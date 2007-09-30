@@ -75,7 +75,8 @@ XML
                         </Container>
                     </View>
 XML
-                program = Program.new
+                window = Window.new
+                program = Program.new(window)
                 program.views = { 'window' => Views::View.from_string(program, xml) }
                 program.models = {}
                 program.states = {}

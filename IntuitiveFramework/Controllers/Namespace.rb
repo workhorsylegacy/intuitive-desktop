@@ -11,4 +11,5 @@ require '/usr/share/rails/activerecord/lib/active_record.rb'
 'DataController',
 'DocumentController',
 'RevisionedFileSystemController',
+'SearchController',
 'UserController'].each { |file_name| require "#{path}/#{file_name}" }

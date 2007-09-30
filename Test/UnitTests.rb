@@ -27,6 +27,7 @@ require 'Models/Data/TestXmlModelCreator'
 require 'Controllers/TestCommunicationController'
 require 'Controllers/TestDataController'
 require 'Controllers/TestRevisionedFileSystemController'
+require 'Controllers/TestSearchController'
 require 'Controllers/TestUserController'
 
 # Servers
@@ -38,7 +39,7 @@ require 'Views/Base/TestMixinBindsToModel'
 require 'Views/TestContainer'
 require 'Views/TestView'
 
-# Desktop
+# Program
 require 'TestProgram'
 
 Thread.abort_on_exception = true
@@ -54,7 +55,7 @@ Thread.abort_on_exception = true
         Models::TestProject.suite,
         Models::TestDocument.suite,
         Models::TestUser.suite,
-        #Models::TestGroup.suite,
+#        Models::TestGroup.suite,
         Models::Data::TestXmlModelCreator.suite]
     end
 
@@ -62,6 +63,7 @@ Thread.abort_on_exception = true
         [Controllers::TestCommunicationController.suite,
         Controllers::TestDataController.suite,
         Controllers::TestRevisionedFileSystemController.suite,
+        Controllers::TestSearchController.suite,
         Controllers::TestUserController.suite]
     end
 

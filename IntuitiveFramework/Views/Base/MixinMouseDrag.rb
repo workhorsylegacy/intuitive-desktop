@@ -3,7 +3,7 @@ module Views; module Base
     module MixinMouseDrag
         attr_accessor :on_mouse_drag_event, :scroll_position
 
-        def on_mouse_drag_trigger(edge, button, x, y, timestamp)
+        def on_mouse_drag_trigger(x, y)
             # Scroll to the position and refresh
             self.scroll_position = [-(x - self.x), -(y - self.y)]
             

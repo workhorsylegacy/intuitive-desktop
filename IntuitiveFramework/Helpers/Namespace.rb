@@ -9,6 +9,4 @@ path = File.dirname(File.expand_path(__FILE__))
 'FileSystem',
 'Color',
 'Logger',
-'MacroFilter',
-'Proxy',
-'Timer'].each { |file_name| require "#{path}/#{file_name}" }
+'Proxy'].each { |file_name| require "#{path}/#{file_name}" }

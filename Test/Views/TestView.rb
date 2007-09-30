@@ -5,7 +5,7 @@ module Views
     class TestView < Test::Unit::TestCase
             def test_load_from_string
                 xml = "<View></View>"
-                view = View::from_string(Program.new, xml)
+                view =View::from_string(nil, xml)
         	       
                 assert_not_nil(view)
             end

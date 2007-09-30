@@ -7,6 +7,9 @@ module Servers
         attr_reader :local_connection
 
         def initialize(ip_address, incoming_port, outgoing_port, logger_output=$stdout)
+            # Make the data system if it does not exist
+            Dir.mkdir($DataSystem) unless File.directory?($DataSystem)
+        
             # Create a message controller to send results back
             @ip_address = ip_address
             @incoming_port = incoming_port

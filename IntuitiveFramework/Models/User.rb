@@ -2,6 +2,8 @@
 # get the path of this file
 path = File.dirname(File.expand_path(__FILE__))
 
+require 'test/unit/testcase'
+
 require "#{path}/Group"
 
 module Models

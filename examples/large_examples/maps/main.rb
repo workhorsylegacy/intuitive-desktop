@@ -53,19 +53,23 @@ document.document_type = :controller
 @project.main_view_name = "main_window"
 Controllers::DataController.save_revision(@branch)
 
+# Create a window to run all the examples in
+desktop = Window.new
+
 # Load the example program into a tab
-program = Program.new
+program = Program.new(window)
 
-## Have the Client ask the Server to run the Document
-#Controllers::DataController.run_project_over_network(@communicator,
-#                                                      @connection,
-#                                                      @document_server.local_connection,
-#                                                      program,
-#                                                      @project,
-#                                                      @branch)
+# Have the Client ask the Server to run the Document
+Controllers::DataController.run_project_over_network(@communicator,
+                                                      @connection,
+                                                      @document_server.local_connection,
+                                                      window,
+                                                      program,
+                                                      @project,
+                                                      @branch)
 
-# FIXME: For now run the document locally so we won't have to deal with Proxy issues.
-Controllers::DataController.run_project_locally(program, @project)
+## FIXME: For now run the document locally so we won't have to deal with Proxy issues.
+#Controllers::DataController.run_project_locally(window, program, @project)
 
-# Run the program
-program.run
+# Have the window run all the programs
+window.run

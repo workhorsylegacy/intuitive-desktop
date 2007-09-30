@@ -20,9 +20,9 @@ libs.each do |lib, description|
     end
 end
 
-# Add any boilerplate class modifications
+# FIXME: We need a way to make sure sqlite works too!
 
-# This lets us cast strings into bools
+# Add any boilerplate class modifications
 class String
 	def to_b
 		case(self.downcase)
@@ -33,26 +33,6 @@ class String
 		end
 	end
 end
-
-class TrueClass
-    def to_b
-        self
-    end
-end
-
-class FalseClass
-    def to_b
-        self
-    end
-end
-
-# This lets us compare symbols
-class Symbol
-    def <=>(other)
-        self.to_s <=> other.to_s
-    end
-end
-
 
 # get the path of this file
 path = File.dirname(File.expand_path(__FILE__))
@@ -87,7 +67,6 @@ $IntuitiveFramework_Veiws_Styles = "#{path}/Views/Styles/Namespace"
 $IntuitiveFramework_Views_Shapes = "#{path}/Views/Shapes/Namespace"
 $IntuitiveFramework_Views_Data = "#{path}/Views/Data/Namespace"
 $IntuitiveFramework_Views_Base = "#{path}/Views/Base/Namespace"
-$IntuitiveFramework_Views_Animations = "#{path}/Views/Animations/Namespace"
 
 # Load all the Classes in this Namespace
 [$IntuitiveFramework_Helpers,
@@ -96,7 +75,8 @@ $IntuitiveFramework_Controllers,
 $IntuitiveFramework_Views].each { |namespace| require namespace }
 
 # Load the root classes
-['Program'].each { |file_name| require "#{path}/#{file_name}" }
+['Program', 
+'Window'].each { |file_name| require "#{path}/#{file_name}" }
 
 # Create a random seed to give us better random numbers
 Kernel.srand
