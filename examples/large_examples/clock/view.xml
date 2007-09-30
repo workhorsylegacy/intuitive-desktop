@@ -1,0 +1,145 @@
+<!--
+	This program is based on the Cairo Clock, which is located at: http://macslow.thepimp.net/cairo-clock/
+	All the SVG layer images are from that program
+-->
+
+<!--
+	TODO: 
+		.Make the window get trimmed to match the shape of the bottom layer
+		.We still need to create a Row Model for single entry tables. For example ClockSize needs to be just a row, and not a table
+		.Add draw_groups to layers so they can be composed into a buffer
+			and wont have to be updated unless one changes
+-->
+
+<View name="main_window" title="Example Animated Clock" pack_style="vertical" 
+		has_title_bar="true"
+		drag_by_holding_left_mouse_button="true"
+		shape_from_layer_mask="clock_drop_shadow"
+		hotkey_quit="ctrl + q, escape"
+		color="0xFFFFFF00">
+	<Binding name="size"
+		model="ClockSize"
+		view_properties="width, height"
+		model_properties="width, height"
+		on_model_change="save_changes_to_view"
+		on_view_change="do_nothing" />
+	<Container name="container_main" pack_style="vertical">
+		<Drawing name="drawing_map" color="0xFFFFFF00">
+			<Animation name="animate_tick" lifetime="forever">
+				<Action name="action_tick_second" interval="every_system_second">
+					<Rotate layers="clock_second_hand_shadow, clock_second_hand" 
+							interval_size="6" interval_start="System.time.seconds" 
+							degree_offset="-90"/>
+				</Action>
+				<Action name="action_tick_minute" interval="every_system_minute">
+					<Rotate layers="clock_minute_hand_shadow, clock_minute_hand" 
+							interval_size="6" interval_start="System.time.minutes" 
+							degree_offset="-90"/>
+				</Action>
+				<Action name="action_tick_hour" interval="every_system_hour">
+					<Rotate layers="clock_hour_hand_shadow, clock_hour_hand" 
+							interval_size="30" interval_start="System.time.hours_12" 
+							degree_offset="-90"/>
+				</Action>	
+					
+			</Animation>
+			<Layer name="clock_drop_shadow">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_drop_shadow_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_face">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_face_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_marks">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_marks_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_hour_hand_shadow" offset_x="50.75%" offset_y="50.75%">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_hour_hand_shadow_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_minute_hand_shadow" offset_x="50.75%" offset_y="50.75%">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_minute_hand_shadow_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_second_hand_shadow" offset_x="50.75%" offset_y="50.75%">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_second_hand_shadow_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_hour_hand" offset_x="50%" offset_y="50%">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_hour_hand_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_minute_hand" offset_x="50%" offset_y="50%">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_minute_hand_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_second_hand" offset_x="50%" offset_y="50%">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_second_hand_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_face_shadow">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_face_shadow_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_glass">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_glass_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+			<Layer name="clock_frame">
+				<Binding name="image"
+					model="ClockImages"
+					view_properties="image_file"
+					model_properties="clock_frame_image"
+					on_model_change="save_changes_to_view"
+					on_view_change="do_nothing" />
+			</Layer>
+		</Drawing>
+	</Container>
+</View>
+

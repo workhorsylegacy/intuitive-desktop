@@ -1,0 +1,22 @@
+
+<Models>
+	<Table name="FoundLocations">
+		<Column name="name" type="string" allows_null="false" />
+		<Column name="street" type="string" allows_null="false" />
+		<Column name="city" type="string" allows_null="false" />
+		<Column name="state" type="string" allows_null="false" />
+		<Column name="zip" type="string" allows_null="false" />
+		<Column name="x" type="integer" allows_null="false" />
+		<Column name="y" type="integer" allows_null="false" />		
+	</Table>
+	
+	<Table name="SelectedLocations">
+		<Column name="name" type="string" allows_null="false" />
+		<Column name="street" type="string" allows_null="false" />
+		<Column name="city" type="string" allows_null="false" />
+		<Column name="state" type="string" allows_null="false" />
+		<Column name="zip" type="string" allows_null="false" />
+		<Column name="x" type="integer" allows_null="false" />
+		<Column name="y" type="integer" allows_null="false" />		
+	</Table>	
+</Models>

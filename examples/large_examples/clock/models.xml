@@ -1,0 +1,37 @@
+
+<Models>
+	<Table name="ClockSize">
+		<Column name="width" type="integer" allows_null="false" />
+		<Column name="height" type="integer" allows_null="false" />
+
+		<Value width="256" height="256" />
+	</Table>
+
+	<Table name="ClockImages">
+		<Column name="clock_drop_shadow_image" type="string" allows_null="false" />
+		<Column name="clock_face_image" type="string" allows_null="false" />
+		<Column name="clock_marks_image" type="string" allows_null="false" />
+		<Column name="clock_hour_hand_shadow_image" type="string" allows_null="false" />
+		<Column name="clock_minute_hand_shadow_image" type="string" allows_null="false" />
+		<Column name="clock_second_hand_shadow_image" type="string" allows_null="false" />
+		<Column name="clock_hour_hand_image" type="string" allows_null="false" />
+		<Column name="clock_minute_hand_image" type="string" allows_null="false" />
+		<Column name="clock_second_hand_image" type="string" allows_null="false" />
+		<Column name="clock_face_shadow_image" type="string" allows_null="false" />
+		<Column name="clock_glass_image" type="string" allows_null="false" />
+		<Column name="clock_frame_image" type="string" allows_null="false" />
+
+		<Value clock_drop_shadow_image="themes/default/clock-drop-shadow.svg" 
+				clock_face_image = "themes/default/clock-face.svg"
+				clock_marks_image = "themes/default/clock-marks.svg"
+				clock_hour_hand_shadow_image = "themes/default/clock-hour-hand-shadow.svg"
+				clock_minute_hand_shadow_image = "themes/default/clock-minute-hand-shadow.svg"
+				clock_second_hand_shadow_image = "themes/default/clock-second-hand-shadow.svg"
+				clock_hour_hand_image = "themes/default/clock-hour-hand.svg"
+				clock_minute_hand_image = "themes/default/clock-minute-hand.svg"
+				clock_second_hand_image = "themes/default/clock-second-hand.svg"
+				clock_face_shadow_image = "themes/default/clock-face-shadow.svg"
+				clock_glass_image = "themes/default/clock-glass.svg"
+				clock_frame_image = "themes/default/clock-frame.svg"/>
+	</Table>
+</Models>

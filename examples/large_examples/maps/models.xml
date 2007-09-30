@@ -1,0 +1,47 @@
+
+<Models>
+	<Table name="Interstate" belongs_to="InterstateCoordinates">
+		<Column name="name" type="string" allows_null="false" />
+		
+		<Value name="101" />
+		<Value name="10" />
+	</Table>
+	
+	<Table name="InterstateCoordinates" has_one="Interstate">
+		<Column name="x" type="integer" allows_null="false" />
+		<Column name="y" type="integer" allows_null="false" />
+		
+		<Value x="-50" y="-67" />
+		<Value x="50" y="67" />
+		<Value x="100" y="172" />
+		<Value x="200" y="43" />
+		<Value x="215" y="100" />
+		<Value x="400" y="100" />
+	</Table>
+	
+	<Table name="HighwayCoordinates" has_one="Interstate">
+		<Column name="x" type="integer" allows_null="false" />
+		<Column name="y" type="integer" allows_null="false" />
+		
+		<Value x="10" y="10" />
+		<Value x="10" y="100" />
+		<Value x="100" y="100" />
+	</Table>
+	
+	<Table name="Locations">
+		<Column name="name" type="string" allows_null="false" />
+		<Column name="street" type="string" allows_null="false" />
+		<Column name="city" type="string" allows_null="false" />
+		<Column name="state" type="string" allows_null="false" />
+		<Column name="zip" type="string" allows_null="false" />
+		<Column name="x" type="integer" allows_null="false" />
+		<Column name="y" type="integer" allows_null="false" />
+		
+		<Value name="Three Ring Circus" street="7897 Event Fields" city="North Saltingham" state="CA" zip="96783" x="50" y="50" />
+		<Value name="Downtown Market" street="9234 Palooka Street" city="North Saltingham" state="CA" zip="96783" x="100" y="100" />
+		<Value name="Three Flavors Ice Cream" street="9234 Palooka Street" city="North Saltingham" state="CA" zip="96783" x="200" y="50" />
+		<Value name="Septic City" street="9234 Palooka Street" city="North Saltingham" state="CA" zip="96783" x="215" y="100" />
+		<Value name="Bob's Chicken Shack" street="9234 Palooka Street" city="North Saltingham" state="CA" zip="96783" x="0" y="0" />
+		<Value name="Port 8" street="9234 Palooka Street" city="North Saltingham" state="CA" zip="96783" x="400" y="100" />
+	</Table>
+</Models>

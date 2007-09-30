@@ -1,0 +1,78 @@
+
+<View name="main_window" title="Map Web Program" pack_style="vertical">
+	<Container name="container_main" pack_style="vertical">
+		<Container name="container_navigation" pack_style="horizontal">
+			<Text name="text_find_location" 
+					default="Enter the name or address of a place to find ..."
+					font_name="Arial"
+					font_size="20"
+					font_color="0x3366FFFF" >
+					<Event name="on_text_changed_event"
+							method="find_location_address"
+							argument="text_find_location.text"
+							result="FoundLocations" />
+			</Text>
+			<Text name="text_location">
+					<Binding name="text"
+							model="FoundLocations"
+							view_properties="text"
+							model_properties="name"
+							on_model_change="save_changes_to_view"
+							on_view_change="do_nothing" />
+			</Text>
+		</Container>
+		<Container name="container_main" pack_style="horizontal">
+			<Drawing name="drawing_map" color="0x99b3ccFF">
+				<Binding name="scroll_position"
+							model="FoundLocations"
+							view_properties="scroll_position"
+							model_properties="x, y"
+							on_model_change="save_changes_to_view"
+							on_view_change="do_nothing"	/>
+				<Line name="line_highways"
+						color="0xfffa73FF"
+						highlight_color="0xA37147FF"
+						join="round"
+						cap="round"
+						width="8"
+						highlight_width="1.0">
+					<Binding name="points"
+								model="HighwayCoordinates"
+								view_properties="points"
+								model_properties="x, y"
+								on_model_change="save_changes_to_view"
+								on_view_change="do_nothing"	/>
+				</Line>
+				<Line name="line_interstates"
+						color="0xf2bf24FF"
+						highlight_color="0xA37147FF"
+						join="round"
+						cap="round"
+						width="12"
+						highlight_width="1.0">
+					<Binding name="points"
+								model="InterstateCoordinates"
+								view_properties="points"
+								model_properties="x, y"
+								on_model_change="save_changes_to_view"
+								on_view_change="do_nothing"	/>								
+				</Line>						
+				<Line name="line_roads" />
+				<Line name="line_streets" />
+				<Labels name="label_location_names"
+						position_indicator="dot"
+						font_name="Courier"
+						font_size="8"
+						font_color="0x000000FF">
+					<Binding name="names"
+						model="Locations"
+						view_properties="items"
+						model_properties="name, x, y"
+						on_model_change="save_changes_to_view"
+						on_view_change="do_nothing" />
+				</Labels>
+			</Drawing>
+		</Container>
+	</Container>
+</View>
+
