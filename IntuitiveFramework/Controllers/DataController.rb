@@ -1,5 +1,4 @@
 
-require '/usr/share/rails/activerecord/lib/active_record.rb'
 
 module Controllers
   class DataController
