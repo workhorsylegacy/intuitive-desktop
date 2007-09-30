@@ -1,20 +1,30 @@
 
 # Get a list of all the libraries we will need to load
-libs = {'gtk2' => ["'gtk2'",  "ruby-gnome2 or libcairo-ruby packages"],
-        'cairo' => ["'cairo'", "ruby-gnome2 or libcairo-ruby packages"],
-        'rsvg2' => ["'rsvg2'", "ruby-gnome2 and librsvg2-ruby packages"],
-        'rexml/document' => ["'rexml'", "librexml-ruby package"],
-        'monitor' => ["'monitor'", "libruby or ruby1.8-dev packages"],
-        '/usr/share/rails/activerecord/lib/active_record.rb' => ["'active record'", "rails package"], 
-        'openssl' => ["'openssl'", "libopenssl-ruby package"],
-        'base64' => ["'base64'", "libruby or ruby1.8-dev packages"],
-        'sqlite3' => ["'sqlite3'", "libsqlite3-ruby package"]}
+libs = {'rubygems' => ["rubygems", :require, "rubygems"],
+		'gtk2' => ["'gtk2'",  :require, "ruby-gnome2 or libcairo-ruby packages"],
+        'cairo' => ["'cairo'", :require, "ruby-gnome2 or libcairo-ruby packages"],
+        'rsvg2' => ["'rsvg2'", :require, "ruby-gnome2 and librsvg2-ruby packages"],
+        'rexml/document' => ["'rexml'", :require, "librexml-ruby package"],
+        'monitor' => ["'monitor'", :require, "libruby or ruby1.8-dev packages"],
+		'active_record' => ["'active record'", :both, "rails or ruby-activerecord packages"], 
+        'openssl' => ["'openssl'", :require, "libopenssl-ruby package"],
+        'base64' => ["'base64'", :require, "libruby or ruby1.8-dev packages"],
+        'sqlite3' => ["'sqlite3'", :require, "libsqlite3-ruby package"]}
 
 # Load all the libraries and give the user a coherent error if any are not installed.
 libs.each do |lib, description|
     begin
-        require lib
-    rescue LoadError
+		case description[1]
+        	when :require: require lib
+			when :gem: gem lib
+			when :both:
+				begin
+					require lib
+				rescue LoadError		
+					gem lib
+				end
+		end
+    rescue
         puts "Failed to load the library #{description.first} which is usually part of the #{description.last}."
         exit
     end

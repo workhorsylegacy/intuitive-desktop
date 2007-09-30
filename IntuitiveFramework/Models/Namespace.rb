@@ -2,9 +2,6 @@
 # get the path of this file
 path = File.dirname(File.expand_path(__FILE__))
 
-# Load external dependencies
-require '/usr/share/rails/activerecord/lib/active_record.rb'
-
 # Load all the Classes in this Namespace
 ['Branch',
 'Category', 
