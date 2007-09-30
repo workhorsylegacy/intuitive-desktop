@@ -2,7 +2,7 @@
 module Views
     module Data
         class Drawing < Views::Base::ContainerParentAndChild
-            attr_reader :name
+            attr_reader :name, :animations
             attr_accessor :color
             
             include Views::Base::MixinMouseDrag
@@ -12,6 +12,7 @@ module Views
                 @name = name
                 @scroll_position = [0, 0]
                 @zoom = 1.0
+                @animations = []
             end
             
             def min_width
@@ -128,7 +129,9 @@ module Views
               # Add child elements
               element.elements.each do |e|
                   case(e.name)
+                      when "Animation": Views::Animations::Animation.from_xml(new_drawing, e)
                       when "Line": Views::Data::Line.from_xml(new_drawing, e)
+					            when "Layer": Views::Data::Layer.from_xml(new_drawing, e)
                       when "Labels": Labels.from_xml(new_drawing, e)
                       when "Polygon": Views::Data::Polygon.from_xml(new_drawing, e)
                       when "Event": new_drawing.add_event(Helpers::Event.from_xml(new_drawing, e))

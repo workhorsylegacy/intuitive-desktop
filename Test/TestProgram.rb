@@ -5,22 +5,6 @@ require "#{path}/../IntuitiveFramework/IntuitiveFramework.rb"
 
 
     class TestProgram < Test::Unit::TestCase
-            class MockWindow < Window
-                attr_accessor :title
-                
-                def initialize
-                    @tabs = {}
-                end
-                
-                def add(program)
-                    @tabs[program] = program.name
-                end
-                
-                def set_tab_title(program, name)
-                    @tabs[program] = program.name
-                end
-            end
-            
             def test_load_from_string
                 view_xml =
 <<VIEW_XML
@@ -39,14 +23,12 @@ VIEW_XML
                   </Models>
 MODEL_XML
                 # Create a program from the xml
-                window = MockWindow.new
-                program = Program.new(window)
+                program = Program.new
                 program.main_view = Views::View.from_string(program, view_xml)
                 program.models = Models::Data::XmlModelCreator.models_from_xml_string(models_xml)
         	    
         	      # Make sure the program is valid
                 assert_not_nil(program)
-                assert_same(window, program.window)
                 assert_not_nil(program.main_view)
                 assert_equal(1, program.models.length)
                 

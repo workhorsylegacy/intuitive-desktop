@@ -3,48 +3,37 @@
 module Controllers
   class DataController
     # Criteria is a hash like:
-    #  :user_ids => ["user_id"],
+    #  :user_ids => [user.public_universal_key],
     #  :names => ["name of a project"]}
     def self.find_projects(criteria)
         # Make sure the criteria is non empty hash
         message = "The criteria should be a Hash like {:user_ids => [], :names => []}"
         raise message unless criteria.is_a?(Hash) and criteria.length > 0
     
-        projects = []
-    
-        # Get all the branches
         branches = (Dir.entries($DataSystem) - ['.', '..']).collect do |entry|
             next unless File.directory?("#{$DataSystem}#{entry}/") && entry.split('_').first == "branch"
                 
             Models::Branch.from_existing("#{$DataSystem}#{entry}/")
         end.compact
         
-        # Get the project names that match the search
+        projects = []
+        
+        if criteria[:user_ids]
+            projects = criteria[:user_ids].collect do |user_id|
+                branches.collect do |branch|
+                    branch.projects if branch.user_id == user_id
+                end
+            end.flatten.compact
+        end
+        
         if criteria[:names]
-            project_names = branches.collect {|b| b.projects.collect {|p| p.name}}.flatten.uniq
-            project_names = criteria[:names].collect do |name|
-                SearchController.find_similar_strings(name, project_names)
-            end.flatten
-            
-            projects.concat(project_names.collect do |name|
+            projects.concat(criteria[:names].collect do |name|
                 branches.collect do |branch|
                     branch.projects.select do |project|
                         project.name.downcase == name.downcase
                     end
                 end
-            end.flatten.compact)            
-        end
-        
-        # Get the identity ids that match the search
-        if criteria[:user_ids]
-            identity_ids = branches.collect {|b| b.user_id }.flatten.uniq      
-            
-            
-            projects = identity_ids.collect do |id|
-              branches.collect do |branch|
-                  branch.projects if branch.user_id == id
-              end
-            end.flatten.compact            
+            end.flatten.compact)
         end
         
         # Return an array of projects with no duplicates
@@ -53,7 +42,7 @@ module Controllers
             next if unique_projects.has_key?(project.project_number)
             unique_projects[project.project_number] = project
         end
-        unique_projects.values        
+        unique_projects.values
     end
     
     # Criteria is a hash like:
@@ -71,7 +60,7 @@ module Controllers
             return message[:projects]
     end
     
-    def self.run_project_over_network(communicator, local_connection, document_server_connection, window, program, project, branch)
+    def self.run_project_over_network(communicator, local_connection, document_server_connection, program, project, branch)
         # Tell the Server that we want to run the project
         message = {:command => :run_project,
                     :project_number => project.project_number,
@@ -114,12 +103,9 @@ module Controllers
             
             program.main_controller = controller
             program.setup_bindings
-            
-            # Add this program to a tab on the window
-            window.add(program)
     end
     
-    def self.run_project_locally(window, program, project)
+    def self.run_project_locally(program, project)
             # Connect the Program to the Models
             program.models = Models::Data::XmlModelCreator::models_from_documents(project.document_models)
             program.states = Models::Data::XmlModelCreator::models_from_documents(project.document_states)
@@ -138,9 +124,6 @@ module Controllers
             program.main_controller = Kernel.eval(project.main_controller_class_name).new(program.models)
             
             program.setup_bindings
-            
-            # Add this program to a tab on the window
-            window.add(program)
     end
     
         def self.move_to_next_revision(branch)

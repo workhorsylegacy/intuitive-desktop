@@ -38,7 +38,7 @@ module Views
                 case key_value
                     when :backspace: self.text = self.text[0..-2] if self.text.length > 0
                     when :space: self.text += " "
-                    else self.text += key_value
+                    else self.text += key_value.to_s
                 end
                 
                 fire_events :on_key_press_event

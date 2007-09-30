@@ -3,16 +3,36 @@
 module Views
     class View < Base::ContainerParent
       attr_reader :name
-      attr_accessor :title, :focused_child
+      attr_accessor :title, :focused_child, :hotkey_quit
     
       def initialize(program, name, title, pack_style)
             super(pack_style)
         @program = program
         @name = name
         @title = title
+        @has_title_bar = true
         
         @focused_child = nil
         @dragging_child = nil
+        @drag_by_holding_left_mouse_button = false
+      end
+    
+      def has_title_bar=(value)
+          @has_title_bar = value
+          
+          @program.decorated = @has_title_bar
+      end
+    
+      def has_title_bar
+          @has_title_bar
+      end    
+    
+      def drag_by_holding_left_mouse_button=(value)
+          @drag_by_holding_left_mouse_button = value
+      end
+    
+      def drag_by_holding_left_mouse_button
+          @drag_by_holding_left_mouse_button
       end
     
         def width
@@ -61,7 +81,7 @@ module Views
             @dragging_child = nil
         end
 
-        def on_key_press_trigger(key_board_group, modify_keys, key_value)            
+        def on_key_press_trigger(key_board_group, modify_keys, key_value)
             # Just return if there is nothing focused
             return unless @focused_child
             
@@ -69,7 +89,7 @@ module Views
             @focused_child.on_key_press_trigger(key_board_group, modify_keys, key_value)
         end
 
-        def on_mouse_drag_trigger(x, y)
+        def on_mouse_drag_trigger(x, y, button, edge, timestamp)            
             # If we just started dragging, find the control we are in
             unless @dragging_child
                 unprocessed_children = self.children.clone
@@ -91,7 +111,7 @@ module Views
             end
             
             # Forward the drag to the control that is being dragged
-            @dragging_child.on_mouse_drag_trigger(x, y) if @dragging_child
+            @dragging_child.on_mouse_drag_trigger(edge, button, x, y, timestamp) if @dragging_child
         end
 
         def self.from_string(program, xml)
@@ -113,6 +133,13 @@ module Views
                             program,
                   element.attributes['name'],
                   element.attributes['title'], :vertical)
+    
+        new_view.has_title_bar = (element.attributes['has_title_bar'] || true).to_b
+        new_view.drag_by_holding_left_mouse_button = 
+            (element.attributes['drag_by_holding_left_mouse_button'] || false).to_b
+            
+        new_view.hotkey_quit =
+            Helpers::MacroFilter.process_keys(element.attributes['hotkey_quit'])
     
         element.elements.each { |e|
           case(e.name)
@@ -156,6 +183,42 @@ module Views
             
             # If nothing was found return nil
             nil
-        end     
+        end
+        
+        def all_child_animations
+            animations = []
+            unprocessed_children = self.children.clone
+            while unprocessed_children.length > 0
+                node = unprocessed_children.pop
+                        
+                # Push this node's children on the stack
+                node.children.each { |child| unprocessed_children.push child } if node.respond_to? :children
+                        
+                # If the node is a Drawing, save its Animations
+                next unless node.is_a?(Views::Data::Drawing)
+                node.animations.each {|animation| animations << animation}
+            end
+            
+            animations
+        end
+        
+        def all_child_layers
+            layers = []
+            unprocessed_children = self.children.clone
+            while unprocessed_children.length > 0
+                node = unprocessed_children.pop
+                        
+                # Push this node's children on the stack
+                node.children.each { |child| unprocessed_children.push child } if node.respond_to? :children
+                        
+                # If the node is a Drawing, save its Layers
+                next unless node.is_a?(Views::Data::Drawing)
+                node.children.each do |child|
+                    layers << child if child.is_a?(Views::Data::Layer)
+                end
+            end
+            
+            layers
+        end        
     end
 end

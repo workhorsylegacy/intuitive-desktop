@@ -153,9 +153,8 @@ CONTROLLER_CODE
           @project.main_view_name = "main_window"
           Controllers::DataController.save_revision(@branch)
           
-          # Create a Window and Program to run the Project in
-          window = Window.new
-          program = Program.new(window)
+          # Create a  Program to run the Project in
+          program = Program.new
 
           # Have the client download the Project from the server
           project = Controllers::DataController.find_projects_over_network(@communicator,
@@ -167,7 +166,6 @@ CONTROLLER_CODE
           Controllers::DataController.run_project_over_network(@communicator,
                                                                     @connection,
                                                                     @document_server.local_connection,
-                                                                    window,
                                                                     program,
                                                                     project,
                                                                     project.parent_branch)
