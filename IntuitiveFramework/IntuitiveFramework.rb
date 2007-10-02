@@ -1,17 +1,25 @@
 
+# Make sure ruby gems is installed
+begin
+	require 'rubygems'
+rescue LoadError
+	puts "Failed to load the library 'ruby gems' which is usually part of the 'rubygems' package."
+	exit
+end
+
 # Get a list of all the libraries we will need to load
-libs = {'rubygems' => ["rubygems", :require, "rubygems"],
-		'gtk2' => ["'gtk2'",  :require, "ruby-gnome2 or libcairo-ruby packages"],
+libs = {'gtk2' => ["'gtk2'",  :require, "ruby-gnome2 or libcairo-ruby packages"],
         'cairo' => ["'cairo'", :require, "ruby-gnome2 or libcairo-ruby packages"],
         'rsvg2' => ["'rsvg2'", :require, "ruby-gnome2 and librsvg2-ruby packages"],
         'rexml/document' => ["'rexml'", :require, "librexml-ruby package"],
         'monitor' => ["'monitor'", :require, "libruby or ruby1.8-dev packages"],
-		'active_record' => ["'active record'", :both, "rails or ruby-activerecord packages"], 
+		'active_record' => ["'active record'", :both, "rails, or activerecord packages or gems"], 
         'openssl' => ["'openssl'", :require, "libopenssl-ruby package"],
         'base64' => ["'base64'", :require, "libruby or ruby1.8-dev packages"],
         'sqlite3' => ["'sqlite3'", :require, "libsqlite3-ruby package"]}
 
-# Load all the libraries and give the user a coherent error if any are not installed.
+# Load all the libraries and create a list of coherent errors if any are not installed.
+error_messages = []
 libs.each do |lib, description|
     begin
 		case description[1]
@@ -19,16 +27,21 @@ libs.each do |lib, description|
 			when :gem: gem lib
 			when :both:
 				begin
-					require lib
-				rescue LoadError		
 					gem lib
+				rescue Gem::LoadError
+					require lib
 				end
 		end
-    rescue
-        puts "Failed to load the library #{description.first} which is usually part of the #{description.last}."
-        exit
+    rescue LoadError
+        error_messages << "Failed to load the library #{description.first} which is usually part of the #{description.last}."
     end
 end
+
+# Show any errors
+error_messages.each do |message|
+	puts message
+end
+exit if error_messages.length > 0
 
 # Add any boilerplate class modifications
 
@@ -67,7 +80,7 @@ end
 # get the path of this file
 path = File.dirname(File.expand_path(__FILE__))
 
-# Create a global strings for the main namespace file
+# Create a global string for the main namespace file
 path = File.dirname(File.expand_path(__FILE__))
 $IntuitiveFramework = path
 
@@ -81,7 +94,7 @@ end
 
 $DataSystem = "#{path}/data_system/"
 
-# Create a global strings for each namespace file
+# Create a global string for each namespace file
 $IntuitiveFramework_Helpers = "#{path}/Helpers/Namespace"
 
 $IntuitiveFramework_Models = "#{path}/Models/Namespace"
@@ -99,7 +112,7 @@ $IntuitiveFramework_Views_Data = "#{path}/Views/Data/Namespace"
 $IntuitiveFramework_Views_Base = "#{path}/Views/Base/Namespace"
 $IntuitiveFramework_Views_Animations = "#{path}/Views/Animations/Namespace"
 
-# Load all the Classes in this Namespace
+# Load all the Classes into this Namespace
 [$IntuitiveFramework_Helpers,
 $IntuitiveFramework_Models,
 $IntuitiveFramework_Controllers,
