@@ -37,6 +37,15 @@ module Models
             value
         end
         
+        def description
+            File.open("#{self.folder_name}description", 'r') { |f| return f.read }
+        end
+        
+        def description=(value)
+            File.open("#{self.folder_name}description", 'w') { |f| f.write(value) }
+            value
+        end        
+        
         def main_controller_class_name
             File.open("#{self.folder_name}main_controller_class_name", 'r') { |f| return f.read }
         end

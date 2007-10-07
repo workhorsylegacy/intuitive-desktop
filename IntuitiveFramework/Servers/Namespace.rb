@@ -4,5 +4,6 @@
 path = File.dirname(File.expand_path(__FILE__))
 
 # Load all the Classes in this Namespace
-['DocumentServer',
+['CommunicationServer',
+'DocumentServer',
 'IdentityServer'].each { |file_name| require "#{path}/#{file_name}" }

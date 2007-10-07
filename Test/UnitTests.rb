@@ -10,7 +10,7 @@ require 'test/unit/testsuite'
 require 'test/unit/ui/console/testrunner'
 require 'test/unit/testcase'
 
-## Helpers
+# Helpers
 require 'Helpers/TestBinding'
 require 'Helpers/TestLogger'
 require 'Helpers/TestProxy'
@@ -32,6 +32,7 @@ require 'Controllers/TestUserController'
 
 # Servers
 require 'Servers/TestIdentityServer'
+require 'Servers/TestCommunicationServer'
 
 # Views
 require 'Views/Base/TestMixinBindsChildrenToModels'
@@ -68,7 +69,8 @@ Thread.abort_on_exception = true
     end
 
     def server_tests
-        [Servers::TestIdentityServer.suite]
+        [Servers::TestIdentityServer.suite,
+        Servers::TestCommunicationServer.suite]
     end
     
     def view_tests
@@ -91,7 +93,8 @@ Thread.abort_on_exception = true
             controller_tests,
             server_tests,
             view_tests,
-            desktop_test].each do |suite_set|
+            desktop_test]
+            [server_tests].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite
                 end
