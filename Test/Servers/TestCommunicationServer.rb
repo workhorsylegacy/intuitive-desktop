@@ -61,7 +61,11 @@ module Servers
           assert(@@communicator.advertise_project_online(project))
           
           # Look up the project online and make sure it is the same
-          @@communicator.search_for_projects_online(:name => "map")
+          details = @@communicator.search_for_projects_online("Map Example")
+          assert_equal(project.name, details[:name])
+          assert_equal(project.description, details[:description])
+          assert_equal(project.parent_branch.user_id, details[:user_id])
+          assert_equal(project.parent_branch.revision_number, details[:revision_number])
       end
             
 #      def teardown
