@@ -69,11 +69,10 @@ module Servers
             end
             
             dbus_method("advertise_project_online", "in name:s, in description:s, in identity_public_key:s, in revision_number:i, out retval:b") do |name, description, identity_public_key, revision_number|
-                retval = web_service.RegisterProject(name, description, identity_public_key, revision_number)
-                [retval]
+                [web_service.RegisterProject(name, description, identity_public_key, revision_number)]
             end
             
-            dbus_method("search_for_projects_online", "in search:s, out results:ss") do |search|
+            dbus_method("search_for_projects_online", "in search:s, out results:aas") do |search|
                 [web_service.SearchProjects(search)]
             end            
             
@@ -86,7 +85,11 @@ module Servers
                     else
                         "http://service.intuitive-desktop.org/projects/service.wsdl"
                     end
-                    @web_service = SOAP::WSDLDriverFactory.new(wsdl).create_rpc_driver
+                    begin
+                        @web_service = SOAP::WSDLDriverFactory.new(wsdl).create_rpc_driver
+                    rescue
+                        raise "Could not connect to web service at '#{wsdl}'."
+                    end
                     raise "Could not connect to the web service at '#{wsdl}'." unless @web_service.IsRunning
                 end
                 
@@ -110,7 +113,9 @@ module Servers
         end
         
         def search_for_projects_online(search)
-            @real_communication_server.search_for_projects_online(search)
+            @real_communication_server.search_for_projects_online(search).first.collect do |p| 
+                { :name => p[0], :description => p[1], :user_id => p[2], :revision => p[3].to_i, :location => p[4] } 
+            end
         end
     end
 end

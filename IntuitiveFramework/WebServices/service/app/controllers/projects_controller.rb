@@ -39,7 +39,7 @@ class ProjectsController < ApplicationController
 		return unless search.strip.length > 0
 
 		Projects.find(:all).collect do |p|
-			[p.name, p.description, p.user_id, p.revision, p.location] if p.name.include? search.downcase
+			[p.name, p.description, p.user_id, p.revision, p.location] if p.name.downcase.include? search.downcase
 		end.compact
 	end
 
