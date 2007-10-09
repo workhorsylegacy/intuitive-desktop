@@ -17,4 +17,6 @@ class ProjectsApi < ActionWebService::API::Base
 			:returns => [[[{:name => :string}, {:user_id => :string}, {:description => :string}]]]
   api_method :list_projects,
 			:returns => [[[{:name => :string}, {:description => :string}, {:user_id => :string}, {:revision => :string}, {:location => :string}]]]
+  api_method :empty_everything,
+      :returns => [:bool]
 end

@@ -50,4 +50,11 @@ class ProjectsController < ApplicationController
 	def list_projects
 		Projects.find(:all).collect { |p| [p.name, p.description, p.user_id, p.revision, p.location] }
 	end
+  
+  def empty_everything
+    Projects.find(:all).each { |p| p.destroy }
+    Identities.find(:all).each { |i| i.destroy }
+    
+    true
+  end
 end

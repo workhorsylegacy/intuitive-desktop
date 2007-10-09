@@ -33,6 +33,12 @@ module Servers
           @@user
       end
             
+      def teardown
+          # FIXME: Because ruby dbus breaks when returning a large aas (array, array, string) 
+          # Like in search_for_projects_online, we clear the database after each test
+          TestCommunicationServer.communicator.clear_everything
+      end
+            
       def test_is_running
           assert(TestCommunicationServer.communicator.is_running)
       end

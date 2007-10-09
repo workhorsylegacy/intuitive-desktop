@@ -64,8 +64,8 @@ module Servers
     # The class that holds all the methods to be accessed by the dbus object
     class CommunicationServerDBus < DBus::Object
         dbus_interface "org.intuitivedesktop.CommunicationServerInterface" do
-            dbus_method "is_running", "out message:b" do
-                [true]
+            dbus_method("is_running", "out message:b") do
+                [web_service.IsRunning()]
             end
             
             dbus_method("advertise_project_online", "in name:s, in description:s, in identity_public_key:s, in revision_number:i, out retval:b") do |name, description, identity_public_key, revision_number|
@@ -75,6 +75,10 @@ module Servers
             dbus_method("search_for_projects_online", "in search:s, out results:aas") do |search|
                 [web_service.SearchProjects(search)]
             end            
+            
+            dbus_method("clear_everything", "out result:b") do
+                [web_service.EmptyEverything()]
+            end 
             
             # Will return a reference to the web service
             def web_service
@@ -116,6 +120,10 @@ module Servers
             @real_communication_server.search_for_projects_online(search).first.collect do |p| 
                 { :name => p[0], :description => p[1], :user_id => p[2], :revision => p[3].to_i, :location => p[4] } 
             end
+        end
+        
+        def clear_everything
+            @real_communication_server.clear_everything
         end
     end
 end
