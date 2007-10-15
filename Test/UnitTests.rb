@@ -88,13 +88,16 @@ Thread.abort_on_exception = true
         def self.suite
             master_suite = Test::Unit::TestSuite.new
             
-            [helper_tests,
-            model_test,
-            controller_tests,
-            server_tests,
-            view_tests,
-            desktop_test]
-            [server_tests].each do |suite_set|
+#            [helper_tests,
+#            model_test,
+#            controller_tests,
+#            server_tests,
+#            view_tests,
+#            desktop_test]
+            [
+              [Servers::TestCommunicationServer.suite,
+              Controllers::TestCommunicationController.suite]
+            ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite
                 end

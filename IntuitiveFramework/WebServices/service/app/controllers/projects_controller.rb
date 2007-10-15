@@ -1,3 +1,4 @@
+
 class ProjectsController < ApplicationController
 	wsdl_service_name 'Projects'
 	web_service_api ProjectsApi
@@ -7,15 +8,16 @@ class ProjectsController < ApplicationController
 		true
 	end
 
-	def register_project(name, description, user_id, revision)
+	def register_project(name, description, user_id, revision, project_number)
 		project = Projects.new
 		project.name = name
 		project.description = description
 		project.user_id = user_id
 		project.revision = revision
+    project.project_number = project_number
 		project.location = self.request.env["REMOTE_ADDR"]
 
-		raise project.errors unless project.save
+		raise project.errors.collect { |e| "#{e.first}: #{e.last}" }.inspect unless project.save
 
 		true
 	end
@@ -26,7 +28,7 @@ class ProjectsController < ApplicationController
 		identity.description = description
 		identity.user_id = user_id
 
-		raise identity.errors unless identity.save
+		raise identity.errors.collect { |e| "#{e.first}: e.last" }.inspect unless identity.save
 
 		true
 	end
@@ -39,7 +41,14 @@ class ProjectsController < ApplicationController
 		return unless search.strip.length > 0
 
 		Projects.find(:all).collect do |p|
-			[p.name, p.description, p.user_id, p.revision, p.location] if p.name.downcase.include? search.downcase
+			[
+        p.name, 
+        p.description, 
+        p.user_id, 
+        p.revision, 
+        p.project_number, 
+        p.location
+      ] if p.name.downcase.include? search.downcase
 		end.compact
 	end
 
@@ -48,7 +57,9 @@ class ProjectsController < ApplicationController
 	end
 
 	def list_projects
-		Projects.find(:all).collect { |p| [p.name, p.description, p.user_id, p.revision, p.location] }
+		Projects.find(:all).collect do |p| 
+      [p.name, p.description, p.user_id, p.revision, p.project_number, p.location]
+    end
 	end
   
   def empty_everything

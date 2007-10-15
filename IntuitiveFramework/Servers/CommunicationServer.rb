@@ -68,8 +68,8 @@ module Servers
                 [web_service.IsRunning()]
             end
             
-            dbus_method("advertise_project_online", "in name:s, in description:s, in identity_public_key:s, in revision_number:i, out retval:b") do |name, description, identity_public_key, revision_number|
-                [web_service.RegisterProject(name, description, identity_public_key, revision_number)]
+            dbus_method("advertise_project_online", "in name:s, in description:s, in identity_public_key:s, in revision_number:i, in project_number:s, out retval:b") do |name, description, identity_public_key, revision_number, project_number|
+                [web_service.RegisterProject(name, description, identity_public_key, revision_number, project_number)]
             end
             
             dbus_method("search_for_projects_online", "in search:s, out results:aas") do |search|
@@ -113,12 +113,19 @@ module Servers
         end
         
         def advertise_project_online(project)
-            @real_communication_server.advertise_project_online(project.name, project.description, project.parent_branch.user_id, project.parent_branch.head_revision_number)
+            @real_communication_server.advertise_project_online(
+                                                        project.name, 
+                                                        project.description, 
+                                                        project.parent_branch.user_id, 
+                                                        project.parent_branch.head_revision_number,
+                                                        project.project_number.to_s)
         end
         
         def search_for_projects_online(search)
             @real_communication_server.search_for_projects_online(search).first.collect do |p| 
-                { :name => p[0], :description => p[1], :user_id => p[2], :revision => p[3].to_i, :location => p[4] } 
+                { :name => p[0], :description => p[1], 
+                  :user_id => p[2], :revision => p[3].to_i, 
+                  :project_number => p[4], :location => p[5] } 
             end
         end
         
