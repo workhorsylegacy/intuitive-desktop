@@ -126,11 +126,14 @@ module Servers
           Controllers::DataController.save_revision(branch)     
           
           # Advertise the project online
-          assert(TestCommunicationServer.communicator.advertise_project_online(project))
+          connection = TestCommunicationServer.communicator.advertise_project_online(project)
+          assert_not_nil(connection)
           
-          revision_number = project.parent_branch.head_revision_number
-          project_number = project.project_number.to_s
-          TestCommunicationServer.communicator.run_project(revision_number, project_number)
+          raise "There is no project server for the connection to talk to! Kaboom!"
+          TestCommunicationServer.communicator.run_project(project.parent_branch.head_revision_number, 
+                                                            project.project_number.to_s,
+                                                            project.parent_branch.branch_number.to_s,
+                                                            connection)
       end
     end
 end

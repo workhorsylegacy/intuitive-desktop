@@ -1,6 +1,7 @@
 
 
 module Servers
+    # FIXME: Change this to store the info in the dbus service instead of each memory space, to create a real service.
     class CommunicationServer    
         def self.start(ip_address, in_port, out_port, use_local_web_service = true, on_error = :log_to_file)            
             # Make sure the on_error is valid
@@ -20,6 +21,7 @@ module Servers
             
             # Create a communication controller for routing DBus and Proxy communication over the Internet
             @@communicator = Controllers::CommunicationController.new(ip_address, in_port, out_port)
+            @@network_connection = @@communicator.create_connection
             
             # Start the Dbus service main loop in a thread
             puts "Running Intuitive Desktop Communication Server"
@@ -73,8 +75,16 @@ module Servers
             return CommunicationServerWrapper.new(communicator)
         end
         
+        def self.network_connection
+            @@network_connection
+        end
+        
         def self.get_new_network_connection
             @@communicator.create_connection
+        end
+        
+        def self.network_communicator
+            @@communicator
         end
     end
     
@@ -137,6 +147,8 @@ module Servers
         end
         
         def advertise_project_online(project)
+            connection_id = CommunicationServer.get_new_network_connection[:id]
+            
             @real_communication_server.advertise_project_online(
                                                         project.name, 
                                                         project.description, 
@@ -146,7 +158,11 @@ module Servers
                                                         project.parent_branch.branch_number.to_s,
                                                         CommunicationServer.ip_address,
                                                         CommunicationServer.in_port,
-                                                        CommunicationServer.get_new_network_connection[:id])
+                                                        connection_id)
+            
+            return {:ip_address => CommunicationServer.ip_address,
+              :port => CommunicationServer.in_port,
+              :id => connection_id}
         end
         
         def search_for_projects_online(search)
@@ -157,25 +173,23 @@ module Servers
             end
         end
         
-        def run_project(revision_number, project_number, location)
-            @real_communication_server.run_project(revision_number, project_number, location)
-            
-        # Tell the Server that we want to run the project
-        message = {:command => :run_project,
-                    :project_number => project.project_number,
-                    :branch_number => branch.branch_number}
-        communicator.send(local_connection, document_server_connection, message)
+        def run_project(revision_number, project_number, branch_number, document_server_connection)
+            # Tell the Server that we want to run the project
+            message = {:command => :run_project,
+                        :project_number => project_number,
+                        :branch_number => branch_number}
+            CommunicationServer.network_communicator.send(CommunicationServer.network_connection, document_server_connection, message)
         
             # Wait for the server to ok the process and give up a new connection to it
-            message = communicator.wait_for_command(local_connection, :ok_to_run_project)
+            message = CommunicationServer.network_communicator.wait_for_command(CommunicationServer.network_connection, :ok_to_run_project)
             new_server_connection = message[:new_connection]
             
             # Confirm that we got the new server connection
             message = { :command => :confirm_new_connection }
-            communicator.send(local_connection, new_server_connection, message)
+            CommunicationServer.network_communicator.send(CommunicationServer.network_connection, new_server_connection, message)
             
             # Get a new connection for the Model and Controller
-            message = communicator.wait_for_command(local_connection, :got_model_and_controller_connections)
+            message = CommunicationServer.network_communicator.wait_for_command(CommunicationServer.network_connection, :got_model_and_controller_connections)
             model_connections = message[:model_connections]
             main_controller_connection = message[:main_controller_connection]
             document_states = message[:document_states]
@@ -185,11 +199,11 @@ module Servers
             # Create a proxy Models and Controller
             models = {}
             model_connections.each do |model_connection|
-                model = Helpers::Proxy.get_proxy_to_object(communicator, model_connection)
+                model = Helpers::Proxy.get_proxy_to_object(CommunicationServer.network_communicator, model_connection)
                 models[model.name] = model
             end
             
-            controller = Helpers::Proxy.get_proxy_to_object(communicator, main_controller_connection)
+            controller = Helpers::Proxy.get_proxy_to_object(CommunicationServer.network_communicator, main_controller_connection)
             
             # Connect the Program to the Models and Controller
             program.models = models
