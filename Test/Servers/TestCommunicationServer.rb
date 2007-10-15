@@ -12,7 +12,7 @@ module Servers
       def self.communicator
           if @@communicator == nil
                # Start the communication server
-               Servers::CommunicationServer.start()
+               Servers::CommunicationServer.start("127.0.0.1", 5555, 6666)
                @@communicator = Servers::CommunicationServer.get_communicator          
           end
           
@@ -128,7 +128,9 @@ module Servers
           # Advertise the project online
           assert(TestCommunicationServer.communicator.advertise_project_online(project))
           
-          TestCommunicationServer.communicator
+          revision_number = project.parent_branch.head_revision_number
+          project_number = project.project_number.to_s
+          TestCommunicationServer.communicator.run_project(revision_number, project_number)
       end
     end
 end
