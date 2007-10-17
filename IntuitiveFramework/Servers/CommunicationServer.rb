@@ -173,7 +173,7 @@ module Servers
             end
         end
         
-        def run_project(revision_number, project_number, branch_number, document_server_connection)
+        def run_project(revision_number, project_number, branch_number, document_server_connection, program)
             # Tell the Server that we want to run the project
             message = {:command => :run_project,
                         :project_number => project_number,

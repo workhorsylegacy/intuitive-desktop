@@ -37,12 +37,21 @@ module Servers
           # FIXME: Because ruby dbus breaks when returning a large aas (array, array, string) 
           # Like in search_for_projects_online, we clear the database befor each test
           TestCommunicationServer.communicator.clear_everything
+          
+          # Create the document server
+          proc = Proc.new do |status, message, exception| 
+              raise exception if exception
+              raise message
+          end
+          @document_server = Servers::DocumentServer.new('127.0.0.1', 5000, 5001, proc)
       end
             
       def teardown
           # FIXME: Because ruby dbus breaks when returning a large aas (array, array, string) 
           # Like in search_for_projects_online, we clear the database after each test
           TestCommunicationServer.communicator.clear_everything
+          
+          @document_server.close if @document_server
       end
             
       def test_is_running
@@ -129,11 +138,13 @@ module Servers
           connection = TestCommunicationServer.communicator.advertise_project_online(project)
           assert_not_nil(connection)
           
-          raise "There is no project server for the connection to talk to! Kaboom!"
+          # Create a local program that is running off the document server
+          program = Program.new
           TestCommunicationServer.communicator.run_project(project.parent_branch.head_revision_number, 
                                                             project.project_number.to_s,
                                                             project.parent_branch.branch_number.to_s,
-                                                            connection)
+                                                            @document_server.local_connection,
+                                                            program)
       end
     end
 end

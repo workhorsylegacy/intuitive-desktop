@@ -98,6 +98,7 @@ module Models
         end
         
         def self.from_number(branch, number)
+            number = number.to_i
             branch.projects.each do |project|
                 return project if project.project_number == number
             end

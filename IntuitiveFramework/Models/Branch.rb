@@ -85,6 +85,7 @@ module Models
         end
         
         def self.from_number(number)
+            number = number.to_i
             (Dir.entries($DataSystem) - ['.', '..']).each do |entry|
                 next unless File.directory?("#{$DataSystem}#{entry}/") && entry.split('_').first == "branch"
                 
