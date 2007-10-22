@@ -1,27 +1,14 @@
 
 
 module Servers
-    # FIXME: Change this to store the info in the dbus service instead of each memory space, to create a real service.
     class CommunicationServer    
-        def self.start(ip_address, in_port, out_port, use_local_web_service = true, on_error = :log_to_file)            
-            # Make sure the on_error is valid
-            valid_on_error = [:log_to_file, :log_to_std_error, :throw]
-            message = "The #{self.class.name} can only use #{valid_on_error.join(', ')} for on_error in its start method."
-            raise message unless valid_on_error.include? on_error
-            @@on_error = on_error
-            
-            # Save out web service connection type
-            @@use_local_web_service = use_local_web_service
+        def self.start()
             
             # Create the Dbus service
             bus = DBus::SessionBus.instance
             service = bus.request_service("org.intuitivedesktop.service")
             communication_server = CommunicationServerDBus.new("/org/intuitivedesktop/CommunicationServer")
             service.export(communication_server)
-            
-            # Create a communication controller for routing DBus and Proxy communication over the Internet
-            @@communicator = Controllers::CommunicationController.new(ip_address, in_port, out_port)
-            @@network_connection = @@communicator.create_connection
             
             # Start the Dbus service main loop in a thread
             puts "Running Intuitive Desktop Communication Server"
@@ -33,29 +20,9 @@ module Servers
             @@main_loop.abort_on_exception = true
         end
         
-        def self.ip_address
-            @@communicator.ip_address
-        end
-        
-        def self.in_port
-            @@communicator.in_port
-        end
-        
-        def self.out_port
-            @@communicator.out_port
-        end        
-        
         def self.stop
             @@main_loop.exit if @@main_loop
             @@main = @@main_loop = nil
-        end
-        
-        def self.on_error
-            @@on_error
-        end
-        
-        def self.use_local_web_service
-            @@use_local_web_service
         end
         
         def self.get_communicator
@@ -73,18 +40,6 @@ module Servers
             
             # Return the wrapped communicator
             return CommunicationServerWrapper.new(communicator)
-        end
-        
-        def self.network_connection
-            @@network_connection
-        end
-        
-        def self.get_new_network_connection
-            @@communicator.create_connection
-        end
-        
-        def self.network_communicator
-            @@communicator
         end
     end
     
@@ -112,6 +67,82 @@ module Servers
             dbus_method("clear_everything", "out result:b") do
                 [web_service.EmptyEverything()]
             end 
+            
+            dbus_method("setup", "in ip_address:s, in in_port:i, in out_port:i, in use_local_web_service:b, in on_error:s", "out result:b") do |ip_address, in_port, out_port, use_local_web_service = true, on_error = :log_to_file|
+                raise "Already setup" if @is_setup
+                
+                # Make sure the on_error is valid
+                valid_on_error = [:log_to_file, :log_to_std_error, :throw]
+                message = "The #{self.class.name} can only use #{valid_on_error.join(', ')} for on_error in its start method."
+                raise message unless valid_on_error.include? on_error
+                @on_error = on_error
+                
+                # Save out web service connection type
+                @use_local_web_service = use_local_web_service
+            
+            
+                # Create a communication controller for routing DBus and Proxy communication over the Internet
+                @communicator = Controllers::CommunicationController.new(ip_address, in_port, out_port)
+                @generic_connection = @communicator.create_connection
+                
+                @is_setup = true
+                
+                [true]
+            end
+            
+            dbus_method("ip_address", "out result:s") do
+                [@communicator.ip_address]
+            end
+            
+            dbus_method("in_port", "out result:i") do
+                [@communicator.in_port]
+            end
+            
+            dbus_method("out_port", "out result:i") do
+                [@communicator.out_port]
+            end
+            
+            dbus_method("on_error", "out result:b") do
+                [@on_error]
+            end
+            
+            dbus_method("use_local_web_service", "out result:b") do
+                [@use_local_web_service]
+            end
+            
+            dbus_method("create_network_connection", "out ip_address:s, out port:i, out connection_id:i") do
+                c = @communicator.create_connection
+                [c[:ip_address], c[:port], c[:id]]
+            end
+            
+            dbus_method("send_message", "in source_connection:s, in dest_connection:s, in message:s, out result:b") do |source_connection, dest_connection, message|
+                source =
+                if source_connection == :generic
+                    @generic_connection
+                else
+                    YAML.load(source_connection)
+                end
+                @communicator.send(source,
+                                    YAML.load(dest_connection),
+                                     YAML.load(message))
+                                     
+                [true]
+            end
+            
+            dbus_method("wait_for_message", "in connection:s, in message:s, out result:s") do |connection, message|
+                source =
+                if connection == :generic
+                    @generic_connection
+                else
+                    YAML.load(connection)
+                end
+                result = @communicator.wait_for_command(connection,
+                                              YAML.load(message))
+                                              
+                [YAML.dump(result)]
+            end
+            
+            private
             
             # Will return a reference to the web service
             def web_service
@@ -178,18 +209,18 @@ module Servers
             message = {:command => :run_project,
                         :project_number => project_number,
                         :branch_number => branch_number}
-            CommunicationServer.network_communicator.send(CommunicationServer.network_connection, document_server_connection, message)
+            send_message(:generic, document_server_connection, message)
         
             # Wait for the server to ok the process and give up a new connection to it
-            message = CommunicationServer.network_communicator.wait_for_command(CommunicationServer.network_connection, :ok_to_run_project)
+            message = wait_for_message(:generic, :ok_to_run_project)
             new_server_connection = message[:new_connection]
             
             # Confirm that we got the new server connection
             message = { :command => :confirm_new_connection }
-            CommunicationServer.network_communicator.send(CommunicationServer.network_connection, new_server_connection, message)
+            send_message(:generic, new_server_connection, message)
             
             # Get a new connection for the Model and Controller
-            message = CommunicationServer.network_communicator.wait_for_command(CommunicationServer.network_connection, :got_model_and_controller_connections)
+            message = wait_for_message(:generic, :got_model_and_controller_connections)
             model_connections = message[:model_connections]
             main_controller_connection = message[:main_controller_connection]
             document_states = message[:document_states]
@@ -221,5 +252,50 @@ module Servers
         def clear_everything
             @real_communication_server.clear_everything
         end
+        
+        def ip_address
+            @real_communication_server.ip_address
+        end
+            
+        def in_port
+            @real_communication_server.in_port
+        end
+            
+        def out_port
+            @real_communication_server.out_port
+        end
+            
+        def on_error
+            @real_communication_server.on_error
+        end
+            
+        def use_local_web_service
+            @real_communication_server.use_local_web_service
+        end
+        
+        def create_network_connection
+            c = @real_communication_server.create_network_connection
+            { :ip_address => c[0], :port => c[1], :id => c[2] }
+        end
+        
+        def send_message(source_connection, dest_connection, message)
+            source_connection = YAML.dump(msource_connectionessage) if source_connection != :generic
+            
+            @real_communication_server.send_message(
+                                                 source_connection,
+                                                 YAML.dump(dest_connection),
+                                                 YAML.dump(message))
+        end
+        
+        def wait_for_message(connection, message)
+            connection = YAML.dump(connection) if connection != :generic
+            
+            result = @real_communication_server.wait_for_message(
+                                                connection, 
+                                                YAML.dump(message))
+                                                
+            YAML.load(result)
+        end
     end
 end
+

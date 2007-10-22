@@ -5,7 +5,7 @@ require 'socket'
 # TODO: Intead of using YAML to convert the messages to strings, use binary
 # FIXME: Fix the issue with having to use one large packet to send each message. We will have to plit the messages somehow. TCPServer?
 # TODO: Figure out how to make the wait_for methods not need to use fast sleep counts to be responsive 
-# TODO: Figure out how to noy have to re-connect when sending to the same place
+# TODO: Figure out how to not have to re-connect when sending to the same place
 module Controllers
     class CommunicationController
 	    attr_reader :ip_address, :in_port, :out_port, :is_open, :is_incoming_open, :is_outgoing_open
