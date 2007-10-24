@@ -95,8 +95,7 @@ Thread.abort_on_exception = true
 #            view_tests,
 #            desktop_test]
             [
-              [Servers::TestCommunicationServer.suite,
-              Controllers::TestCommunicationController.suite]
+              [Servers::TestCommunicationServer.suite]
             ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite

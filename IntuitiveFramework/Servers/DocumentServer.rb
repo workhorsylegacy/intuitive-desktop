@@ -6,27 +6,22 @@ module Servers
 	class DocumentServer
         attr_reader :local_connection
 
-        def initialize(ip_address, incoming_port, outgoing_port, logger_output=$stdout)
+        def initialize(logger_output=$stdout)
             # Make the data system if it does not exist
             Dir.mkdir($DataSystem) unless File.directory?($DataSystem)
-        
-            # Create a message controller to send results back
-            @ip_address = ip_address
-            @incoming_port = incoming_port
-            @outgoing_port = outgoing_port
-            @communicator = Controllers::CommunicationController.new(@ip_address, @incoming_port, @outgoing_port)
             
             # a hash to store known identities
             @identities = {}.extend(MonitorMixin)
             
-            @local_connection = @communicator.create_connection
+            @communicator = Servers::CommunicationServer.get_communicator()
+            @local_connection = @communicator.create_network_connection
             
             @logger = Helpers::Logger.new(logger_output)
             
             # Respond to each request
             @thread = Thread.new {
                 loop do
-                    @communicator.wait_for_any_command(@local_connection) { |message|
+                    @communicator.wait_for_any_message(@local_connection) { |message|
                         case message[:command]
                             # Find and return any matching projects
                             when :find_projects
@@ -58,7 +53,8 @@ module Servers
         end
         
         def close
-            @communicator.close if @communicator
+            @communicator.destroy_network_connection(@local_connection)
+            #@communicator.close if @communicator
             @thread.exit
             @logger.close
         end
@@ -73,7 +69,7 @@ module Servers
             
             message = {:command => :found_projects, 
                         :projects => projects}
-            @communicator.send(@local_connection, remote_connection, message)        
+            @communicator.send_message(@local_connection, remote_connection, message)        
         end
         
         def run_project(message)
@@ -85,10 +81,10 @@ module Servers
             # Create another connection just for this conversation and tell the remote machine to use it
             temp_connection = @communicator.create_connection
             message = {:command => :ok_to_run_project, :new_connection => temp_connection}
-            @communicator.send(temp_connection, remote_connection, message)
+            @communicator.send_message(temp_connection, remote_connection, message)
             
             # Confirm that the client is using the new connection
-            @communicator.wait_for_command(temp_connection, :confirm_new_connection)
+            @communicator.wait_for_message(temp_connection, :confirm_new_connection)
             
             # Get the Project
             branch = Models::Branch.from_number(branch_number)
@@ -126,7 +122,7 @@ module Servers
                         :document_states => project.document_states,
                         :document_views => project.document_views,
                         :main_view_name => project.main_view_name}
-            @communicator.send(temp_connection, remote_connection, message)
+            @communicator.send_message(temp_connection, remote_connection, message)
             
             # Remove the temporary connection
             @communicator.destroy_connection(temp_connection)

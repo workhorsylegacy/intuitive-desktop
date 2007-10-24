@@ -66,11 +66,11 @@ module Controllers
             
 	        loop do
 	           message = nil
-	           @in_commands.synchronize {
+	           @in_commands.synchronize do
     	           if @in_commands[id].length > 0
     	               message = @in_commands[id].shift
     	           end
-	           }
+	           end
 	           
 	           if message != nil
 	               yield(message)

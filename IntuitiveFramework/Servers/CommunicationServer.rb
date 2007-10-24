@@ -1,31 +1,42 @@
 
 
 module Servers
-    class CommunicationServer    
+    class CommunicationServer
+        @@main_loop = nil
+        
+        # FIXME: Change this to start the service if is not already running, and drop the main loop
         def self.start()
+            return unless @@main_loop == nil
             
-            # Create the Dbus service
-            bus = DBus::SessionBus.instance
-            service = bus.request_service("org.intuitivedesktop.service")
-            communication_server = CommunicationServerDBus.new("/org/intuitivedesktop/CommunicationServer")
-            service.export(communication_server)
+#            begin
+                # Create the Dbus service
+                bus = DBus::SessionBus.instance
+                service = bus.request_service("org.intuitivedesktop.service")
+                communication_server = CommunicationServerDBus.new("/org/intuitivedesktop/CommunicationServer")
+                service.export(communication_server)
             
-            # Start the Dbus service main loop in a thread
-            puts "Running Intuitive Desktop Communication Server"
-            @@main_loop = Thread.new(bus) do |bus|
-                @@main = DBus::Main.new
-                @@main << bus
-                @@main.run
-            end
-            @@main_loop.abort_on_exception = true
+                # Start the Dbus service main loop in a thread
+                puts "Running Intuitive Desktop Communication Server"
+                @@main_loop = Thread.new(bus) do |bus|
+                    @@main = DBus::Main.new
+                    @@main << bus
+                    @@main.run
+                end
+                @@main_loop.abort_on_exception = true
+#            rescue Exception => err
+#            
+#            end
         end
         
+        # FIXME: Change this to stop the service if it is running
         def self.stop
             @@main_loop.exit if @@main_loop
             @@main = @@main_loop = nil
         end
         
         def self.get_communicator
+            start()
+            
             session_bus = DBus::SessionBus.instance
             
             # Get the Intuitive-Desktop service
@@ -46,7 +57,7 @@ module Servers
     private
     
     # The class that holds all the methods to be accessed by the dbus object
-    class CommunicationServerDBus < DBus::Object
+    class CommunicationServerDBus < DBus::Object        
         dbus_interface "org.intuitivedesktop.CommunicationServerInterface" do
             dbus_method("is_running", "out message:b") do
                 [web_service.IsRunning()]
@@ -68,13 +79,13 @@ module Servers
                 [web_service.EmptyEverything()]
             end 
             
-            dbus_method("setup", "in ip_address:s, in in_port:i, in out_port:i, in use_local_web_service:b, in on_error:s", "out result:b") do |ip_address, in_port, out_port, use_local_web_service = true, on_error = :log_to_file|
+            dbus_method("setup_network", "in ip_address:s, in in_port:i, in out_port:i, in use_local_web_service:b, in on_error:s, out result:b") do |ip_address, in_port, out_port, use_local_web_service, on_error|
                 raise "Already setup" if @is_setup
                 
                 # Make sure the on_error is valid
-                valid_on_error = [:log_to_file, :log_to_std_error, :throw]
-                message = "The #{self.class.name} can only use #{valid_on_error.join(', ')} for on_error in its start method."
-                raise message unless valid_on_error.include? on_error
+                on_error_options = [:log_to_file, :log_to_std_error, :throw]
+                message = "The #{self.class.name} can only use #{on_error_options.join(', ')} for on_error in its start method."
+                raise message unless on_error_options.include? on_error.to_sym
                 @on_error = on_error
                 
                 # Save out web service connection type
@@ -102,17 +113,23 @@ module Servers
                 [@communicator.out_port]
             end
             
-            dbus_method("on_error", "out result:b") do
-                [@on_error]
+            dbus_method("on_error", "out result:s") do
+                [@on_error.to_s]
             end
             
             dbus_method("use_local_web_service", "out result:b") do
                 [@use_local_web_service]
             end
             
-            dbus_method("create_network_connection", "out ip_address:s, out port:i, out connection_id:i") do
+            #FIXME: We should return an as (array string) here, but dbus is broken
+            dbus_method("create_network_connection", "out result:s") do
                 c = @communicator.create_connection
-                [c[:ip_address], c[:port], c[:id]]
+                [c[:ip_address] + ":" + c[:port].to_s + ":" + c[:id].to_s]
+            end
+            
+            dbus_method("destroy_network_connection", "in connection:s, out result:b") do |connection|
+                @communicator.destroy_connection(YAML.load(connection))
+                [true]
             end
             
             dbus_method("send_message", "in source_connection:s, in dest_connection:s, in message:s, out result:b") do |source_connection, dest_connection, message|
@@ -142,13 +159,19 @@ module Servers
                 [YAML.dump(result)]
             end
             
+            dbus_method("wait_for_any_message", "in connection:s, out result:s") do |connection|
+                result = @communicator.wait_for_any_command(YAML.load(connection))
+                                              
+                [YAML.dump(result)]
+            end
+            
             private
             
             # Will return a reference to the web service
             def web_service
                 unless @web_service
                     wsdl = 
-                    if Servers::CommunicationServer.use_local_web_service
+                    if @use_local_web_service
                         "http://localhost:3000/projects/service.wsdl"
                     else
                         "http://service.intuitive-desktop.org/projects/service.wsdl"
@@ -253,6 +276,10 @@ module Servers
             @real_communication_server.clear_everything
         end
         
+        def setup_network(ip_address, in_port, out_port, use_local_web_service, on_error)
+            @real_communication_server.setup_network(ip_address, in_port, out_port, use_local_web_service, on_error)
+        end
+        
         def ip_address
             @real_communication_server.ip_address
         end
@@ -274,8 +301,12 @@ module Servers
         end
         
         def create_network_connection
-            c = @real_communication_server.create_network_connection
-            { :ip_address => c[0], :port => c[1], :id => c[2] }
+            c = @real_communication_server.create_network_connection.first
+            { :ip_address => c.split(":")[0], :port => c.split(":")[1].to_i, :id => c.split(":")[2].to_i }
+        end
+        
+        def destroy_network_connection(connection)
+            @real_communication_server.destroy_network_connection(YAML.dump(connection))
         end
         
         def send_message(source_connection, dest_connection, message)
@@ -293,6 +324,13 @@ module Servers
             result = @real_communication_server.wait_for_message(
                                                 connection, 
                                                 YAML.dump(message))
+                                                
+            YAML.load(result)
+        end
+        
+        def wait_for_any_message(connection)
+            result = @real_communication_server.wait_for_any_message( 
+                                                YAML.dump(connection))
                                                 
             YAML.load(result)
         end
