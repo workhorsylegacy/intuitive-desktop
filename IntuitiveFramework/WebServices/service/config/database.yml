@@ -15,7 +15,7 @@ development:
   adapter: mysql
   database: service_development
   username: root
-  password:
+  password: letmein
   socket: /var/run/mysqld/mysqld.sock
 
 # Warning: The database defined as 'test' will be erased and

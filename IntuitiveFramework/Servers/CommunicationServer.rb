@@ -23,8 +23,8 @@ module Servers
                     @@main.run
                 end
                 @@main_loop.abort_on_exception = true
-#            rescue Exception => err
-#            
+#            rescue DBus::Connection::NameRequestError => err
+#                puts "Already running ..."
 #            end
         end
         
