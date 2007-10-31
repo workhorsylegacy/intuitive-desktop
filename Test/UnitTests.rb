@@ -29,6 +29,7 @@ require 'Controllers/TestDataController'
 require 'Controllers/TestRevisionedFileSystemController'
 require 'Controllers/TestSearchController'
 require 'Controllers/TestUserController'
+require 'Controllers/TestSystemCommunicationController'
 
 # Servers
 require 'Servers/TestIdentityServer'
@@ -65,7 +66,8 @@ Thread.abort_on_exception = true
         Controllers::TestDataController.suite,
         Controllers::TestRevisionedFileSystemController.suite,
         Controllers::TestSearchController.suite,
-        Controllers::TestUserController.suite]
+        Controllers::TestUserController.suite,
+        Controllers::TestSystemCommunicationController.suite]
     end
 
     def server_tests
@@ -95,7 +97,7 @@ Thread.abort_on_exception = true
 #            view_tests,
 #            desktop_test]
             [
-              [Servers::TestCommunicationServer.suite]
+              [Controllers::TestSystemCommunicationController.suite]
             ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite
