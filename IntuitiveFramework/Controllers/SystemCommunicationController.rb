@@ -7,10 +7,10 @@ module Controllers
     class SystemCommunicationController
       attr_reader :name, :is_open, :is_incoming_open, :is_outgoing_open
       
-      # FIXME: Move this into the project folder for now
-      @@file_path = "/home/matt/Desktop/poop/"
-      
       def initialize(name = :random)
+          # Make sure the temp directory exist
+          FileUtils.mkdir(self.class.file_path) unless File.directory?(self.class.file_path)
+          
           # Validate arguments
           raise "The name cannot be nil" unless name
           raise "The name '#{name}' is already used by a service." if name != :random && self.class.is_name_used?(name)
@@ -36,11 +36,15 @@ module Controllers
       end
       
       def full_name
-          @@file_path + @name
+          self.class.file_path + @name
+      end
+      
+      def self.file_path
+          $TempCommunicationDirectory
       end
       
       def self.is_name_used?(name)
-          full_name = @@file_path + name
+          full_name = file_path + name
           retval = false
           
           # If the file exist, and we can connect to it, it is used
@@ -116,7 +120,7 @@ module Controllers
             message_yaml = YAML.dump(complete_message)
 
             # Send the message to the destination            
-            out_socket = UNIXSocket.new(@@file_path + complete_message[:dest_connection])
+            out_socket = UNIXSocket.new(self.class.file_path + complete_message[:dest_connection])
             out_socket.write message_yaml
             out_socket.close
         end
@@ -145,7 +149,7 @@ module Controllers
           begin
               @in_socket = UNIXServer.new(self.full_name)
           rescue Errno::EADDRINUSE
-             raise "System Communication Controller could not bind to the name '#{@name}' because it is already in use."
+             raise "The name '#{@name}' is already used by a service."
           end
               
           @in_thread = Thread.new do
@@ -177,6 +181,7 @@ module Controllers
           @in_thread.exit
           @in_socket.close
           File.delete(self.full_name) if File.exist?(self.full_name)
+          @in_commands.clear
       end
       
       def validate_connection(connection)

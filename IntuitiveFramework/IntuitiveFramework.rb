@@ -95,6 +95,7 @@ unless defined? Models::USER_DATABASE_CONNECTION
 end
 
 $DataSystem = "#{path}/data_system/"
+$TempCommunicationDirectory = "#{path}/temp_communication/"
 
 # Create a global string for each namespace file
 $IntuitiveFramework_Helpers = "#{path}/Helpers/Namespace"
