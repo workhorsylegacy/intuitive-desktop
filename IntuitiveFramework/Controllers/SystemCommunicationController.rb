@@ -119,10 +119,16 @@ module Controllers
             # Get the message into YAML format
             message_yaml = YAML.dump(complete_message)
 
-            # Send the message to the destination            
-            out_socket = UNIXSocket.new(self.class.file_path + complete_message[:dest_connection])
-            out_socket.write message_yaml
-            out_socket.close
+            # Send the message to the destination
+            out_socket = nil
+            begin
+                out_socket = UNIXSocket.new(self.class.file_path + complete_message[:dest_connection])
+                out_socket.write message_yaml
+            rescue Exception
+                raise "No connection named '#{dest_name}' to send to."
+            ensure
+                out_socket.close if out_socket
+            end
         end
       
       def open

@@ -149,10 +149,10 @@ module Controllers
             
             def test_missing_destination
                 # Send a message to a missing destination
-                @communicator_one.send("black hole", { :command => :yo, :body => "what up?" })
-                
-                # add these tests!
-                raise "a test for wait_for_command, and wait_for_any_command"
+                e = assert_raise(RuntimeError) do
+                    @communicator_one.send("black hole", { :command => :yo, :body => "what up?" })
+                end
+                assert_equal("No connection named 'black hole' to send to.", e.message)
             end
       end
 end
