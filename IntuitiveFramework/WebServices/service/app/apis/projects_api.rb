@@ -18,10 +18,6 @@ class ProjectsApi < ActionWebService::API::Base
 			:returns => [[[{:name => :string}, {:description => :string}, {:user_id => :string}, 
                       {:revision => :string}, {:project_number => :string}, {:branch_number => :string},
                       {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}]]]
-                      
-  api_method :run_project,
-      :expects => [{:revision => :string}, {:project_number => :string}, {:branch_number => :string},
-                    {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}]
                     
   api_method :register_identity,
       :expects => [{:name => :string}, {:user_id => :string}, {:description => :string}],

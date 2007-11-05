@@ -3,65 +3,50 @@ require $IntuitiveFramework_Servers
 
 module Servers
   class TestCommunicationServer < Test::Unit::TestCase
-      # FIXME: We need to figure out how to stop and un-register a dbus service.
-      # This is a hack to just turn it on and leave it on for all tests. This
-      # is bad for unit testing. It should be restarted each time.
-      @@communicator = nil
-      @@user = nil
-      
-      def self.communicator
-          if @@communicator == nil
-               # Start the communication server
-               @@communicator = Servers::CommunicationServer.get_communicator
-               @@communicator.setup_network("127.0.0.1", 5555, 6666, true, "throw")
-          end
-          
-          @@communicator
-      end
-      
-      def self.user
-          unless @@user
-               # create a test user
-               public_key, private_key = Models::EncryptionKey.make_public_and_private_keys
-               @@user = Models::User.new
-               @@user.name = 'bobrick'
-               @@user.public_universal_key = public_key.key.to_s
-               @@user.private_key = private_key.key.to_s
-               @@user.save!         
-          end
-          
-          @@user
-      end
+      @communication_server = nil
+      @user = nil
             
       def setup
-          # FIXME: Because ruby dbus breaks when returning a large aas (array, array, string) 
-          # Like in search_for_projects_online, we clear the database befor each test
-          TestCommunicationServer.communicator.clear_everything
+          Servers::CommunicationServer.force_kill_other_instances()
+          
+          # Start the communication server
+          # FIXME: We should not be talking to the sever directly like this. Make a
+          # the static methods talk to the real server using a proxy
+          @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, 6666, true, :throw)
+          
+          # create a test user
+          public_key, private_key = Models::EncryptionKey.make_public_and_private_keys
+          @user = Models::User.new
+          @user.name = 'bobrick'
+          @user.public_universal_key = public_key.key.to_s
+          @user.private_key = private_key.key.to_s
+          @user.save! 
+          
+          @communication_server.clear_everything
           
           # Create the document server
           proc = Proc.new do |status, message, exception| 
               raise exception if exception
               raise message
           end
-          @document_server = Servers::DocumentServer.new(proc)
+#          @document_server = Servers::DocumentServer.new(proc)
       end
             
       def teardown
-          # FIXME: Because ruby dbus breaks when returning a large aas (array, array, string) 
-          # Like in search_for_projects_online, we clear the database after each test
-          TestCommunicationServer.communicator.clear_everything
+          @communication_server.clear_everything
           
-          @document_server.close if @document_server
+          @communication_server.close if @communication_server
+          @user.destroy if @user
+#          @document_server.close if @document_server
       end
             
       def test_is_running
-          assert(TestCommunicationServer.communicator.is_running)
+          assert(@communication_server.is_running)
       end
-            
-=begin
+
       def test_advertise_project_online
           # Create the project in a local repository
-          branch = Models::Branch.new('Map Example Trunk', TestCommunicationServer.user.public_universal_key)
+          branch = Models::Branch.new('Map Example Trunk', @user.public_universal_key)
           project = Models::Project.new(branch, 'Map Example')
           project.description = "A simple map program. Allows you to search for locations by name, and see them on the map."
           
@@ -90,11 +75,11 @@ module Servers
           Controllers::DataController.save_revision(branch)     
           
           # Advertise the project online
-          assert(TestCommunicationServer.communicator.advertise_project_online(project))
+          assert(@communication_server.advertise_project_online(project))
           
           # Look up the project online and make sure it is the same
           begin
-              details = TestCommunicationServer.communicator.search_for_projects_online("Map Example")
+              details = @communication_server.search_for_projects_online("Map Example")
           rescue Exception
               raise "This will explode because there seems to be a limit to the size of a dbus message."
           end
@@ -104,7 +89,7 @@ module Servers
           assert_equal(project.parent_branch.head_revision_number, details.first[:revision])
           assert_equal(project.project_number.to_s, details.first[:project_number])
       end
-=end
+
 =begin      
       def test_run_project_online
           # Create the project in a local repository

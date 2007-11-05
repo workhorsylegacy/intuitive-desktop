@@ -17,7 +17,6 @@ libs = {'gtk2' => ["'gtk2'",  :require, "ruby-gnome2 or libcairo-ruby packages"]
         'openssl' => ["'openssl'", :require, "libopenssl-ruby package"],
         'base64' => ["'base64'", :require, "libruby or ruby1.8-dev packages"],
         'sqlite3' => ["'sqlite3'", :require, "libsqlite3-ruby package"],
-        'dbus' => ["'ruby dbus'", :require, "download from https://trac.luon.net/ruby-dbus/ . Someone package this. Or show me how to package ~ mattjones@workhorsy.org"],
         'soap/wsdlDriver' => ["'WSDL Driver'", :require, "standard Ruby install"]}
 
 # Load all the libraries and create a list of coherent errors if any are not installed.

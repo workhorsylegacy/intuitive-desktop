@@ -63,6 +63,10 @@ module Controllers
           return retval
       end
       
+      def self.get_socket_file_name(name)
+          file_path + name
+      end
+      
       # Will block until the next command is received, then return it
       def wait_for_any_command
           loop do
