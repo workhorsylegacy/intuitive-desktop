@@ -11,4 +11,5 @@ path = File.dirname(File.expand_path(__FILE__))
 'Logger',
 'MacroFilter',
 'Proxy',
+'SystemProxy',
 'Timer'].each { |file_name| require "#{path}/#{file_name}" }

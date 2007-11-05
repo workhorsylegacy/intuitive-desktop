@@ -51,7 +51,9 @@ module Servers
         
         def close
             @system_communicator.close if @system_communicator
+            @net_communicator.close if @net_communicator
             @system_communicator = nil
+            @net_communicator = nil
         end
     
         def is_running
@@ -61,7 +63,7 @@ module Servers
         def advertise_project_online(project)
 
             connection = create_net_connection
-            
+
             @web_service.RegisterProject(
                                          project.name, 
                                          project.description, 
@@ -70,18 +72,19 @@ module Servers
                                          project.project_number.to_s,
                                          project.parent_branch.branch_number.to_s,
                                          connection[:ip_address],
-                                         connection[:in_port],
+                                         connection[:port],
                                          connection[:id])
             
             connection
         end
             
         def search_for_projects_online(search)
-            p = @web_service.SearchProjects(search)
-            
-            { :name => p[0], :description => p[1], 
-              :user_id => p[2], :revision => p[3].to_i, 
-              :project_number => p[4], :location => p[5] }
+            projects = @web_service.SearchProjects(search)
+            projects.collect do |p|
+                { :name => p[0], :description => p[1], 
+                  :user_id => p[2], :revision => p[3].to_i, 
+                  :project_number => p[4], :location => p[5] }
+            end
         end            
             
         def send_message(source_connection, dest_connection, message)

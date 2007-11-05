@@ -14,6 +14,7 @@ require 'test/unit/testcase'
 require 'Helpers/TestBinding'
 require 'Helpers/TestLogger'
 require 'Helpers/TestProxy'
+require 'Helpers/TestSystemProxy'
 
 # Models
 require 'Models/TestBranch'
@@ -49,7 +50,8 @@ Thread.abort_on_exception = true
     def helper_tests
         [Helpers::TestBinding.suite,
         Helpers::TestLogger.suite,
-        Helpers::TestProxy.suite]
+        Helpers::TestProxy.suite,
+        Helpers::TestSystemProxy.suite]
     end
 
     def model_test
@@ -99,7 +101,8 @@ Thread.abort_on_exception = true
             [
               [Controllers::TestCommunicationController.suite,
                Controllers::TestSystemCommunicationController.suite,
-               Servers::TestCommunicationServer.suite]
+               Servers::TestCommunicationServer.suite,
+               Helpers::TestSystemProxy.suite]
             ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite

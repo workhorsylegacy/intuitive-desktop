@@ -2,6 +2,7 @@
 require 'monitor'
 require 'socket'
 
+# FIXME: Rename to NetCommunicationController
 # TODO: Intead of using YAML to convert the messages to strings, use binary
 # FIXME: Fix the issue with having to use one large packet to send each message. We will have to plit the messages somehow. TCPServer?
 # TODO: Figure out how to make the wait_for methods not need to use fast sleep counts to be responsive 
