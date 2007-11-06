@@ -4,24 +4,35 @@ require $IntuitiveFramework_Models
 
 module Servers
 	class DocumentServer
-        attr_reader :local_connection
+        attr_reader :generic_net_connection
 
-        def initialize(logger_output=$stdout)
+        def initialize(ip_address, in_port, out_port, logger_output=$stdout)
             # Make the data system if it does not exist
             Dir.mkdir($DataSystem) unless File.directory?($DataSystem)
             
             # a hash to store known identities
             @identities = {}.extend(MonitorMixin)
             
-            @communicator = Servers::CommunicationServer.get_communicator()
-            @local_connection = @communicator.create_network_connection
+            # Create the net communicator
+            @net_communicator = Controllers::CommunicationController.new(ip_address, in_port, out_port)
+            @generic_net_connection = @net_communicator.create_connection
+                    
+            # Create the system communicator
+            if Controllers::SystemCommunicationController.is_name_used?("DocumentServer")
+                raise "The Document Server is already running."
+            else
+                @system_communicator = Controllers::SystemCommunicationController.new("DocumentServer")
+            end
+            
+            # Make the server available over the system communicator
+            Helpers::SystemProxy.make_object_proxyable(self, @system_communicator)
             
             @logger = Helpers::Logger.new(logger_output)
             
             # Respond to each request
             @thread = Thread.new {
                 loop do
-                    @communicator.wait_for_any_message(@local_connection) { |message|
+                    @net_communicator.wait_for_any_command(@generic_net_connection) { |message|
                         case message[:command]
                             # Find and return any matching projects
                             when :find_projects
@@ -49,12 +60,13 @@ module Servers
         end
         
         def is_open
-            @communicator.is_open
+            @net_communicator.is_open
         end
         
         def close
-            @communicator.destroy_network_connection(@local_connection)
-            #@communicator.close if @communicator
+            #@net_communicator.destroy_network_connection(@generic_net_connection)
+            @net_communicator.close if @net_communicator
+            @system_communicator.close if @system_communicator
             @thread.exit
             @logger.close
         end
@@ -69,7 +81,7 @@ module Servers
             
             message = {:command => :found_projects, 
                         :projects => projects}
-            @communicator.send_message(@local_connection, remote_connection, message)        
+            @net_communicator.send_message(@generic_net_connection, remote_connection, message)        
         end
         
         def run_project(message)
@@ -79,12 +91,12 @@ module Servers
             branch_number = message[:branch_number]
 
             # Create another connection just for this conversation and tell the remote machine to use it
-            temp_connection = @communicator.create_connection
+            temp_connection = @net_communicator.create_connection
             message = {:command => :ok_to_run_project, :new_connection => temp_connection}
-            @communicator.send_message(temp_connection, remote_connection, message)
+            @net_communicator.send(temp_connection, remote_connection, message)
             
             # Confirm that the client is using the new connection
-            @communicator.wait_for_message(temp_connection, :confirm_new_connection)
+            @net_communicator.wait_for_command(temp_connection, :confirm_new_connection)
             
             # Get the Project
             branch = Models::Branch.from_number(branch_number)
@@ -101,7 +113,7 @@ module Servers
             # Make the Models available to proxy through the connection
             models_connections =
             new_models.collect do |name, model|
-                Helpers::Proxy.make_object_proxyable(model, @communicator)
+                Helpers::Proxy.make_object_proxyable(model, @net_communicator)
             end                               
             
             # Create the Controller
@@ -114,7 +126,7 @@ module Servers
             end
             
             # Make the Controller available to proxy through the connection
-            controller_connection = Helpers::Proxy.make_object_proxyable(new_controller, @communicator)
+            controller_connection = Helpers::Proxy.make_object_proxyable(new_controller, @net_communicator)
             # Send the client a connection for talking to the Model and Controller
             message = {:command => :got_model_and_controller_connections,
                         :model_connections => models_connections,
@@ -122,10 +134,10 @@ module Servers
                         :document_states => project.document_states,
                         :document_views => project.document_views,
                         :main_view_name => project.main_view_name}
-            @communicator.send_message(temp_connection, remote_connection, message)
+            @net_communicator.send(temp_connection, remote_connection, message)
             
             # Remove the temporary connection
-            @communicator.destroy_connection(temp_connection)
+            @net_communicator.destroy_connection(temp_connection)
         end     
 	end
 end

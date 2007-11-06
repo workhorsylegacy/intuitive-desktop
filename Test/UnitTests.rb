@@ -101,8 +101,9 @@ Thread.abort_on_exception = true
             [
               [Controllers::TestCommunicationController.suite,
                Controllers::TestSystemCommunicationController.suite,
-               Servers::TestCommunicationServer.suite,
-               Helpers::TestSystemProxy.suite]
+               Helpers::TestSystemProxy.suite,
+               Helpers::TestProxy.suite,
+               Servers::TestCommunicationServer.suite]
             ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite

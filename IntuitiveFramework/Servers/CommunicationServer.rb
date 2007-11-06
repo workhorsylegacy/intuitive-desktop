@@ -47,6 +47,9 @@ module Servers
             else
                 @system_communicator = Controllers::SystemCommunicationController.new("CommunicationServer")
             end
+            
+            # Make the server available over the system communicator
+            Helpers::SystemProxy.make_object_proxyable(self, @system_communicator)
         end
         
         def close
@@ -90,7 +93,7 @@ module Servers
         def send_message(source_connection, dest_connection, message)
             source =
             if source_connection == :generic
-                @generic_connection
+                @generic_net_connection
             else
                 source_connection
             end
@@ -127,11 +130,11 @@ module Servers
             # Create a proxy Models and Controller
             models = {}
             model_connections.each do |model_connection|
-                model = Helpers::Proxy.get_proxy_to_object(CommunicationServer.network_communicator, model_connection)
+                model = Helpers::Proxy.get_proxy_to_object(@net_communicator, model_connection)
                 models[model.name] = model
             end
             
-            controller = Helpers::Proxy.get_proxy_to_object(CommunicationServer.network_communicator, main_controller_connection)
+            controller = Helpers::Proxy.get_proxy_to_object(@net_communicator, main_controller_connection)
             
             # Connect the Program to the Models and Controller
             program.models = models
@@ -183,11 +186,11 @@ module Servers
         def wait_for_message(connection, message)
             source =
             if connection == :generic
-                @generic_connection
+                @generic_net_connection
             else
                 connection
             end
-            @net_communicator.wait_for_command(connection, message)
+            @net_communicator.wait_for_command(source, message)
         end
             
         def wait_for_any_message(connection)

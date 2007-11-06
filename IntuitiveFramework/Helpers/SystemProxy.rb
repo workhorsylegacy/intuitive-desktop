@@ -26,6 +26,7 @@ module Helpers
                                     retval = nil
                                     exception = nil
                                     exception_class_name = nil
+                                    exception_backtrace = nil
                                     
                                     # Try to call the method
                                     begin
@@ -36,13 +37,15 @@ module Helpers
                                     rescue Exception => e
                                         exception = e.message
                                         exception_class_name = e.class.name
+                                        exception_backtrace = e.backtrace
                                     end
                                     
                                     # Return any result and exceptions
                                     message = {:command => :send_to_object_return_value,
                                                 :return_value => retval,
                                                 :exception => exception,
-                                                :exception_class_name => exception_class_name}
+                                                :exception_class_name => exception_class_name,
+                                                :backtrace => exception_backtrace}
                                     commun.send(remote_connection, message)
                                 when :proxy_still_alive
                                     timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
@@ -129,7 +132,12 @@ module Helpers
                 message = communicator.wait_for_command(:send_to_object_return_value)
                     
                 # raise an error if the object on the Server threw
-                raise eval(message[:exception_class_name]), message[:exception] if message[:exception] && message[:exception_class_name]
+                if message[:exception]
+                    # FIXME: How can I append the backtrace from message[:backtrace] to this exception's backtrace?
+                    e = eval(message[:exception_class_name]).new(message[:exception])
+#                    puts message[:backtrace]
+                    raise e
+                end
 
                 return message[:return_value]
         rescue NameError => e

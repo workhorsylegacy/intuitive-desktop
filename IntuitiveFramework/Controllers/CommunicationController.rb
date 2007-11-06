@@ -114,6 +114,7 @@ module Controllers
             # Make sure the arguments are valid
             raise "The message to send was nil" unless message
             raise "The destination connection info is nil" unless dest_connection
+            raise "The source connection info is nil" unless source_connection
             
             # Make sure the local connection is valid
             raise "The source connection does not belong to this Communication Controller." unless @connections.has_key?(source_connection[:id])

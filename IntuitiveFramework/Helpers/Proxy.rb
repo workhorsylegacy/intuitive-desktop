@@ -6,6 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
+# FIXME: Rename to NetProxy
 module Helpers
 	class Proxy        
         def self.make_object_proxyable(object_to_serve, communicator, proxy_timeout=60)

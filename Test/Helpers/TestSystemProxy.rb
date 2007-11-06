@@ -17,7 +17,7 @@ module Helpers
             
             # Start proxying the object
             @server_communicator = Controllers::SystemCommunicationController.new("Thingy")
-            remote_connection = Helpers::SystemProxy.make_object_proxyable(@object, @server_communicator)
+            Helpers::SystemProxy.make_object_proxyable(@object, @server_communicator)
             
             # Get a proxy to the real object
             @local_communicator = Controllers::SystemCommunicationController.new()
