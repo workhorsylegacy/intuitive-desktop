@@ -48,6 +48,13 @@ module Servers
                 @system_communicator = Controllers::SystemCommunicationController.new("CommunicationServer")
             end
             
+            # Create an internal Document Server for now
+            #FIXME: Move the Document Server to be an item on the system that only uses the system communicator.
+            # It should not be nested in here, but a separate service.
+            proc = Proc.new { |status, message, exception| raise message }
+            @document_server = Servers::DocumentServer.new("127.0.0.1", 5000, 6000, proc)
+            @document_server_connection = @document_server.instance_variable_get("@net_communicator").create_connection
+            
             # Make the server available over the system communicator
             Helpers::SystemProxy.make_object_proxyable(self, @system_communicator)
         end
@@ -57,6 +64,8 @@ module Servers
             @net_communicator.close if @net_communicator
             @system_communicator = nil
             @net_communicator = nil
+            @document_server.close if @document_server
+            @document_server = nil
         end
     
         def is_running
@@ -104,23 +113,25 @@ module Servers
             nil
         end
             
-        def run_project(revision_number, project_number, branch_number, document_server_connection, program)
+        def self.run_project(communication_server, revision_number, project_number, branch_number, program)
+            document_server_connection = communication_server.instance_variable_get("@document_server_connection")
+            
             # Tell the Server that we want to run the project
             message = {:command => :run_project,
                         :project_number => project_number,
                         :branch_number => branch_number}
-            send_message(:generic, document_server_connection, message)
+            communication_server.send_message(:generic, document_server_connection, message)
         
             # Wait for the server to ok the process and give up a new connection to it
-            message = wait_for_message(:generic, :ok_to_run_project)
+            message = communication_server.wait_for_message(:generic, :ok_to_run_project)
             new_server_connection = message[:new_connection]
             
             # Confirm that we got the new server connection
             message = { :command => :confirm_new_connection }
-            send_message(:generic, new_server_connection, message)
+            communication_server.send_message(:generic, new_server_connection, message)
             
             # Get a new connection for the Model and Controller
-            message = wait_for_message(:generic, :got_model_and_controller_connections)
+            message = communication_server.wait_for_message(:generic, :got_model_and_controller_connections)
             model_connections = message[:model_connections]
             main_controller_connection = message[:main_controller_connection]
             document_states = message[:document_states]

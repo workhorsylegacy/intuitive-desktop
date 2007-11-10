@@ -23,26 +23,14 @@ module Servers
           @user.save! 
           
           @communication_server.clear_everything
-          
-          # Create the document server
-          proc = Proc.new do |status, message, exception| 
-              raise exception if exception
-              raise message
-          end
-          
-          @real_document_server = Servers::DocumentServer.new("127.0.0.1", 5000, 6000, proc)
-          @document_communicator = Controllers::SystemCommunicationController.new()
-          @document_server = Helpers::SystemProxy.get_proxy_to_object("DocumentServer", @document_communicator)
       end
             
       def teardown
           @communication_server.clear_everything if @communication_server
           
           @server_communicator.close if @server_communicator
-          @document_communicator.close if @document_communicator
           
           @real_communication_server.close if @real_communication_server
-          @real_document_server.close if @real_document_server
           
           @user.destroy if @user
       end
@@ -130,10 +118,13 @@ module Servers
           
           # Create a local program that is running off the document server
           program = Program.new
-          @communication_server.run_project(project.parent_branch.head_revision_number, 
+          # FIXME: This is breaking because it is proxing the program to the server and trying to run it.
+          # We need to gather all the project details and proxy them here to run them. The program object
+          # has a bunch of gobjects that can't be serialized over the net!
+          Servers::CommunicationServer.run_project(@communication_server,
+                                                            project.parent_branch.head_revision_number, 
                                                             project.project_number.to_s,
                                                             project.parent_branch.branch_number.to_s,
-                                                            @document_server.generic_net_connection,
                                                             program)
       end
     end

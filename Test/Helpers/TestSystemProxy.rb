@@ -50,7 +50,7 @@ module Helpers
         
         def test_exceptions
             # Make sure it forwards exceptions
-            assert_raise(Exception) { @proxy.kaboom }
+            assert_raise(Helpers::ProxiedException) { @proxy.kaboom }
             
             # Make sure the exception did not break the real object
             assert_equal("my name is object", @object.name)
@@ -70,7 +70,7 @@ module Helpers
             assert_equal(Object, @object.class)
             
             # Make sure that .class does not work
-            assert_raise(Exception) { @proxy.class }
+            assert_raise(Helpers::ProxiedException) { @proxy.class }
         end
         
 =begin FIXME: Add these tests to see what happens when the real object or proxy is GCed

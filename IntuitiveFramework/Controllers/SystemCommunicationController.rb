@@ -174,9 +174,9 @@ module Controllers
                       retry
                   end
 
-                  raise "Incoming message not a Hash." unless result.class == Hash
-                  raise "Incoming message missing source_connection." unless result.has_key?(:source_connection)
-                  raise "Incoming message missing dest_connection." unless result.has_key?(:dest_connection)
+                  raise "Message incoming to '#{name}' is not a Hash." unless result.class == Hash
+                  raise "Message incoming to '#{name}'is missing source_connection." unless result.has_key?(:source_connection)
+                  raise "Message incoming to '#{name}'is missing dest_connection." unless result.has_key?(:dest_connection)
                   
                   @in_commands.synchronize { @in_commands << result }
               end

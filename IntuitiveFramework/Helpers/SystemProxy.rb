@@ -133,10 +133,7 @@ module Helpers
                     
                 # raise an error if the object on the Server threw
                 if message[:exception]
-                    # FIXME: How can I append the backtrace from message[:backtrace] to this exception's backtrace?
-                    e = eval(message[:exception_class_name]).new(message[:exception])
-#                    puts message[:backtrace]
-                    raise e
+                    raise Helpers::ProxiedException.new(message[:exception], message[:backtrace])
                 end
 
                 return message[:return_value]

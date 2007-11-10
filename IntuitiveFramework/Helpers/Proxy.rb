@@ -6,6 +6,17 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
+module Helpers
+    class ProxiedException < Exception
+        attr_reader :backtrace, :message
+    
+        def initialize(message, backtrace)
+            @message = message
+            @backtrace = backtrace
+        end
+    end
+end
+
 # FIXME: Rename to NetProxy
 module Helpers
 	class Proxy        
@@ -145,7 +156,9 @@ module Helpers
                 message = communicator.wait_for_command(local_connection, :send_to_object_return_value)
                     
                 # raise an error if the object on the Server threw
-                raise eval(message[:exception_class_name]), message[:exception] if message[:exception] && message[:exception_class_name]
+                if message[:exception]
+                    raise Helpers::ProxiedException.new(message[:exception], message[:backtrace])
+                end
 
                 return message[:return_value]
     		rescue NameError => e
