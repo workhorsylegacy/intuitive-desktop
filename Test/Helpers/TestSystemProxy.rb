@@ -5,6 +5,9 @@ require $IntuitiveFramework_Controllers
 module Helpers
   class TestSystemProxy < Test::Unit::TestCase
         def setup
+            # Make sure nothing is using the name
+            assert_equal(false, Controllers::SystemCommunicationController.is_name_used?("Thingy"))
+            
             # Create an object that will be accessed by a proxy
             @object = Object.new
             def @object.name
@@ -16,17 +19,15 @@ module Helpers
             @object.name = "my name is object"
             
             # Start proxying the object
-            @server_communicator = Controllers::SystemCommunicationController.new("Thingy")
-            Helpers::SystemProxy.make_object_proxyable(@object, @server_communicator)
+            Helpers::SystemProxy.make_object_proxyable(@object, "Thingy")
             
             # Get a proxy to the real object
-            @local_communicator = Controllers::SystemCommunicationController.new()
-            @proxy = Helpers::SystemProxy.get_proxy_to_object("Thingy", @local_communicator)
+            @proxy = Helpers::SystemProxy.get_proxy_to_object("Thingy")
         end
         
         def teardown
-            @local_communicator.close if @local_communicator
-            @server_communicator.close if @server_communicator
+            # Make sure the communicator released its resources
+            assert_equal(false, Controllers::SystemCommunicationController.is_name_used?("Thingy"))
         end
         
         def test_proxy_object
@@ -46,6 +47,7 @@ module Helpers
             
             # Make sure .send works
             assert_equal(11, @proxy.send(:add, 4, 7))
+            assert_equal(11, @proxy.add(4, 7))
         end
         
         def test_exceptions

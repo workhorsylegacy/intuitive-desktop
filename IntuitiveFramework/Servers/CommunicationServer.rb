@@ -3,6 +3,7 @@
 module Servers
     # FIXME: Have this replace the DataController. Trash the old one.
     class CommunicationServer
+        attr_reader :net_communicator
         
         def self.force_kill_other_instances
             return unless Controllers::SystemCommunicationController.is_name_used?("CommunicationServer")
@@ -53,7 +54,7 @@ module Servers
             # It should not be nested in here, but a separate service.
             proc = Proc.new { |status, message, exception| raise message }
             @document_server = Servers::DocumentServer.new("127.0.0.1", 5000, 6000, proc)
-            @document_server_connection = @document_server.instance_variable_get("@net_communicator").create_connection
+            @document_server_connection = @document_server.instance_variable_get("@generic_net_connection")
             
             # Make the server available over the system communicator
             Helpers::SystemProxy.make_object_proxyable(self, @system_communicator)
@@ -141,11 +142,11 @@ module Servers
             # Create a proxy Models and Controller
             models = {}
             model_connections.each do |model_connection|
-                model = Helpers::Proxy.get_proxy_to_object(@net_communicator, model_connection)
+                model = Helpers::Proxy.get_proxy_to_object(communication_server.net_communicator, model_connection)
                 models[model.name] = model
             end
             
-            controller = Helpers::Proxy.get_proxy_to_object(@net_communicator, main_controller_connection)
+            controller = Helpers::Proxy.get_proxy_to_object(communication_server.net_communicator, main_controller_connection)
             
             # Connect the Program to the Models and Controller
             program.models = models

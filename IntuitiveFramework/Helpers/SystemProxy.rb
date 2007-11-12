@@ -8,7 +8,14 @@ require 'pathname'
 
 module Helpers
   class SystemProxy        
-        def self.make_object_proxyable(object_to_serve, communicator, proxy_timeout=60)
+        def self.make_object_proxyable(object_to_serve, name=:random, proxy_timeout=60)
+            communicator = Controllers::SystemCommunicationController.new(name)
+            
+            # Add a method for testing the connection
+            def object_to_serve.is_proxy_connected?
+                true
+            end
+            
             # Perform any calls to the Object from the communicator
             proxy_thread = Thread.new(object_to_serve, communicator) do |object, commun|
                     # Create a thread to timeout the proxy connection
@@ -63,18 +70,28 @@ module Helpers
                     end
             end
             
+            # Have the communicator close when the object to serve is GCed
+            ObjectSpace.define_finalizer(object_to_serve) do
+                communicator.close if communicator
+            end
+            
             nil
         end
     
-    def self.get_proxy_to_object(name, communicator, proxy_timeout=50)
-        proxy = Object.new
+    def self.get_proxy_to_object(name, proxy_timeout=50)
+        communicator = Controllers::SystemCommunicationController.new()
 
         # Save the connection info in instance variables
+        proxy = Object.new
         proxy.instance_variable_set('@proxy_communicator', communicator)
         proxy.instance_variable_set('@proxy_server_name', name)
         
         def proxy.method_missing(name, *args)
             Helpers::SystemProxy.call_object(@proxy_communicator, @proxy_server_name, name, args)
+        end
+        
+        def proxy.is_proxy_connected?
+            false
         end
         
         # Get a list of methods to replace
@@ -102,7 +119,15 @@ module Helpers
         
         # Stop telling the real object to live when the proxy is GCed
         ObjectSpace.define_finalizer(proxy) do
+            communicator.close if communicator
             proxy_alive_thread.terminate if proxy_alive_thread
+        end
+        
+        # Make sure there is something to connect to
+        begin
+            proxy.is_proxy_connected?
+        rescue
+            raise "No object named '#{name}' to connect to."
         end
         
         proxy

@@ -4,10 +4,7 @@ require $IntuitiveFramework_Controllers
 
 module Helpers
 	class TestProxy < Test::Unit::TestCase
-        def setup
-            @local_communicator = Controllers::CommunicationController.new('127.0.0.1', 5000, 5001)
-            @remote_communicator = Controllers::CommunicationController.new('127.0.0.1', 6000, 6001)
-            
+        def setup            
             # Create an object that will be accessed by a proxy
             @object = Object.new
             def @object.name
@@ -19,10 +16,10 @@ module Helpers
             @object.name = "my name is object"
             
             # Start proxying the object
-            remote_connection = Helpers::Proxy.make_object_proxyable(@object, @remote_communicator)
+            remote_connection = Helpers::Proxy.make_object_proxyable(@object)
             
             # Get a proxy to the real object
-            @proxy = Helpers::Proxy.get_proxy_to_object(@local_communicator, remote_connection)            
+            @proxy = Helpers::Proxy.get_proxy_to_object(remote_connection)
         end
         
         def teardown

@@ -15,7 +15,7 @@ module Controllers
           raise "The name cannot be nil" unless name
           raise "The name '#{name}' is already used by a service." if name != :random && self.class.is_name_used?(name)
           
-          # Generate a random name if it was nil
+          # Generate a random name if it was :random
           if name == :random
               new_name = nil
               loop do
@@ -45,19 +45,20 @@ module Controllers
       
       def self.is_name_used?(name)
           full_name = file_path + name
-          retval = false
           
-          # If the file exist, and we can connect to it, it is used
-          if File.exist?(full_name)
-              s = nil
-              begin
-                  s = UNIXSocket.new(full_name)
-                  retval = false
-              rescue
-                  retval = true
-              ensure
-                  s.close if s
-              end
+          # Just return false if the file does not exist
+          return false unless File.exist?(full_name)
+          
+          # If we can connect to the file, it is used
+          retval = true
+          begin
+              s = UNIXSocket.new(full_name)
+              retval = false
+          rescue Exception => e
+              retval = true
+          ensure
+              s.close if s
+              File.delete(full_name) if File.exist?(full_name)
           end
           
           return retval
@@ -167,8 +168,13 @@ module Controllers
               while @is_incoming_open
                   result = nil
                   begin
+                      # Get the yamled data from the socket
                       sock = @in_socket.accept_nonblock
-                      result = YAML.load(sock.read)
+                      yamled_data = sock.read
+                      
+                      # Get the data from the yaml if there is any
+                      next if yamled_data.length == 0
+                      result = YAML.load(yamled_data)
                   rescue Errno::EAGAIN, Errno::ECONNABORTED, Errno::EPROTO, Errno::EINTR
                       IO.select([@in_socket])
                       retry

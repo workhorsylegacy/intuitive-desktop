@@ -19,12 +19,13 @@ end
 
 # FIXME: Rename to NetProxy
 module Helpers
-	class Proxy        
-        def self.make_object_proxyable(object_to_serve, communicator, proxy_timeout=60)
-            connection = communicator.create_connection
+	class Proxy
+        def self.make_object_proxyable(object_to_serve, proxy_timeout=60)
+            communication_server = Helpers::SystemProxy.get_proxy_to_object("CommunicationServer")
+            connection = communication_server.create_net_connection()
             
             # Perform any calls to the Object from the communicator
-            proxy_thread = Thread.new(object_to_serve, communicator, connection) {|object, commun, connec|
+            proxy_thread = Thread.new(object_to_serve, communication_server, connection) {|object, commun, connec|
                     # Create a thread to timeout the proxy connection
                     timout_thread = nil
                     timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
@@ -72,18 +73,21 @@ module Helpers
                             end
                         }
                     end
-            }
+            end
             
-            connection
+            nil
         end
 		
-		def self.get_proxy_to_object(communicator, server_connection, proxy_timeout=50)
+		def self.get_proxy_to_object(server_connection, proxy_timeout=50)
+        communication_server = Helpers::SystemProxy.get_proxy_to_object("CommunicationServer")
+        connection = communication_server.create_net_connection()
+    
 		    proxy = Object.new
 		    local_connection = communicator.create_connection
 		    
 		    # Save the connection info in instance variables
-		    proxy.instance_variable_set('@proxy_communicator', communicator)
-		    proxy.instance_variable_set('@proxy_local_connection', local_connection)
+		    proxy.instance_variable_set('@proxy_communicator', communication_server)
+		    proxy.instance_variable_set('@proxy_local_connection', connection)
 		    proxy.instance_variable_set('@proxy_server_connection', server_connection)
 		    
             def proxy.method_missing(name, *args)
@@ -101,17 +105,6 @@ module Helpers
     			end")
     		end
 		    
-#		    # Convert the class name to the actual class
-#		    def proxy.class
-#		        class_name = method_missing('class')
-#		        
-#		        begin
-#		            eval(class_name)
-#		        rescue NameError => e
-#		            raise "The proxy cannot use the real object's class '#{class_name}' because the class is not known in the proxies ObjectSpace."
-#		        end
-#		    end
-		    
 		    # Create thread that tells real object to stay alive
 		    proxy_alive_thread = Thread.new(communicator, local_connection, server_connection) do |commun, local_conn, remote_conn|
 		        loop do
@@ -126,9 +119,17 @@ module Helpers
 		    
 		    # Stop telling the real object to live when the proxy is GCed
 		    ObjectSpace.define_finalizer(proxy) do
+            communication_server.destroy_net_connection(connection) if communication_server && connection
 		        proxy_alive_thread.terminate if proxy_alive_thread
 		    end
 		    
+        # Make sure there is something to connect to
+        begin
+            proxy.is_proxy_connected?
+        rescue
+            raise "No object named '#{name}' to connect to."
+        end        
+        
 		    proxy
 		end
 		
