@@ -11,8 +11,17 @@ module Helpers
         attr_reader :backtrace, :message
     
         def initialize(message, backtrace)
+            # Create a local backtrace and include it with the remote backtrace
+            local_error = nil
+            begin
+                raise ""
+            rescue Exception => e
+                local_error = e
+            end
+        
             @message = message
-            @backtrace = backtrace
+            @backtrace = ["==== Remote backtrace ===="] + backtrace +
+                          ["==== Local backtrace ===="] + local_error.backtrace[1..-1]
         end
     end
 end
@@ -24,14 +33,19 @@ module Helpers
             communication_server = Helpers::SystemProxy.get_proxy_to_object("CommunicationServer")
             connection = communication_server.create_net_connection()
             
+            # Add a method for testing the connection
+            def object_to_serve.is_proxy_connected?
+                true
+            end            
+            
             # Perform any calls to the Object from the communicator
-            proxy_thread = Thread.new(object_to_serve, communication_server, connection) {|object, commun, connec|
+            proxy_thread = Thread.new(object_to_serve, communication_server, connection) do |object, commun, connec|
                     # Create a thread to timeout the proxy connection
                     timout_thread = nil
                     timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
             
                     loop do
-                        commun.wait_for_any_command(connec) {|message|
+                        message = commun.wait_for_any_net_message(connec)
                             remote_connection = message[:source_connection]
                             
                             case message[:command]
@@ -51,31 +65,37 @@ module Helpers
                                     rescue Exception => e
                                         exception = e.message
                                         exception_class_name = e.class.name
+                                        exception_backtrace = e.backtrace
                                     end
                                     
                                     # Return any result and exceptions
                                     message = {:command => :send_to_object_return_value,
                                                 :return_value => retval,
                                                 :exception => exception,
-                                                :exception_class_name => exception_class_name}
-                                    commun.send(connec, remote_connection, message)
+                                                :exception_class_name => exception_class_name,
+                                                :backtrace => exception_backtrace}
+                                    commun.send_net_message(connec, remote_connection, message)
                                 when :proxy_still_alive
                                     timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
                                     message = { :command => :will_stay_alive }
-                                    commun.send(connec, remote_connection, message)                                    
+                                    commun.send_net_message(connec, remote_connection, message)                                    
                                 else
                                     error = "The proxied object does not know what to do with the command '#{message[:command]}'."
                                     message = {:command => :send_to_object_return_value,
                                                 :return_value => retval,
                                                 :exception => Exception.new(error),
                                                 :exception_class_name => Exception}
-                                    commun.send(connec, remote_connection, message)
+                                    commun.send_net_message(connec, remote_connection, message)
                             end
-                        }
                     end
             end
             
-            nil
+            # Have the communicator close when the object to serve is GCed
+            ObjectSpace.define_finalizer(object_to_serve) do
+                communication_server.delete_net_connection(connection) if communication_server && connection
+            end            
+            
+            connection
         end
 		
 		def self.get_proxy_to_object(server_connection, proxy_timeout=50)
@@ -83,7 +103,6 @@ module Helpers
         connection = communication_server.create_net_connection()
     
 		    proxy = Object.new
-		    local_connection = communicator.create_connection
 		    
 		    # Save the connection info in instance variables
 		    proxy.instance_variable_set('@proxy_communicator', communication_server)
@@ -94,6 +113,10 @@ module Helpers
                 Helpers::Proxy.call_object(@proxy_communicator, @proxy_local_connection, @proxy_server_connection, name, args)
             end
 		    
+          def proxy.is_proxy_connected?
+              false
+          end        
+        
             # Get a list of methods to replace
             replaceable_methods = proxy.methods.sort - ['class', 'method_missing'] << 'class'
             
@@ -106,14 +129,14 @@ module Helpers
     		end
 		    
 		    # Create thread that tells real object to stay alive
-		    proxy_alive_thread = Thread.new(communicator, local_connection, server_connection) do |commun, local_conn, remote_conn|
+		    proxy_alive_thread = Thread.new(communication_server, connection, server_connection) do |commun, local_conn, remote_conn|
 		        loop do
 		            sleep proxy_timeout
 		            
 		            message = { :command => :proxy_still_alive }
-		            commun.send(local_conn, remote_conn, message)
+		            commun.send_net_message(local_conn, remote_conn, message)
 		            
-		            commun.wait_for_command(local_conn, :will_stay_alive)
+		            commun.wait_for_net_message(local_conn, :will_stay_alive)
 		        end
 		    end		    
 		    

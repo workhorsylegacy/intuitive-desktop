@@ -20,12 +20,10 @@ module Servers
             # Create the system communicator
             if Controllers::SystemCommunicationController.is_name_used?("DocumentServer")
                 raise "The Document Server is already running."
-            else
-                @system_communicator = Controllers::SystemCommunicationController.new("DocumentServer")
             end
             
             # Make the server available over the system communicator
-            Helpers::SystemProxy.make_object_proxyable(self, @system_communicator)
+            Helpers::SystemProxy.make_object_proxyable(self, "DocumentServer")
             
             @logger = Helpers::Logger.new(logger_output)
             

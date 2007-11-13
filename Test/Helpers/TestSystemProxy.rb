@@ -75,6 +75,21 @@ module Helpers
             assert_raise(Helpers::ProxiedException) { @proxy.class }
         end
         
+        def test_nothing_to_connect_to
+            assert_raise(RuntimeError) do
+                Helpers::SystemProxy.get_proxy_to_object("Not There")
+            end
+        end
+        
+      def test_multiple_proxies_to_same_object
+          # Make sure multiple proxies are ok
+          another = Helpers::SystemProxy.get_proxy_to_object("Thingy")
+          yet_another = Helpers::SystemProxy.get_proxy_to_object("Thingy")
+          
+          assert(another.name != nil)
+          assert(yet_another.name != nil)
+      end        
+        
 =begin FIXME: Add these tests to see what happens when the real object or proxy is GCed
               or the communicator or connections break or turn off
               or any of them time out.
