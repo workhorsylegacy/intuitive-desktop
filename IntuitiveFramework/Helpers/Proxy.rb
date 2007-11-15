@@ -45,7 +45,8 @@ module Helpers
                     timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
             
                     loop do
-                        message = commun.wait_for_any_net_message(connec)
+                            message = commun.wait_for_any_net_message(connec)
+                            puts "Proxy get: #{message.inspect}."
                             remote_connection = message[:source_connection]
                             
                             case message[:command]
@@ -174,7 +175,8 @@ module Helpers
                 message = { :command => :send_to_object,
                                     :name => name,
                                     :args => args }
-                communicator.send(local_connection, server_connection, message)
+                communicator.send_command(local_connection, server_connection, message)
+                puts "Proxy set: #{message.inspect}."
     
                 # Get the return value of the call
                 message = communicator.wait_for_command(local_connection, :send_to_object_return_value)

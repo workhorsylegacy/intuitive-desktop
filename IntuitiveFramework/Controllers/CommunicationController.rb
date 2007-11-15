@@ -4,26 +4,20 @@ require 'socket'
 
 # FIXME: Rename to NetCommunicationController
 # TODO: Intead of using YAML to convert the messages to strings, use binary
-# FIXME: Fix the issue with having to use one large packet to send each message. We will have to plit the messages somehow. TCPServer?
-# TODO: Figure out how to make the wait_for methods not need to use fast sleep counts to be responsive 
-# TODO: Figure out how to not have to re-connect when sending to the same place
+# TODO: Figure out how to make the wait_for methods not need to use fast sleep counts to be responsive
 module Controllers
     class CommunicationController
-	    attr_reader :ip_address, :in_port, :out_port, :is_open, :is_incoming_open, :is_outgoing_open
+	    attr_reader :ip_address, :in_port, :is_open, :is_incoming_open
 	    
-	    MESSAGE_SIZE = 90_000
-	    
-	    def initialize(ip_address, in_port, out_port)
+	    def initialize(ip_address, in_port)
 	        # Validate arguments
 	        # FIXME: Add validation for ports and ip address format
 	        raise "IP address was nil." unless ip_address
-	        raise "Incoming port number was nil." unless in_port  
-	        raise "Outgoing port number was nil." unless out_port
+	        raise "Incoming port number was nil." unless in_port
 	        
 	        # Save network info
 	        @ip_address = ip_address
 	        @in_port = in_port
-	        @out_port = out_port
 	        
 	        # Get variables to store message and id info
 	        @connections = {}.extend(MonitorMixin)
@@ -74,16 +68,16 @@ module Controllers
 	           end
 	           
 	           if message != nil
-	               yield(message)
+	               yield(message) if block_given?
 	               return message
 	           else
-	               sleep(0.01)
+	               sleep(0.1)
 	           end
 	        end
 	    end            
 	    
 	    # Will wait for a command up to a certain amount of time before throwing
-	    def wait_for_command(connection, command, max_seconds_to_wait=5)
+	    def wait_for_command(connection, command, max_seconds_to_wait=10)
             # Make sure the connection is valid
             validate_connection(connection)
 	        
@@ -101,13 +95,13 @@ module Controllers
 	            #}
 	            break if retval
 	            raise "Timed out while waiting for the command '#{command}'" if (Time.now - start_time).to_i > max_seconds_to_wait
-	            sleep(0.01)
+	            sleep(0.1)
 	        end
 	        
 	        return retval
 	    end            
 	    
-        def send(source_connection, dest_connection, message)
+        def send_command(source_connection, dest_connection, message)
             # Make sure the socket is open
             raise "The outgoing channel is closed" unless @is_open
                     
@@ -123,13 +117,17 @@ module Controllers
             complete_message = message.merge({:source_connection => source_connection, 
                                               :dest_connection => dest_connection})
             
-            # Get the message in YAML format and make sure it is not too big for the socket
+            # Get the message in YAML format
             message_yaml = YAML.dump(complete_message)
-            raise "Can't send message because it is bigger than #{MESSAGE_SIZE}!" if message_yaml.length > MESSAGE_SIZE
             
-            # FIXME:  Make this only re-connects if the connection is different
-            @out_socket.connect(dest_connection[:ip_address], dest_connection[:port])
-            @out_socket.send(message_yaml, 0)
+            # FIXME:  Make this only re-connect if the connection is different
+            out_socket = nil
+            begin
+                out_socket = TCPSocket.open(dest_connection[:ip_address], dest_connection[:port])
+                out_socket.send(message_yaml, 0)
+            ensure
+                out_socket.close if out_socket
+            end
         end
 	    
 	    def open
@@ -137,7 +135,6 @@ module Controllers
 	        return if @is_open
 
 	        start_incoming_thread
-	        start_outgoing_thread
 	        
 	        @is_open = true
 	    end
@@ -147,7 +144,6 @@ module Controllers
 	        return unless @is_open
 	        
 	        stop_incoming_thread
-	        stop_outgoing_thread
 	        
 	        @is_open = false
 	    end
@@ -155,9 +151,8 @@ module Controllers
 	    private
 	    
 	    def start_incoming_thread
-            @in_socket = UDPSocket.open
             begin
-                @in_socket.bind(@ip_address, @in_port)
+                @in_socket = TCPServer.open(@ip_address, @in_port)
 	        rescue Errno::EADDRINUSE
 	           raise "Communication controller could not bind to address: #{@ip_address}:#{@in_port} because it is already in use."
 	        end
@@ -165,15 +160,22 @@ module Controllers
 	        @in_thread = Thread.new {
 	            @is_incoming_open = true
 	            while @is_incoming_open
-	                result = YAML.load(@in_socket.recvfrom(MESSAGE_SIZE).first)
+                  begin
+                      sock = @in_socket.accept_nonblock
+	                    result = YAML.load(sock.read)
+                      sock.close
+                  rescue Errno::EAGAIN, Errno::ECONNABORTED, Errno::EPROTO, Errno::EINTR
+                      IO.select([@in_socket])
+                      retry
+                  end
 
 	                raise "Incoming message not a Hash." unless result.class == Hash
 	                raise "Incoming message missing source_connection." unless result.has_key?(:source_connection)
 	                raise "Incoming message missing dest_connection." unless result.has_key?(:dest_connection)
 	                id = result[:dest_connection][:id]
 	                
-	                # FIXME: Dump the message here if it was sent to the wrong controller
-	                raise @connections.inspect unless @connections.has_key?(id)
+#	                # FIXME: Dump the message here if it was sent to the wrong controller
+#	                raise @connections.inspect unless @connections.has_key?(id)
 	                
 	                # Make sure we know of this connection
 	                raise "There is no destination connection on this controller that matches that id." unless @connections.has_key?(id)
@@ -190,20 +192,6 @@ module Controllers
 	        # its message que on kill?
 	        @in_thread.exit
 	        @in_socket.close
-	    end
-	    
-	    def start_outgoing_thread
-           # Create the socket
-           @out_socket = UDPSocket.open
-           @out_socket.bind(@ip_address, @out_port)	       
-	    
-	       @is_outgoing_open = true
-	    end
-	    
-	    def stop_outgoing_thread
-	        @is_outgoing_open = false
-	        
-	        @out_socket.close
 	    end
 	    
 	    def validate_connection(connection)

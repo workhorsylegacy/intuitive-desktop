@@ -82,13 +82,13 @@ module Controllers
                  yield(message)
                  return message
              else
-                 sleep(0.01)
+                 sleep(0.1)
              end
           end
       end            
       
       # Will wait for a command up to a certain amount of time before throwing
-      def wait_for_command(command, max_seconds_to_wait=5)          
+      def wait_for_command(command, max_seconds_to_wait=10)          
           start_time = Time.now
 
           retval = nil
@@ -103,13 +103,13 @@ module Controllers
               end
               break if retval
               raise "Timed out while waiting for the command '#{command}'" if (Time.now - start_time).to_i > max_seconds_to_wait
-              sleep(0.01)
+              sleep(0.1)
           end
           
           return retval
       end            
       
-        def send(dest_name, message)
+        def send_command(dest_name, message)
             # Make sure the socket is open
             raise "The outgoing channel is closed" unless @is_open
                     
@@ -171,6 +171,7 @@ module Controllers
                       # Get the yamled data from the socket
                       sock = @in_socket.accept_nonblock
                       yamled_data = sock.read
+                      sock.close
                       
                       # Get the data from the yaml if there is any
                       next if yamled_data.length == 0

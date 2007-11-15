@@ -83,8 +83,8 @@ module Controllers
          end
          
             def test_received_messages
-                @communicator_one.send(@communicator_two.name, { :command => :yo, :body => "what up?" }) 
-                @communicator_two.send(@communicator_one.name, { :command => :fu, :body => "your stank up fu" })
+                @communicator_one.send_command(@communicator_two.name, { :command => :yo, :body => "what up?" }) 
+                @communicator_two.send_command(@communicator_one.name, { :command => :fu, :body => "your stank up fu" })
               
                 # Make sure the communicators got the messages
                 sleep(0.5)
@@ -95,8 +95,8 @@ module Controllers
             end
        
             def test_wait_for_any_command
-                @communicator_one.send(@communicator_two.name, { :command => :yo }) 
-                @communicator_two.send(@communicator_one.name, { :command => :fu })
+                @communicator_one.send_command(@communicator_two.name, { :command => :yo }) 
+                @communicator_two.send_command(@communicator_one.name, { :command => :fu })
                 sleep(0.5)
                 
                 # Make sure the communicator is saving the messages
@@ -121,8 +121,8 @@ module Controllers
             
             def test_wait_for_command
                 # Send some messages
-                @communicator_one.send(@communicator_two.name, { :command => :yo, :body => "what up?" }) 
-                @communicator_two.send(@communicator_one.name, { :command => :fu, :body => "your stank up fu" })
+                @communicator_one.send_command(@communicator_two.name, { :command => :yo, :body => "what up?" }) 
+                @communicator_two.send_command(@communicator_one.name, { :command => :fu, :body => "your stank up fu" })
               
                 # Make sure the communicator got the messages
                 sleep(0.5)
@@ -150,7 +150,7 @@ module Controllers
             def test_missing_destination
                 # Send a message to a missing destination
                 e = assert_raise(RuntimeError) do
-                    @communicator_one.send("black hole", { :command => :yo, :body => "what up?" })
+                    @communicator_one.send_command("black hole", { :command => :yo, :body => "what up?" })
                 end
                 assert_equal("No connection named 'black hole' to send to.", e.message)
             end

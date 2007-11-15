@@ -50,7 +50,7 @@ module Controllers
     #  :names => ["name of a project"]}    
     def self.find_projects_over_network(communicator, local_connection, document_server_connection, criteria)
             # Ask the server for any projects
-            communicator.send(local_connection, document_server_connection, {:command => :find_projects,
+            communicator.send_command(local_connection, document_server_connection, {:command => :find_projects,
                                                                              :criteria => criteria})
           
             # Get the server's response
@@ -65,7 +65,7 @@ module Controllers
         message = {:command => :run_project,
                     :project_number => project.project_number,
                     :branch_number => branch.branch_number}
-        communicator.send(local_connection, document_server_connection, message)
+        communicator.send_command(local_connection, document_server_connection, message)
         
             # Wait for the server to ok the process and give up a new connection to it
             message = communicator.wait_for_command(local_connection, :ok_to_run_project)
@@ -73,7 +73,7 @@ module Controllers
             
             # Confirm that we got the new server connection
             message = { :command => :confirm_new_connection }
-            communicator.send(local_connection, new_server_connection, message)
+            communicator.send_command(local_connection, new_server_connection, message)
             
             # Get a new connection for the Model and Controller
             message = communicator.wait_for_command(local_connection, :got_model_and_controller_connections)

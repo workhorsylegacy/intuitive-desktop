@@ -24,6 +24,7 @@ module Helpers
             
                     loop do
                         commun.wait_for_any_command do |message|
+                            puts "SystemProxy got: #{message.inspect}."
                             remote_connection = message[:source_connection]
                             
                             case message[:command]
@@ -53,18 +54,18 @@ module Helpers
                                                 :exception => exception,
                                                 :exception_class_name => exception_class_name,
                                                 :backtrace => exception_backtrace}
-                                    commun.send(remote_connection, message)
+                                    commun.send_command(remote_connection, message)
                                 when :proxy_still_alive
                                     timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
                                     message = { :command => :will_stay_alive }
-                                    commun.send(remote_connection, message)                                    
+                                    commun.send_command(remote_connection, message)                                    
                                 else
                                     error = "The proxied object does not know what to do with the command '#{message[:command]}'."
                                     message = {:command => :send_to_object_return_value,
                                                 :return_value => retval,
                                                 :exception => Exception.new(error),
                                                 :exception_class_name => Exception}
-                                    commun.send(remote_connection, message)
+                                    commun.send_command(remote_connection, message)
                             end
                         end
                     end
@@ -111,7 +112,7 @@ module Helpers
                 sleep proxy_timeout
                 
                 message = { :command => :proxy_still_alive }
-                commun.send(name, message)
+                commun.send_command(name, message)
                 
                 commun.wait_for_command(:will_stay_alive)
             end
@@ -151,7 +152,8 @@ module Helpers
                 message = { :command => :send_to_object,
                                     :name => name,
                                     :args => args }
-                communicator.send(server_name, message)
+                communicator.send_command(server_name, message)
+                puts "SystemProxy set: #{message.inspect}."
     
                 # Get the return value of the call
                 message = communicator.wait_for_command(:send_to_object_return_value)

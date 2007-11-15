@@ -6,8 +6,7 @@ module Controllers
 	       def setup
 	           @ip_address = "127.0.0.1"
 	           @in_port = 7001
-	           @out_port = 7000
-	           @communicator = Controllers::CommunicationController.new(@ip_address, @in_port, @out_port)
+	           @communicator = Controllers::CommunicationController.new(@ip_address, @in_port)
 	           
 	           @connection_one = @communicator.create_connection
 	           @connection_two = @communicator.create_connection
@@ -19,7 +18,6 @@ module Controllers
 	       
 	       def test_is_open
 	           assert(@communicator.is_incoming_open)
-	           assert(@communicator.is_outgoing_open)
 	           assert(@communicator.is_open)
 	       end
 	       
@@ -31,8 +29,8 @@ module Controllers
 	       end
 	       
             def test_received_messages
-                @communicator.send(@connection_two, @connection_one, { :command => :yo, :body => "what up?" }) 
-                @communicator.send(@connection_one, @connection_two, { :command => :fu, :body => "your stank up fu" })
+                @communicator.send_command(@connection_two, @connection_one, { :command => :yo, :body => "what up?" }) 
+                @communicator.send_command(@connection_one, @connection_two, { :command => :fu, :body => "your stank up fu" })
               
                 # Make sure the communicator got the messages
                 sleep(0.5)
@@ -42,8 +40,8 @@ module Controllers
             end
 	     
             def test_wait_for_any_command
-                @communicator.send(@connection_two, @connection_one, { :command => :yo }) 
-                @communicator.send(@connection_one, @connection_two, { :command => :fu })
+                @communicator.send_command(@connection_two, @connection_one, { :command => :yo }) 
+                @communicator.send_command(@connection_one, @connection_two, { :command => :fu })
                 sleep(0.5)
                 
                 # Make sure the communicator is saving the messages
@@ -66,8 +64,8 @@ module Controllers
             
             def test_wait_for_command
                 # Send some messages
-                @communicator.send(@connection_two, @connection_one, { :command => :yo, :body => "what up?" }) 
-                @communicator.send(@connection_one, @connection_two, { :command => :fu, :body => "your stank up fu" })
+                @communicator.send_command(@connection_two, @connection_one, { :command => :yo, :body => "what up?" }) 
+                @communicator.send_command(@connection_one, @connection_two, { :command => :fu, :body => "your stank up fu" })
               
                 # Make sure the communicator got the messages
                 sleep(0.5)
@@ -88,7 +86,7 @@ module Controllers
                 in_commands = @communicator.instance_variable_get("@in_commands")
                 assert_equal(0, in_commands[@connection_one[:id]].length)
                 assert_equal(0, in_commands[@connection_two[:id]].length)
-            end            
+            end
 	    end
 end
 

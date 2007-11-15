@@ -10,7 +10,7 @@ module Controllers
             message = { :command => :register_identity,
                         :public_key => user.public_universal_key,
                         :name => user.name }
-            communicator.send(local_connection, server_connection, message)
+            communicator.send_command(local_connection, server_connection, message)
 
             # Wait for the server to ok the process and give up a new connection to it
             message = communicator.wait_for_command(local_connection, :ok_to_register_on_new_connection)
@@ -18,7 +18,7 @@ module Controllers
             
             # Confirm that we got the new server connection
             message = { :command => :confirm_new_connection }
-            communicator.send(local_connection, new_server_connection, message)
+            communicator.send_command(local_connection, new_server_connection, message)
 
 			# Start the test
             satisfy_identity_ownership_test(communicator, local_connection, new_server_connection, user)
@@ -33,7 +33,7 @@ module Controllers
             message = { :command => :prove_identity_ownership,
                       :public_key => user.public_universal_key,
                       :decrypted_proof => decrypted_message }
-            communicator.send(local_connection, remote_connection, message)
+            communicator.send_command(local_connection, remote_connection, message)
 			   
             # Make sure we got a confirmation
             message = communicator.wait_for_command(local_connection, :confirmed_identity_ownership)
@@ -51,7 +51,7 @@ module Controllers
 
             out_message = { :command => :challenge_identity_ownership,  
                         :encrypted_proof => encrypted_proof}
-            communicator.send(local_connection, remote_connection, out_message)
+            communicator.send_command(local_connection, remote_connection, out_message)
             
             # Wait for the remote machine to send proof back
             message = communicator.wait_for_command(local_connection, :prove_identity_ownership)
@@ -70,14 +70,14 @@ module Controllers
                                 :connection => connection, 
                                 :name => user_name, 
                                 :public_key => public_key}
-                communicator.send(local_connection, connection, out_message)
+                communicator.send_command(local_connection, connection, out_message)
             end
         end
         
         def self.find_user(communicator, local_connection, server_connection, user_public_key)
             message = {:command => :find_virtual_identity, 
                         :public_key => user_public_key}
-            communicator.send(local_connection, server_connection, message)
+            communicator.send_command(local_connection, server_connection, message)
 			   
             message = communicator.wait_for_command(local_connection, :found_virtual_identity)
 			   

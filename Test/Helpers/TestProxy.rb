@@ -8,7 +8,7 @@ module Helpers
             Servers::CommunicationServer.force_kill_other_instances()
           
             # Start the communication server
-            @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, 6666, true, :throw)    
+            @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)    
         
             # Create an object that will be accessed by a proxy
             @object = Object.new
@@ -33,15 +33,15 @@ module Helpers
             @communication_server.close if @communication_server
         end
         
-        def test_proxy_object
-            # Make sure the object is proxied
-            assert_equal("my name is object", @object.name)
-            assert_equal("my name is object", @proxy.name)
-            
-            @proxy.name = "proxy of doom"
-            assert_equal("proxy of doom", @object.name)
-            assert_equal("proxy of doom", @proxy.name)
-        end
+#        def test_proxy_object
+#            # Make sure the object is proxied
+#            assert_equal("my name is object", @object.name)
+#            assert_equal("my name is object", @proxy.name)
+#            
+#            @proxy.name = "proxy of doom"
+#            assert_equal("proxy of doom", @object.name)
+#            assert_equal("proxy of doom", @proxy.name)
+#        end
         
 #        def test_send
 #            def @object.add(a, b)
@@ -50,6 +50,7 @@ module Helpers
 #            
 #            # Make sure .send works
 #            assert_equal(11, @proxy.send(:add, 4, 7))
+#            assert_equal(11, @proxy.add(4, 7))
 #        end
 #        
 #        def test_exceptions

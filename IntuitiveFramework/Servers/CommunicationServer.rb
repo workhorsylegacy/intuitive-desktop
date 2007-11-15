@@ -10,7 +10,7 @@ module Servers
             File.delete(unix_socket_file)
         end
         
-        def initialize(ip_address, in_port, out_port, use_local_web_service, on_error)
+        def initialize(ip_address, in_port, use_local_web_service, on_error)
             # Make sure the on_error is valid
             on_error_options = [:log_to_file, :log_to_std_error, :throw]
             message = "The Communication Server can only use #{on_error_options.join(', ')} for on_error."
@@ -18,7 +18,7 @@ module Servers
             @on_error = on_error
 
             # Create the net communicator
-            @net_communicator = Controllers::CommunicationController.new(ip_address, in_port, out_port)
+            @net_communicator = Controllers::CommunicationController.new(ip_address, in_port)
 
             # Make the server available over the system communicator
             Helpers::SystemProxy.make_object_proxyable(self, "CommunicationServer")
@@ -40,10 +40,6 @@ module Servers
             @net_communicator.in_port
         end
             
-        def out_port
-            @net_communicator.out_port
-        end
-            
         def on_error
             @on_error.to_s
         end
@@ -57,7 +53,7 @@ module Servers
         end
             
         def send_net_message(source_connection, dest_connection, message)
-            @net_communicator.send(source_connection, dest_connection, message)
+            @net_communicator.send_command(source_connection, dest_connection, message)
         end            
             
         def wait_for_net_message(connection, message)
