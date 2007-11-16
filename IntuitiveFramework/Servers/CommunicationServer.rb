@@ -54,15 +54,33 @@ module Servers
             
         def send_net_message(source_connection, dest_connection, message)
             @net_communicator.send_command(source_connection, dest_connection, message)
-        end            
-            
-        def wait_for_net_message(connection, message)
-            @net_communicator.wait_for_command(connection, message)
         end
+        
+        def get_net_message(connection, command)
+            in_commands = @net_communicator.instance_variable_get("@in_commands")
+            commands = in_commands[connection[:id]]
             
-        def wait_for_any_net_message(connection)
-            raise "This method does not except a code block." if block_given?
-            @net_communicator.wait_for_any_command(connection) {}
+            commands.each do |message|
+                return commands.delete(message) if message[:command] == command
+            end
+            
+            nil
+        end
+        
+        def get_any_net_message(connection)
+            in_commands = @net_communicator.instance_variable_get("@in_commands")
+            
+            message = "There is no connection with the id #{connection[:id]} on this net communication controller."
+            return nil unless in_commands.has_key?(connection[:id]); warn("FIXME: This is a hack. For some reason the connection is not in the in_commands hash?" + __LINE__.to_s + __FILE__)
+            raise message unless in_commands.has_key?(connection[:id])
+            
+            commands = in_commands[connection[:id]]
+            
+            if commands.length > 0
+                commands.shift
+            else
+                nil
+            end
         end
     end
 end

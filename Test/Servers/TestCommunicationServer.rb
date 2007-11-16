@@ -18,8 +18,7 @@ module Servers
           @communication_server.close if @communication_server
           @other_net_communicator.close if @other_net_communicator
       end
-          
-=begin
+
       def test_is_running?
           assert(@communication_server.is_running?)
       end
@@ -41,7 +40,7 @@ module Servers
           assert_equal(message[:command], got_message[:command])
       end
       
-      def test_wait_for_net_message
+      def test_get_net_message
           # Get a connection to the communication server
           server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
           assert_not_nil(server)
@@ -53,12 +52,15 @@ module Servers
           # Make sure we can use the wait_for_net_message
           message = {:command => :sup_server}
           @other_net_communicator.send_command(@other_connection, connection, message)
-          got_message = 
-          server.wait_for_net_message(connection, :sup_server)
+          
+          while (got_message = server.get_net_message(connection, :sup_server)) == nil
+              sleep 0.1
+          end          
+          
           assert_equal(message[:command], got_message[:command])
       end
       
-      def test_wait_for_any_net_message
+      def test_get_any_net_message
           # Get a connection to the communication server
           server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
           assert_not_nil(server)
@@ -70,10 +72,12 @@ module Servers
           # Make sure we can use the wait_for_any_net_message
           message = {:command => :sup_server}
           @other_net_communicator.send_command(@other_connection, connection, message)
-          got_message = server.wait_for_any_net_message(connection)
+          got_message = nil
+          while (got_message = server.get_any_net_message(connection)) == nil
+              sleep 0.1
+          end
           assert_equal(message[:command], got_message[:command])
       end
-=end
       
       def test_simultaneous_use
           server_one = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
@@ -83,13 +87,15 @@ module Servers
           
           a = Thread.new(server_one, connection_one) do |server, conn|
               10.times do
-                  server.wait_for_any_net_message(conn)
+                  while server.get_any_net_message(conn) != nil
+                      sleep 0.1
+                  end
               end
           end
                               
           b = Thread.new(server_two, connection_two, connection_one) do |server, conn_two, conn_one|
               10.times do
-                  server.send_net_message(conn_two, conn_one, { :command => :send_to_object, :name => "poop" }) 
+                  server.send_net_message(conn_two, conn_one, { :command => :something }) 
               end
           end
           

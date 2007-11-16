@@ -24,7 +24,6 @@ module Helpers
             
                     loop do
                         commun.wait_for_any_command do |message|
-                            puts "SystemProxy got: #{message.inspect}."
                             remote_connection = message[:source_connection]
                             
                             case message[:command]
@@ -153,7 +152,6 @@ module Helpers
                                     :name => name,
                                     :args => args }
                 communicator.send_command(server_name, message)
-                puts "SystemProxy set: #{message.inspect}."
     
                 # Get the return value of the call
                 message = communicator.wait_for_command(:send_to_object_return_value)

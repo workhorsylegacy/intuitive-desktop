@@ -45,8 +45,10 @@ module Helpers
                     timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
             
                     loop do
-                            message = commun.wait_for_any_net_message(connec)
-                            puts "Proxy get: #{message.inspect}."
+                            message = nil
+                            while (message = commun.get_any_net_message(connec)) == nil
+                                sleep 0.1
+                            end
                             remote_connection = message[:source_connection]
                             
                             case message[:command]
@@ -137,7 +139,9 @@ module Helpers
 		            message = { :command => :proxy_still_alive }
 		            commun.send_net_message(local_conn, remote_conn, message)
 		            
-		            commun.wait_for_net_message(local_conn, :will_stay_alive)
+		            while commun.get_net_message(local_conn, :will_stay_alive) == nil
+                    sleep 1
+                end
 		        end
 		    end		    
 		    
@@ -175,11 +179,13 @@ module Helpers
                 message = { :command => :send_to_object,
                                     :name => name,
                                     :args => args }
-                communicator.send_command(local_connection, server_connection, message)
-                puts "Proxy set: #{message.inspect}."
+                communicator.send_net_message(local_connection, server_connection, message)
     
                 # Get the return value of the call
-                message = communicator.wait_for_command(local_connection, :send_to_object_return_value)
+                message = nil
+                while (message = communicator.get_net_message(local_connection, :send_to_object_return_value)) == nil
+                    sleep 0.1
+                end
                     
                 # raise an error if the object on the Server threw
                 if message[:exception]
