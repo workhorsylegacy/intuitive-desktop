@@ -3,6 +3,7 @@ require $IntuitiveFramework_Servers
 require $IntuitiveFramework_Models
 
 module Servers
+    # FIXME: Rename to DataServer
 	class DocumentServer
         attr_reader :generic_net_connection
 

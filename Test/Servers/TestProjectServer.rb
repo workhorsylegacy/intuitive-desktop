@@ -3,14 +3,12 @@ require $IntuitiveFramework_Servers
 
 module Servers
   class TestProjectServer < Test::Unit::TestCase
-      @communication_server = nil
-      @user = nil
-            
       def setup
           Servers::CommunicationServer.force_kill_other_instances()
+          Servers::ProjectServer.force_kill_other_instances()
           
           # Start the communication server
-          @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, 6666, true, :throw)
+          @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
           
           # create a test user
           public_key, private_key = Models::EncryptionKey.make_public_and_private_keys
@@ -20,24 +18,26 @@ module Servers
           @user.private_key = private_key.key.to_s
           @user.save! 
           
-          @communication_server.clear_everything
+          @project_server = Servers::ProjectServer.new(true, :throw)
+          @project_server.clear_everything
       end
             
       def teardown
-          @communication_server.clear_everything if @communication_server
-          
-          @server_communicator.close if @server_communicator
-          
+          @project_server.clear_everything if @project_server
+
+          @project_server.close if @project_server
           @communication_server.close if @communication_server
           
           @user.destroy if @user
       end
             
       def test_is_running
-          assert(@communication_server.is_running)
+          assert(@project_server.is_running)
       end
 
       def test_advertise_project_online
+          server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
+          
           # Create the project in a local repository
           branch = Models::Branch.new('Map Example Trunk', @user.public_universal_key)
           project = Models::Project.new(branch, 'Map Example')
@@ -68,10 +68,10 @@ module Servers
           Controllers::DataController.save_revision(branch)     
           
           # Advertise the project online
-          assert(@communication_server.advertise_project_online(project))
+          assert(@project_server.advertise_project_online(project))
           
           # Look up the project online and make sure it is the same
-          details = @communication_server.search_for_projects_online("Map Example")
+          details = @project_server.search_for_projects_online("Map Example")
           
           assert_equal(project.name, details.first[:name])
           assert_equal(project.description, details.first[:description])
@@ -111,7 +111,7 @@ module Servers
           Controllers::DataController.save_revision(branch)     
           
           # Advertise the project online
-          connection = @communication_server.advertise_project_online(project)
+          connection = @project_server.advertise_project_online(project)
           assert_not_nil(connection)
           
           # Create a local program that is running off the document server
@@ -119,8 +119,7 @@ module Servers
           # FIXME: This is breaking because it is proxing the program to the server and trying to run it.
           # We need to gather all the project details and proxy them here to run them. The program object
           # has a bunch of gobjects that can't be serialized over the net!
-          Servers::CommunicationServer.run_project(@communication_server,
-                                                            project.parent_branch.head_revision_number, 
+          Servers::ProjectServer.run_project(connection, project.parent_branch.head_revision_number, 
                                                             project.project_number.to_s,
                                                             project.parent_branch.branch_number.to_s,
                                                             program)

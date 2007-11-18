@@ -1,24 +1,19 @@
 
-# FIXME: This should do all the project runnning and registering things that the CommunicationServer used
-#         to do. But it should use the CommunicationServer for all its talkin'
 
 module Servers
     # FIXME: Have this replace the DataController. Trash the old one.
     class ProjectServer
-=begin
-        attr_reader :net_communicator
-        
         def self.force_kill_other_instances
-            return unless Controllers::SystemCommunicationController.is_name_used?("CommunicationServer")
+            return unless Controllers::SystemCommunicationController.is_name_used?("ProjectServer")
             
-            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("CommunicationServer")
+            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("ProjectServer")
             File.delete(unix_socket_file)
         end
         
-        def initialize(ip_address, in_port, out_port, use_local_web_service, on_error)
+        def initialize(use_local_web_service, on_error)
             # Make sure the on_error is valid
             on_error_options = [:log_to_file, :log_to_std_error, :throw]
-            message = "The Communication Server can only use #{on_error_options.join(', ')} for on_error."
+            message = "The Project Server can only use #{on_error_options.join(', ')} for on_error."
             raise message unless on_error_options.include? on_error.to_sym
             @on_error = on_error
                 
@@ -40,17 +35,6 @@ module Servers
                 raise "Could not connect to web service at '#{wsdl}'."
             end
             raise "Could not connect to the web service at '#{wsdl}'." unless @web_service.IsRunning
-                    
-            # Create the net communicator
-            @net_communicator = Controllers::CommunicationController.new(ip_address, in_port, out_port)
-            @generic_net_connection = @net_communicator.create_connection
-                    
-            # Create the system communicator
-            if Controllers::SystemCommunicationController.is_name_used?("CommunicationServer")
-                raise "The Communication Server is already running."
-            else
-                @system_communicator = Controllers::SystemCommunicationController.new("CommunicationServer")
-            end
             
             # Create an internal Document Server for now
             #FIXME: Move the Document Server to be an item on the system that only uses the system communicator.
@@ -60,14 +44,14 @@ module Servers
 #            @document_server_connection = @document_server.instance_variable_get("@generic_net_connection")
             
             # Make the server available over the system communicator
-            Helpers::SystemProxy.make_object_proxyable(self, "CommunicationServer")
+            Helpers::SystemProxy.make_object_proxyable(self, "ProjectServer")
         end
         
         def close
-            @system_communicator.close if @system_communicator
-            @net_communicator.close if @net_communicator
-            @system_communicator = nil
-            @net_communicator = nil
+#            @system_communicator.close if @system_communicator
+#            @net_communicator.close if @net_communicator
+#            @system_communicator = nil
+#            @net_communicator = nil
  #           @document_server.close if @document_server
  #           @document_server = nil
         end
@@ -78,7 +62,8 @@ module Servers
             
         def advertise_project_online(project)
 
-            connection = create_net_connection
+            communication_server = Helpers::SystemProxy.get_proxy_to_object("DocumentServer")
+            connection = communication_server.get_generic_external_connection()
 
             @web_service.RegisterProject(
                                          project.name, 
@@ -91,7 +76,7 @@ module Servers
                                          connection[:port],
                                          connection[:id])
             
-            connection
+            nil
         end
             
         def search_for_projects_online(search)
@@ -101,23 +86,9 @@ module Servers
                   :user_id => p[2], :revision => p[3].to_i, 
                   :project_number => p[4], :location => p[5] }
             end
-        end            
-            
-        def send_message(source_connection, dest_connection, message)
-            source =
-            if source_connection == :generic
-                @generic_net_connection
-            else
-                source_connection
-            end
-            @net_communicator.send(source,
-                               dest_connection,
-                               message)
-                                     
-            nil
         end
             
-        def self.run_project(communication_server, revision_number, project_number, branch_number, program)
+        def self.run_project(revision_number, project_number, branch_number, program)
             document_server_connection = communication_server.instance_variable_get("@document_server_connection")
             
             # Tell the Server that we want to run the project
@@ -170,18 +141,6 @@ module Servers
             @web_service.EmptyEverything()
         end
             
-        def ip_address
-            @net_communicator.ip_address
-        end
-            
-        def in_port
-            @net_communicator.in_port
-        end
-            
-        def out_port
-            @net_communicator.out_port
-        end
-            
         def on_error
             @on_error.to_s
         end
@@ -189,29 +148,6 @@ module Servers
         def use_local_web_service
             @use_local_web_service
         end
-            
-        def create_net_connection
-            @net_communicator.create_connection
-        end
-            
-        def destroy_net_connection(connection)
-            @net_communicator.destroy_connection(connection)
-        end
-            
-        def wait_for_message(connection, message)
-            source =
-            if connection == :generic
-                @generic_net_connection
-            else
-                connection
-            end
-            @net_communicator.wait_for_command(source, message)
-        end
-            
-        def wait_for_any_message(connection)
-            @net_communicator.wait_for_any_command(connection)
-        end
-=end
     end
 end
 

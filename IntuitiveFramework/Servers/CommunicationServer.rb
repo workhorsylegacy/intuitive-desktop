@@ -70,8 +70,15 @@ module Servers
         def get_any_net_message(connection)
             in_commands = @net_communicator.instance_variable_get("@in_commands")
             
+            #FIXME: This is a hack. For some reason the connection is not immedetly in the in_commands hash
+            # Here we are just asking the connection if it belongs to the communicator, instead of asking
+            # the communicator if it has that channel.
+            if connection[:ip_address] == @net_communicator.ip_address &&
+                connection[:port] == @net_communicator.in_port
+                return nil unless in_commands.has_key?(connection[:id])
+            end
+            
             message = "There is no connection with the id #{connection[:id]} on this net communication controller."
-            return nil unless in_commands.has_key?(connection[:id]); warn("FIXME: This is a hack. For some reason the connection is not in the in_commands hash?" + __LINE__.to_s + __FILE__)
             raise message unless in_commands.has_key?(connection[:id])
             
             commands = in_commands[connection[:id]]

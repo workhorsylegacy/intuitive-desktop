@@ -35,6 +35,7 @@ require 'Controllers/TestSystemCommunicationController'
 # Servers
 require 'Servers/TestIdentityServer'
 require 'Servers/TestCommunicationServer'
+require 'Servers/TestProjectServer'
 
 # Views
 require 'Views/Base/TestMixinBindsChildrenToModels'
@@ -74,6 +75,7 @@ Thread.abort_on_exception = true
 
     def server_tests
         [Servers::TestIdentityServer.suite,
+        Servers::TestProjectServer.suite,
         Servers::TestCommunicationServer.suite]
     end
     
@@ -97,21 +99,14 @@ Thread.abort_on_exception = true
 #            controller_tests,
 #            server_tests,
 #            view_tests,
-#            desktop_test]
-#            [
-#              [Controllers::TestCommunicationController.suite,
-#               Controllers::TestSystemCommunicationController.suite,
-#               Helpers::TestSystemProxy.suite,
-#               Helpers::TestProxy.suite,
-#               Servers::TestCommunicationServer.suite]
-#            ]
-            
-               [[Controllers::TestCommunicationController.suite,
-                Controllers::TestSystemCommunicationController.suite,
-                Helpers::TestSystemProxy.suite,
-                Helpers::TestProxy.suite,
-                Servers::TestCommunicationServer.suite
-               ]].each do |suite_set|
+#            desktop_test
+            [[Controllers::TestCommunicationController.suite,
+              Controllers::TestSystemCommunicationController.suite,
+              Helpers::TestProxy.suite,
+              Helpers::TestSystemProxy.suite,
+              Servers::TestCommunicationServer.suite,
+              Servers::TestProjectServer.suite
+            ]].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite
                 end
