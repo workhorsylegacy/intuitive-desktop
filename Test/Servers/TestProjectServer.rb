@@ -67,8 +67,11 @@ module Servers
           project.main_view_name = "main_window"
           Controllers::DataController.save_revision(branch)     
           
-          # Advertise the project online
-          assert(@project_server.advertise_project_online(project))
+          # Advertise the project online         
+          @project_server.advertise_project_online(server.generic_incoming_connection,
+                                                          project.name, project.description, project.parent_branch.user_id,
+                                                          project.parent_branch.head_revision_number, project.project_number.to_s,
+                                                          project.parent_branch.branch_number.to_s)
           
           # Look up the project online and make sure it is the same
           details = @project_server.search_for_projects_online("Map Example")
@@ -81,6 +84,8 @@ module Servers
       end
    
       def test_run_project_online
+          server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
+          
           # Create the project in a local repository
           branch = Models::Branch.new('Map Example Trunk', @user.public_universal_key)
           project = Models::Project.new(branch, 'Map Example')
@@ -111,7 +116,11 @@ module Servers
           Controllers::DataController.save_revision(branch)     
           
           # Advertise the project online
-          connection = @project_server.advertise_project_online(project)
+          connection = server.generic_incoming_connection
+          @project_server.advertise_project_online(server.generic_incoming_connection,
+                                                          project.name, project.description, project.parent_branch.user_id,
+                                                          project.parent_branch.head_revision_number, project.project_number.to_s,
+                                                          project.parent_branch.branch_number.to_s)
           assert_not_nil(connection)
           
           # Create a local program that is running off the document server
@@ -119,7 +128,7 @@ module Servers
           # FIXME: This is breaking because it is proxing the program to the server and trying to run it.
           # We need to gather all the project details and proxy them here to run them. The program object
           # has a bunch of gobjects that can't be serialized over the net!
-          Servers::ProjectServer.run_project(connection, project.parent_branch.head_revision_number, 
+          Servers::ProjectServer.run_project(server, connection, project.parent_branch.head_revision_number, 
                                                             project.project_number.to_s,
                                                             project.parent_branch.branch_number.to_s,
                                                             program)

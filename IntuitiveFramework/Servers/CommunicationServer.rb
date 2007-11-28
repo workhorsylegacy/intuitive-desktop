@@ -1,8 +1,9 @@
 
 
 module Servers
-    # FIXME: Have this replace the DataController. Trash the old one.
     class CommunicationServer
+        attr_reader :generic_incoming_connection
+        
         def self.force_kill_other_instances
             return unless Controllers::SystemCommunicationController.is_name_used?("CommunicationServer")
             
@@ -20,6 +21,11 @@ module Servers
             # Create the net communicator
             @net_communicator = Controllers::CommunicationController.new(ip_address, in_port)
 
+            # Create a generic connection for incoming messages from remote systems
+            @generic_incoming_connection = self.create_net_connection
+
+            start_generic_incoming_thread
+
             # Make the server available over the system communicator
             Helpers::SystemProxy.make_object_proxyable(self, "CommunicationServer")
         end
@@ -29,6 +35,7 @@ module Servers
         end
         
         def close
+            @generic_incoming_thread.kill if @generic_incoming_thread
             @net_communicator.close if @net_communicator
         end
             
@@ -89,6 +96,88 @@ module Servers
                 nil
             end
         end
+        
+        private
+        
+        def start_generic_incoming_thread
+            @generic_incoming_thread = 
+            Thread.new(@generic_incoming_connection) do |conn|
+                loop do
+                    message = self.get_any_net_message(conn)
+                    unless message
+                        sleep 0.1
+                        next
+                    end
+                    
+                    case message[:command]
+                        when :run_project
+                            run_project(message)
+                        else
+                          raise "The command #{message[:command]} was not expected."
+                    end
+                end
+            end
+        end
+        
+        # FIXME: This should not be in the communication server
+        def run_project(message)
+            # Get the information
+            remote_connection = message[:source_connection]
+            project_number = message[:project_number]
+            branch_number = message[:branch_number]
+
+            # Create another connection just for this conversation and tell the remote machine to use it
+            temp_connection = self.create_net_connection
+            message = {:command => :ok_to_run_project, :new_connection => temp_connection}
+            self.send_net_message(temp_connection, remote_connection, message)
+            
+            # Confirm that the client is using the new connection
+            loop do
+                break if self.get_net_message(temp_connection, :confirm_new_connection) != nil
+                sleep 0.1
+            end
+            
+            # Get the Project
+            branch = Models::Branch.from_number(branch_number)
+            project = Models::Project.from_number(branch, project_number)
+            
+            # Create the Models
+            new_models = nil
+            begin
+                new_models = Models::Data::XmlModelCreator::models_from_documents(project.document_models)
+            rescue Exception => e
+                raise "Could not load the document's models because: " + e.message
+            end
+            
+            # Make the Models available to proxy through the connection
+            models_connections =
+            new_models.collect do |name, model|
+                Helpers::Proxy.make_object_proxyable(model)
+            end                               
+            
+            # Create the Controller
+            new_controller = nil
+            begin
+                project.document_controllers.each { |document| Kernel.eval(document.data) }
+                new_controller = Kernel.eval(project.main_controller_class_name).new(new_models)
+            rescue Exception => e
+                raise "Could not load the document's controller because: " + e.message
+            end
+            
+            # Make the Controller available to proxy through the connection
+            controller_connection = Helpers::Proxy.make_object_proxyable(new_controller)
+            # Send the client a connection for talking to the Model and Controller
+            message = {:command => :got_model_and_controller_connections,
+                        :model_connections => models_connections,
+                        :main_controller_connection => controller_connection,
+                        :document_states => project.document_states,
+                        :document_views => project.document_views,
+                        :main_view_name => project.main_view_name}
+            self.send_net_message(temp_connection, remote_connection, message)
+            
+            # Remove the temporary connection
+            self.destroy_net_connection(temp_connection)
+        end 
     end
 end
 

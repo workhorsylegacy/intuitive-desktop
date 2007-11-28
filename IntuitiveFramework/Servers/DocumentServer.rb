@@ -1,4 +1,5 @@
 
+=begin
 require $IntuitiveFramework_Servers
 require $IntuitiveFramework_Models
 
@@ -7,7 +8,7 @@ module Servers
 	class DocumentServer
         attr_reader :generic_net_connection
 
-        def initialize(ip_address, in_port, out_port, logger_output=$stdout)
+        def initialize(logger_output=$stdout)
             # Make the data system if it does not exist
             Dir.mkdir($DataSystem) unless File.directory?($DataSystem)
             
@@ -141,3 +142,4 @@ module Servers
 	end
 end
 
+=end

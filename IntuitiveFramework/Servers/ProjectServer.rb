@@ -39,7 +39,7 @@ module Servers
             # Create an internal Document Server for now
             #FIXME: Move the Document Server to be an item on the system that only uses the system communicator.
             # It should not be nested in here, but a separate service.
-            proc = Proc.new { |status, message, exception| raise message }
+#            proc = Proc.new { |status, message, exception| raise message }
 #            @document_server = Servers::DocumentServer.new("127.0.0.1", 5000, 6000, proc)
 #            @document_server_connection = @document_server.instance_variable_get("@generic_net_connection")
             
@@ -60,18 +60,14 @@ module Servers
             @web_service.IsRunning()
         end
             
-        def advertise_project_online(project)
-
-            communication_server = Helpers::SystemProxy.get_proxy_to_object("DocumentServer")
-            connection = communication_server.get_generic_external_connection()
-
-            @web_service.RegisterProject(
-                                         project.name, 
-                                         project.description, 
-                                         project.parent_branch.user_id, 
-                                         project.parent_branch.head_revision_number,
-                                         project.project_number.to_s,
-                                         project.parent_branch.branch_number.to_s,
+        # FIXME: This should not be manual.Update when we add group permissions to the DataController
+        def advertise_project_online(connection, name, description, user_id, head_revision_number, project_number, branch_number)
+            @web_service.RegisterProject(name, 
+                                         description, 
+                                         user_id, 
+                                         head_revision_number,
+                                         project_number,
+                                         branch_number,
                                          connection[:ip_address],
                                          connection[:port],
                                          connection[:id])
@@ -88,39 +84,45 @@ module Servers
             end
         end
             
-        def self.run_project(revision_number, project_number, branch_number, program)
-            document_server_connection = communication_server.instance_variable_get("@document_server_connection")
+        def self.run_project(server, connection, revision_number, project_number, branch_number, program) 
+            out_connection = server.create_net_connection
             
             # Tell the Server that we want to run the project
             message = {:command => :run_project,
                         :project_number => project_number,
                         :branch_number => branch_number}
-            communication_server.send_message(:generic, document_server_connection, message)
+            server.send_net_message(out_connection, connection, message)
         
             # Wait for the server to ok the process and give up a new connection to it
-            message = communication_server.wait_for_message(:generic, :ok_to_run_project)
+            while (message = server.get_net_message(out_connection, :ok_to_run_project)) == nil
+                sleep 0.1
+            end
             new_server_connection = message[:new_connection]
             
             # Confirm that we got the new server connection
             message = { :command => :confirm_new_connection }
-            communication_server.send_message(:generic, new_server_connection, message)
+            server.send_net_message(out_connection, new_server_connection, message)
             
             # Get a new connection for the Model and Controller
-            message = communication_server.wait_for_message(:generic, :got_model_and_controller_connections)
+            while (message = server.get_net_message(out_connection, :got_model_and_controller_connections)) == nil
+                sleep 0.1
+            end
             model_connections = message[:model_connections]
             main_controller_connection = message[:main_controller_connection]
             document_states = message[:document_states]
             document_views = message[:document_views]
             main_view_name = message[:main_view_name]
             
+            server.destroy_net_connection(out_connection)
+            
             # Create a proxy Models and Controller
             models = {}
             model_connections.each do |model_connection|
-                model = Helpers::Proxy.get_proxy_to_object(communication_server.net_communicator, model_connection)
+                model = Helpers::Proxy.get_proxy_to_object(model_connection)
                 models[model.name] = model
             end
             
-            controller = Helpers::Proxy.get_proxy_to_object(communication_server.net_communicator, main_controller_connection)
+            controller = Helpers::Proxy.get_proxy_to_object(main_controller_connection)
             
             # Connect the Program to the Models and Controller
             program.models = models
