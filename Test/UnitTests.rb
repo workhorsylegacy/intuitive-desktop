@@ -66,7 +66,7 @@ Thread.abort_on_exception = true
 
     def controller_tests
         [Controllers::TestCommunicationController.suite,
-        Controllers::TestDataController.suite,
+#        Controllers::TestDataController.suite,
         Controllers::TestRevisionedFileSystemController.suite,
         Controllers::TestSearchController.suite,
         Controllers::TestUserController.suite,
@@ -100,13 +100,11 @@ Thread.abort_on_exception = true
 #            server_tests,
 #            view_tests,
 #            desktop_test
-            [[Controllers::TestCommunicationController.suite,
-              Controllers::TestSystemCommunicationController.suite,
-              Helpers::TestProxy.suite,
-              Helpers::TestSystemProxy.suite,
-              Servers::TestCommunicationServer.suite,
-              Servers::TestProjectServer.suite
-            ]].each do |suite_set|
+#            ]
+            [helper_tests,
+            model_test,
+            controller_tests,
+            ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite
                 end

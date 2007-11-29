@@ -8,25 +8,30 @@ module Servers
 	class IdentityServer
         attr_reader :identities, :local_connection
         
-        def initialize(logger_output, ip_address, incoming_port, outgoing_port)
-            # Create a message controller to send results back
-            @ip_address = ip_address
-            @incoming_port = incoming_port
-            @outgoing_port = outgoing_port
-            @communicator = Controllers::CommunicationController.new(@ip_address, @incoming_port, @outgoing_port)
+        def self.force_kill_other_instances
+            return unless Controllers::SystemCommunicationController.is_name_used?("IdentityServer")
+            
+            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("IdentityServer")
+            File.delete(unix_socket_file)
+        end
+        
+        def initialize(logger_output)
+            @communicator = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
             
             # a hash to store known identities
             @identities = {}.extend(MonitorMixin)
             
-            @local_connection = @communicator.create_connection
+            @local_connection = @communicator.create_net_connection
             
             @logger = Helpers::Logger.new(logger_output)
             
             # FIXME: To speed this up so it does not have to wait, move the guts of each 'when' to a function and do Thread.new { function_call }
             # Start a thread that responds to all requests
             @thread = Thread.new {
-                while true
-                    @communicator.wait_for_any_command(@local_connection) { |message|
+                loop do
+                    while (mesage = @communicator.get_any_net_message(@local_connection)) == nil
+                        sleep 0.1
+                    end
                         case message[:command]
                             # The user wants to prove they are the owner of the identity
                             when :register_identity
@@ -37,12 +42,14 @@ module Servers
                                     public_key = message[:public_key]
             
                                     # Create another connection just for this conversation and tell the remote machine to use it
-                                    temp_connection = @communicator.create_connection
+                                    temp_connection = @communicator.create_net_connection
                                     message = {:command => :ok_to_register_on_new_connection, :new_connection => temp_connection}
-                                    @communicator.send(temp_connection, remote_connection, message)
+                                    @communicator.send_net_message(temp_connection, remote_connection, message)
             
                                     # Confirm that the remote machine got the connection
-                                    @communicator.wait_for_command(temp_connection, :confirm_new_connection)
+                                    while @communicator.get_net_message(temp_connection, :confirm_new_connection) == nil
+                                        sleep 0.1
+                                    end
             
                                     # Perform the standard identity ownership test
                                     Controllers::UserController.require_identity_ownership_test(
@@ -52,7 +59,7 @@ module Servers
                                                                                         name, 
                                                                                         public_key)
                                     # Remove the temporary connection     
-                                    @communicator.destroy_connection(temp_connection)
+                                    @communicator.destroy_net_connection(temp_connection)
                                                                                         
                                     # If get this far, save the identity
                                     @identities.synchronize {
@@ -89,9 +96,11 @@ module Servers
                             else
                                 @logger.log :info, "Identity server does not know the command '#{message[:command]}'."
                         end
-                    }
                 end
             }
+            
+            # Make the server available over the system communicator
+            Helpers::SystemProxy.make_object_proxyable(self, "IdentityServer")
         end
         
         def is_open

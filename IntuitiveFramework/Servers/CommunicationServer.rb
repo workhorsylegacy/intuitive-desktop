@@ -8,7 +8,7 @@ module Servers
             return unless Controllers::SystemCommunicationController.is_name_used?("CommunicationServer")
             
             unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("CommunicationServer")
-            File.delete(unix_socket_file)
+            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
         end
         
         def initialize(ip_address, in_port, use_local_web_service, on_error)

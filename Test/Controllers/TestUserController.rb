@@ -3,36 +3,38 @@ require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
 module Controllers
+  #FIXME: Rename to TestIdentityController
 	class TestUserController < Test::Unit::TestCase
 			def setup
+          Servers::CommunicationServer.force_kill_other_instances()
+          Servers::IdentityServer.force_kill_other_instances()
+          
+          @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
+          
                 # Add 2 users
                 @local_user = UserController::create_user('matt jones')
-                @local_communicator = CommunicationController.new('127.0.0.1', 5000, 5001)
-                @local_connection = @local_communicator.create_connection
+                @local_connection = @communication_server.create_net_connection
                 
                 @remote_user = UserController::create_user('bobrick')
-                @remote_communicator = CommunicationController.new('127.0.0.1', 3000, 3001)
-                @remote_connection = @remote_communicator.create_connection                
+                @remote_connection = @communication_server.create_net_connection                
                 
                 # Have the logger throw when it gets anything
                 logger_exception = Proc.new { |status, message, exception| raise message }
-                @server = Servers::IdentityServer.new(logger_exception, '127.0.0.1', 6000, 6001)
-            end
+                @identity_server = Servers::IdentityServer.new(logger_exception)
+      end
             
             def teardown
                 @local_user.destroy if @local_user
                 @remote_user.destroy if @remote_user
                 
-                @local_communicator.close
-                @remote_communicator.close
-                
-                @server.close if @server
+                @identity_server.close if @identity_server
+                @communication_server.close if @communication_server
 			end
 			
 			def test_can_prove_identity
                 require_thread = Thread.new {
                     UserController::require_identity_ownership_test(
-                                                        @local_communicator, 
+                                                        @communication_server, 
                                                         @local_connection, 
                                                         @remote_connection, 
                                                         @remote_user.name, 
@@ -41,7 +43,7 @@ module Controllers
 			
                 satisfy_thread = Thread.new {
                     UserController::satisfy_identity_ownership_test(
-                                                        @remote_communicator, 
+                                                        @communication_server, 
                                                         @remote_connection, 
                                                         @local_connection, 
                                                         @remote_user)
@@ -52,16 +54,17 @@ module Controllers
 			end
 			
 			def test_can_register_and_locate_user
+          raise "Finish converting this test to the new communication controller."
 			   # Register the 2 users
-			   UserController::register_identity(@local_communicator, 
+			   UserController::register_identity(@communication_server, 
 			                                 @local_connection, 
-			                                 @server.local_connection, 
+			                                 @identity_server.local_connection, 
 			                                 @local_user)
 			   
 			   # Make sure we can find the 2 users
-			   copy_local_user = UserController::find_user(@local_communicator,
+			   copy_local_user = UserController::find_user(@communication_server,
 			                             @local_connection,
-			                             @server.local_connection,
+			                             @identity_server.local_connection,
 			                             @local_user.public_universal_key)
 
                 # Make sure the found Identities are correct

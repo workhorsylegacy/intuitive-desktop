@@ -1,4 +1,6 @@
 
+
+=begin
 require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
@@ -171,7 +173,6 @@ CONTROLLER_CODE
                                                                     project.parent_branch)
       end
 
-=begin
       def test_branch
         # Create a simple document with data in it
         data_one = RevisionedDocument.new('secret sauce')
@@ -200,8 +201,8 @@ CONTROLLER_CODE
         # Create another document that is a changed version of this one
         data_two = RevisionData.new('secret sauce', 6)
         data_two.commit(:data => "things to buy for supper:\n 1. butter\n 2. crisco\n 3. vegtable oil")
-      end
-=end        
+      end     
 	end
 end
 
+=end

@@ -10,33 +10,40 @@ module Controllers
             message = { :command => :register_identity,
                         :public_key => user.public_universal_key,
                         :name => user.name }
-            communicator.send_command(local_connection, server_connection, message)
+            communicator.send_net_message(local_connection, server_connection, message)
 
             # Wait for the server to ok the process and give up a new connection to it
-            message = communicator.wait_for_command(local_connection, :ok_to_register_on_new_connection)
+            while (message = communicator.get_net_message(local_connection, :ok_to_register_on_new_connection)) == nil
+                sleep 0.1
+            end
             new_server_connection = message[:new_connection]
             
             # Confirm that we got the new server connection
             message = { :command => :confirm_new_connection }
-            communicator.send_command(local_connection, new_server_connection, message)
+            communicator.send_net_message(local_connection, new_server_connection, message)
 
-			# Start the test
+			     # Start the test
             satisfy_identity_ownership_test(communicator, local_connection, new_server_connection, user)
         end
         
         def self.satisfy_identity_ownership_test(communicator, local_connection, remote_connection, user)
             # Get an encrypted challenge from the remote machine
-            encrypted_message = communicator.wait_for_command(local_connection, :challenge_identity_ownership)[:encrypted_proof]
+            while (message = communicator.get_net_message(local_connection, :challenge_identity_ownership)) == nil
+                sleep 0.1
+            end
+            encrypted_message = message[:encrypted_proof]
             decrypted_message = Models::EncryptionKey.new(user.private_key, false).decrypt(encrypted_message)
 			   
             # Send it back to the other machine unencrypted
             message = { :command => :prove_identity_ownership,
                       :public_key => user.public_universal_key,
                       :decrypted_proof => decrypted_message }
-            communicator.send_command(local_connection, remote_connection, message)
+            communicator.send_net_message(local_connection, remote_connection, message)
 			   
             # Make sure we got a confirmation
-            message = communicator.wait_for_command(local_connection, :confirmed_identity_ownership)
+            while (message = communicator.get_net_message(local_connection, :confirmed_identity_ownership)) == nil
+                sleep 0.1
+            end
             
             message
         end
@@ -51,10 +58,12 @@ module Controllers
 
             out_message = { :command => :challenge_identity_ownership,  
                         :encrypted_proof => encrypted_proof}
-            communicator.send_command(local_connection, remote_connection, out_message)
+            communicator.send_net_message(local_connection, remote_connection, out_message)
             
             # Wait for the remote machine to send proof back
-            message = communicator.wait_for_command(local_connection, :prove_identity_ownership)
+            while (message = communicator.get_net_message(local_connection, :prove_identity_ownership)) == nil
+                sleep 0.1
+            end
 
             # Get the Virtual Identity information
             connection = message[:source_connection]
@@ -70,7 +79,7 @@ module Controllers
                                 :connection => connection, 
                                 :name => user_name, 
                                 :public_key => public_key}
-                communicator.send_command(local_connection, connection, out_message)
+                communicator.send_net_message(local_connection, connection, out_message)
             end
         end
         
