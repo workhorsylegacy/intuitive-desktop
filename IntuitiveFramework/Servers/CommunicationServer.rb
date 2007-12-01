@@ -109,6 +109,7 @@ module Servers
                         next
                     end
                     
+                    # FIXME: The find_project should be called from the same place as the run_project
                     case message[:command]
                         when :run_project
                             run_project(message)

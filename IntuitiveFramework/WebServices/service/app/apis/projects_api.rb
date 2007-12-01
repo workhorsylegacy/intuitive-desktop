@@ -1,3 +1,5 @@
+
+# FIXME: Rename to IntuitiveAPI
 class ProjectsApi < ActionWebService::API::Base
   api_method :is_running,
 			:returns => [:bool]
@@ -19,16 +21,19 @@ class ProjectsApi < ActionWebService::API::Base
                       {:revision => :string}, {:project_number => :string}, {:branch_number => :string},
                       {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}]]]
                     
-  api_method :register_identity,
-      :expects => [{:name => :string}, {:user_id => :string}, {:description => :string}],
+  api_method :regster_identity_start,
+      :expects => [{:name => :string}, {:public_key => :string}, {:description => :string},
+                   {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}],
       :returns => [:bool]
     
   api_method :search_identities,
       :expects => [{:search => :string}],
-      :returns => [[{:name => :string}, {:user_id => :string}, {:description => :string}]]
+      :returns => [[{:name => :string}, {:user_id => :string}, {:description => :string},
+                    {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}]]
       
   api_method :list_identities,
-      :returns => [[[{:name => :string}, {:user_id => :string}, {:description => :string}]]]
+      :returns => [[[{:name => :string}, {:user_id => :string}, {:description => :string},
+                     {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}]]]
       
   api_method :empty_everything,
       :returns => [:bool]

@@ -7,7 +7,7 @@ module Servers
             return unless Controllers::SystemCommunicationController.is_name_used?("ProjectServer")
             
             unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("ProjectServer")
-            File.delete(unix_socket_file)
+            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
         end
         
         def initialize(use_local_web_service, on_error)
@@ -60,7 +60,7 @@ module Servers
             @web_service.IsRunning()
         end
             
-        # FIXME: This should not be manual.Update when we add group permissions to the DataController
+        # FIXME: This should not be manual. Update when we add group permissions to the DataController
         def advertise_project_online(connection, name, description, user_id, head_revision_number, project_number, branch_number)
             @web_service.RegisterProject(name, 
                                          description, 

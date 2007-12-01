@@ -5,6 +5,7 @@ require "#{path}/Namespace"
 # FIXME: Rename to IdentityController and change Virtual Identity to just Identity.
 module Controllers
 	class UserController
+=begin
         def self.register_identity(communicator, local_connection, server_connection, user)
             # Tell the server we want to register an identity
             message = { :command => :register_identity,
@@ -25,7 +26,7 @@ module Controllers
 			     # Start the test
             satisfy_identity_ownership_test(communicator, local_connection, new_server_connection, user)
         end
-        
+=end
         def self.satisfy_identity_ownership_test(communicator, local_connection, remote_connection, user)
             # Get an encrypted challenge from the remote machine
             while (message = communicator.get_net_message(local_connection, :challenge_identity_ownership)) == nil
@@ -47,7 +48,7 @@ module Controllers
             
             message
         end
-        
+
         def self.require_identity_ownership_test(communicator, local_connection, remote_connection, user_name, user_public_key)
             # Get the Virtual Identity information
             public_key = Models::EncryptionKey.new(user_public_key, true)
@@ -82,7 +83,7 @@ module Controllers
                 communicator.send_net_message(local_connection, connection, out_message)
             end
         end
-        
+=begin
         def self.find_user(communicator, local_connection, server_connection, user_public_key)
             message = {:command => :find_virtual_identity, 
                         :public_key => user_public_key}
@@ -95,7 +96,7 @@ module Controllers
 		    user.public_universal_key = message[:public_key]
 		    user
         end
-        
+=end
         def self.create_user(name)
             public_key, private_key = Models::EncryptionKey.make_public_and_private_keys
             user = Models::User.new

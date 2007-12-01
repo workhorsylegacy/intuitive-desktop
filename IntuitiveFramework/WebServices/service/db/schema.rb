@@ -2,18 +2,30 @@
 # migrations feature of ActiveRecord to incrementally modify your database, and
 # then regenerate this schema definition.
 
-ActiveRecord::Schema.define(:version => 5) do
+ActiveRecord::Schema.define(:version => 8) do
 
   create_table "identities", :force => true do |t|
-    t.column "name",        :string
-    t.column "description", :text
-    t.column "user_id",     :string
+    t.column "name",          :string
+    t.column "description",   :text
+    t.column "public_key",    :string
+    t.column "port",          :integer
+    t.column "connection_id", :integer
+    t.column "branch_number", :string
+  end
+
+  create_table "pending_identities", :force => true do |t|
+    t.column "name",          :string,  :default => "", :null => false
+    t.column "description",   :text,    :default => "", :null => false
+    t.column "public_key",    :text,    :default => "", :null => false
+    t.column "ip_address",    :string,  :default => "", :null => false
+    t.column "port",          :integer,                 :null => false
+    t.column "connection_id", :integer,                 :null => false
   end
 
   create_table "projects", :force => true do |t|
     t.column "name",           :string
     t.column "description",    :text
-    t.column "user_id",        :string
+    t.column "public_key",     :string
     t.column "revision",       :string
     t.column "project_number", :string
     t.column "ip_address",     :string

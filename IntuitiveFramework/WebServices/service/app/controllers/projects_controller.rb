@@ -1,4 +1,5 @@
 
+# FIXME: Rename to IntuitiveController
 class ProjectsController < ApplicationController
 	wsdl_service_name 'Projects'
 	web_service_api ProjectsApi
@@ -45,14 +46,29 @@ class ProjectsController < ApplicationController
 	end
   
   def list_identities
-    Identities.find(:all).collect { |i| [i.name, i.user_id, i.description] }
+    Identities.find(:all).collect { |i| [i.name, i.user_id, i.description, i.ip_address, i.port, i.connection_id] }
   end
   
-  def register_identity(name, user_id, description)
-    identity = Identities.new
+  def regster_identity_start(name, public_key, description, ip_address, port, connection_id)
+    # Perform the standard identity ownership test
+    Controllers::UserController.require_identity_ownership_test()
+  end
+  
+  def register_identity_end(name, public_key, description, ip_address, port, connection_id, encrypted_test, decrypted_test)
+    
+    # Make sure the test passed
+    unless Controllers::UserController.satisfy_identity_ownership_test(original_test, decrypted_test)
+        raise "Failed to confirm identity for #{name}."
+    end
+                            
+    # If we got this far, save the identity
+    identity = Identity.new
     identity.name = name
+    identity.public_key = public_key
     identity.description = description
-    identity.user_id = user_id
+    identity.ip_address = ip_address
+    identity.port = port
+    identity.connection_id = connection_id
 
     raise identity.errors.collect { |e| "#{e.first}: e.last" }.inspect unless identity.save
 
@@ -60,7 +76,13 @@ class ProjectsController < ApplicationController
   end
 
   def search_identities(search)
-    []
+      return unless search.strip.length > 0
+      
+      Identities.find(:all).collect do |i|
+          [i.name, i.user_id, i.description, 
+            i.ip_address, i.port, i.connection_id
+          ] if i.name.downcase.include? search.downcase
+      end.compact
   end
   
   def empty_everything
