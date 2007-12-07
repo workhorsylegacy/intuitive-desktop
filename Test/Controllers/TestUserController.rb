@@ -19,8 +19,7 @@ module Controllers
                 @remote_connection = @communication_server.create_net_connection                
                 
                 # Have the logger throw when it gets anything
-                logger_exception = Proc.new { |status, message, exception| raise message }
-                @identity_server = Servers::IdentityServer.new(logger_exception)
+                @identity_server = Servers::IdentityServer.new(true, :throw)
       end
             
             def teardown
@@ -31,36 +30,27 @@ module Controllers
                 @communication_server.close if @communication_server
 			end
 			
-#			def test_can_prove_identity
-#                require_thread = Thread.new {
-#                    UserController::require_identity_ownership_test(
-#                                                        @communication_server, 
-#                                                        @local_connection, 
-#                                                        @remote_connection, 
-#                                                        @remote_user.name, 
-#                                                        @remote_user.public_universal_key)
-#                }
-#			
-#                satisfy_thread = Thread.new {
-#                    UserController::satisfy_identity_ownership_test(
-#                                                        @communication_server, 
-#                                                        @remote_connection, 
-#                                                        @local_connection, 
-#                                                        @remote_user)
-#                }
-#                
-#                require_thread.join
-#                satisfy_thread.join
-#			end
+			def test_can_prove_identity
+          encrypted_proof = Controllers::UserController.create_ownership_test(@local_user.public_universal_key)
+          
+          decrypted_proof = Controllers::UserController.answer_ownership_test(@local_user.private_key, encrypted_proof)
+          
+          passed = Controllers::UserController.passed_ownership_test?(@local_user.public_universal_key, decrypted_proof)
+          
+          assert passed
+			end
 			
 			def test_can_register_and_locate_user
 			   # Register the 2 users
-			   UserController::register_identity(@communication_server, 
-			                                 @local_connection, 
-			                                 @identity_server.local_connection, 
-			                                 @local_user)
+         raise "This breaks because the web service cannot see the Controllers::UserController class, even after it is required"
+         passed =
+			   @identity_server.register_identity(@local_connection, 
+                                           @local_user.name,
+			                                     "",
+                                           @local_user.public_universal_key)
 			   
-         raise "done"
+         assert passed
+         
 			   # Make sure we can find the 2 users
 			   copy_local_user = UserController::find_user(@communication_server,
 			                             @local_connection,

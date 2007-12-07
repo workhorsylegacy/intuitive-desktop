@@ -1,4 +1,7 @@
 
+require '../../IntuitiveFramework.rb'
+require $IntuitiveFramework_Controllers
+
 # FIXME: Rename to IntuitiveController
 class ProjectsController < ApplicationController
 	wsdl_service_name 'Projects'
@@ -9,11 +12,11 @@ class ProjectsController < ApplicationController
 		true
 	end
 
-	def register_project(name, description, user_id, revision, project_number, branch_number, ip_address, port, connection_id)
+	def register_project(name, description, public_key, revision, project_number, branch_number, ip_address, port, connection_id)
 		project = Projects.new
 		project.name = name
 		project.description = description
-		project.user_id = user_id
+		project.public_key = public_key
 		project.revision = revision
     project.project_number = project_number
     project.branch_number = branch_number
@@ -30,7 +33,7 @@ class ProjectsController < ApplicationController
 		return unless search.strip.length > 0
 
 		Projects.find(:all).collect do |p|
-			[p.name, p.description, p.user_id, 
+			[p.name, p.description, p.public_key, 
         p.revision, p.project_number, p.branch_number,
         p.ip_address, p.port, p.connection_id
       ] if p.name.downcase.include? search.downcase
@@ -39,27 +42,25 @@ class ProjectsController < ApplicationController
 
 	def list_projects
 		Projects.find(:all).collect do |p| 
-      [p.name, p.description, p.user_id, 
+      [p.name, p.description, p.public_key, 
         p.revision, p.project_number, p.branch_number,
         p.ip_address, p.port, p.connection_id]
     end
 	end
   
   def list_identities
-    Identities.find(:all).collect { |i| [i.name, i.user_id, i.description, i.ip_address, i.port, i.connection_id] }
+    Identities.find(:all).collect { |i| [i.name, i.public_key, i.description, i.ip_address, i.port, i.connection_id] }
   end
   
-  def regster_identity_start(name, public_key, description, ip_address, port, connection_id)
-    # Perform the standard identity ownership test
-    Controllers::UserController.require_identity_ownership_test()
+  def register_identity_start(name, public_key, description, ip_address, port, connection_id)
+      encrypted_proof = Controllers::UserController.create_ownership_test(public_key)
   end
   
-  def register_identity_end(name, public_key, description, ip_address, port, connection_id, encrypted_test, decrypted_test)
-    
+  def register_identity_end(name, public_key, description, ip_address, port, connection_id, decrypted_proof)
+      passed = Controllers::UserController.passed_ownership_test?(public_key, decrypted_proof)
+            
     # Make sure the test passed
-    unless Controllers::UserController.satisfy_identity_ownership_test(original_test, decrypted_test)
-        raise "Failed to confirm identity for #{name}."
-    end
+    raise "Failed to confirm identity for #{name}." unless passed
                             
     # If we got this far, save the identity
     identity = Identity.new
@@ -71,15 +72,17 @@ class ProjectsController < ApplicationController
     identity.connection_id = connection_id
 
     raise identity.errors.collect { |e| "#{e.first}: e.last" }.inspect unless identity.save
+    
+    Controllers::UserController.clear_ownership_test(public_key)
 
-    true
+    passed
   end
 
   def search_identities(search)
       return unless search.strip.length > 0
       
       Identities.find(:all).collect do |i|
-          [i.name, i.user_id, i.description, 
+          [i.name, i.public_key, i.description, 
             i.ip_address, i.port, i.connection_id
           ] if i.name.downcase.include? search.downcase
       end.compact

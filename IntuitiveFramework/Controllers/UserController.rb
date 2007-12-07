@@ -27,61 +27,44 @@ module Controllers
             satisfy_identity_ownership_test(communicator, local_connection, new_server_connection, user)
         end
 =end
-        def self.satisfy_identity_ownership_test(communicator, local_connection, remote_connection, user)
-            # Get an encrypted challenge from the remote machine
-            while (message = communicator.get_net_message(local_connection, :challenge_identity_ownership)) == nil
-                sleep 0.1
-            end
-            encrypted_message = message[:encrypted_proof]
-            decrypted_message = Models::EncryptionKey.new(user.private_key, false).decrypt(encrypted_message)
-			   
-            # Send it back to the other machine unencrypted
-            message = { :command => :prove_identity_ownership,
-                      :public_key => user.public_universal_key,
-                      :decrypted_proof => decrypted_message }
-            communicator.send_net_message(local_connection, remote_connection, message)
-			   
-            # Make sure we got a confirmation
-            while (message = communicator.get_net_message(local_connection, :confirmed_identity_ownership)) == nil
-                sleep 0.1
-            end
-            
-            message
-        end
-
-        def self.require_identity_ownership_test(communicator, local_connection, remote_connection, user_name, user_public_key)
-            # Get the Virtual Identity information
-            public_key = Models::EncryptionKey.new(user_public_key, true)
+        def self.create_ownership_test(public_key)
+            # Get the Identity information
+            crypto = Models::EncryptionKey.new(public_key, true)
             
             # Generate a random number and encrypt it with the user's public key
+            srand
             decrypted_proof = rand(2**256).to_s
-            encrypted_proof = public_key.encrypt(decrypted_proof)
-
-            out_message = { :command => :challenge_identity_ownership,  
-                        :encrypted_proof => encrypted_proof}
-            communicator.send_net_message(local_connection, remote_connection, out_message)
+            encrypted_proof = crypto.encrypt(decrypted_proof)
             
-            # Wait for the remote machine to send proof back
-            while (message = communicator.get_net_message(local_connection, :prove_identity_ownership)) == nil
-                sleep 0.1
-            end
-
-            # Get the Virtual Identity information
-            connection = message[:source_connection]
-            public_key = Models::EncryptionKey.new(message[:public_key], true)
-            remote_decrypted_proof = message[:decrypted_proof]
+            @@pending_identity_tests ||= {}
+            @@pending_identity_tests[public_key] = decrypted_proof
             
-            # Make sure the proof was good
-            if decrypted_proof != remote_decrypted_proof
-                raise "Filed to prove identity for #{name}."
-            else
-                # The identity ownership was proven
-                out_message = { :command => :confirmed_identity_ownership, 
-                                :connection => connection, 
-                                :name => user_name, 
-                                :public_key => public_key}
-                communicator.send_net_message(local_connection, connection, out_message)
-            end
+            # Return the random number encrypted
+            encrypted_proof
+        end
+
+        def self.passed_ownership_test?(public_key, decrypted_proof)
+            # Get the Identity information
+            crypto = Models::EncryptionKey.new(public_key, true)
+            @@pending_identity_tests ||= {}
+            original_proof = @@pending_identity_tests[public_key]
+            
+            # Return if the proof was good or not
+            return decrypted_proof == original_proof
+        end
+        
+        def self.clear_ownership_test(public_key)
+            @@pending_identity_tests ||= {}
+            @@pending_identity_tests.delete(public_key)
+            
+            nil
+        end
+        
+        def self.answer_ownership_test(private_key, encrypted_proof)
+            # Get the Identity information
+            crypto = Models::EncryptionKey.new(private_key, false)
+            
+            crypto.decrypt(encrypted_proof)
         end
 =begin
         def self.find_user(communicator, local_connection, server_connection, user_public_key)
