@@ -69,7 +69,7 @@ class ProjectsController < ApplicationController
     raise "Failed to confirm identity for #{name}." unless passed
                             
     # If we got this far, save the identity
-    identity = Identity.new
+    identity = Identities.new
     identity.name = name
     identity.public_key = public_key
     identity.description = description
@@ -77,21 +77,20 @@ class ProjectsController < ApplicationController
     identity.port = port
     identity.connection_id = connection_id
 
-    raise identity.errors.collect { |e| "#{e.first}: e.last" }.inspect unless identity.save
+    raise identity.errors.collect { |e| "#{e.first}: #{e.last}" }.inspect unless identity.save
     
     ID::Controllers::UserController.clear_ownership_test(public_key)
 
     passed
   end
 
-  def search_identities(search)
-      return unless search.strip.length > 0
+  def find_identity(public_key)
+      identity = Identities.find(:first, :conditions => ["public_key = ?", public_key])
+
+      return [] unless identity
       
-      Identities.find(:all).collect do |i|
-          [i.name, i.public_key, i.description, 
-            i.ip_address, i.port, i.connection_id
-          ] if i.name.downcase.include? search.downcase
-      end.compact
+      [identity.name, identity.public_key, identity.description,
+      identity.ip_address, identity.port, identity.connection_id]
   end
   
   def empty_everything

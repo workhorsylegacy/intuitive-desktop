@@ -33,8 +33,8 @@ class ProjectsApi < ActionWebService::API::Base
                   {:decrypted_test => :string}],
       :returns => [:bool]
     
-  api_method :search_identities,
-      :expects => [{:search => :string}],
+  api_method :find_identity,
+      :expects => [{:public_key => :string}],
       :returns => [[{:name => :string}, {:public_key => :string}, {:description => :string},
                     {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}]]
       

@@ -45,20 +45,19 @@ module ID; module Controllers
          passed =
 			   @identity_server.register_identity(@local_connection, 
                                            @local_user.name,
-			                                     "",
-                                           @local_user.public_universal_key)
+			                                     "The happy identity of your doom",
+                                           @local_user.public_universal_key,
+                                           @local_user.private_key)
 			   
          assert passed
          
-			   # Make sure we can find the user
-			   copy_local_user = UserController::find_user(@communication_server,
-			                             @local_connection,
-			                             @identity_server.local_connection,
-			                             @local_user.public_universal_key)
+			   # Make sure we can find the identity
+			   identity_info = 
+         @identity_server.find_identity(@local_user.public_universal_key)
 
-                # Make sure the found Identities are correct
-                assert_equal(@local_user.public_universal_key, copy_local_user.public_universal_key)
-                assert_equal(@local_user.name, copy_local_user.name)                            
+         # Make sure the identity is the same
+         assert_equal(@local_user.public_universal_key, identity_info[:public_key])
+         assert_equal(@local_user.name, identity_info[:name])                            
 			end
 		end
 end; end

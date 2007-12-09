@@ -48,10 +48,10 @@ module ID; module Servers
         def close
         end
         
-        def register_identity(connection, name, description, private_key)
+        def register_identity(connection, name, description, public_key, private_key)
             encrypted_proof =
             @web_service.RegisterIdentityStart(name, 
-                                              private_key,
+                                              public_key,
                                               description, 
                                               connection[:ip_address],
                                               connection[:port],
@@ -60,7 +60,7 @@ module ID; module Servers
             decrypted_proof = Controllers::UserController::answer_ownership_test(private_key, encrypted_proof)
             
             @web_service.RegisterIdentityEnd(name, 
-                                              private_key,
+                                              public_key,
                                               description, 
                                               connection[:ip_address],
                                               connection[:port],
@@ -68,8 +68,13 @@ module ID; module Servers
                                               decrypted_proof)
         end
         
-        def has_identity?(public_key)
-            @identities.has_key?(public_key)
+        def find_identity(public_key)
+            i = @web_service.FindIdentity(public_key)
+            
+            return {} if i.length == 0
+            
+            {:name => i[0], :public_key => i[1], :description => i[2],
+             :ip_address => i[3], :port => i[4], :connection_id => i[5]}
         end
 	end
 end; end
