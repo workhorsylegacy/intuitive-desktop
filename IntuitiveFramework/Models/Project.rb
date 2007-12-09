@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class Project
         attr_reader :parent_branch, :project_number
         
@@ -106,4 +106,4 @@ module Models
             raise "No Project with the number '#{number}' found."
         end
     end
-end
+end; end

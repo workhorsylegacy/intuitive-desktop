@@ -1,6 +1,6 @@
 
 
-module Servers
+module ID; module Servers
     class CommunicationServer
         attr_reader :generic_incoming_connection
         
@@ -180,5 +180,5 @@ module Servers
             self.destroy_net_connection(temp_connection)
         end 
     end
-end
+end; end
 

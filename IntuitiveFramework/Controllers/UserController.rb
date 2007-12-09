@@ -3,7 +3,7 @@ path = File.dirname(File.expand_path(__FILE__))
 require "#{path}/Namespace"
 
 # FIXME: Rename to IdentityController and change Virtual Identity to just Identity.
-module Controllers
+module ID; module Controllers
 	class UserController
 =begin
         def self.register_identity(communicator, local_connection, server_connection, user)
@@ -29,7 +29,11 @@ module Controllers
 =end
         def self.create_ownership_test(public_key)
             # Get the Identity information
-            crypto = Models::EncryptionKey.new(public_key, true)
+#            begin
+                crypto = ID::Models::EncryptionKey.new(public_key, true)
+#            rescue
+#                raise "FIXME: This may be throwing because the local Models module is hiding the IntuitiveFramework one"
+#            end
             
             # Generate a random number and encrypt it with the user's public key
             srand
@@ -94,5 +98,5 @@ module Controllers
             user.destroy
         end
 	end
-end
+end; end
 

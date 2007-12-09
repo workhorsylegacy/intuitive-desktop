@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
-module Helpers
+module ID; module Helpers
     class Color
         # Takes a hex string such as 'FF3388FF' and converts it to a RGBA array such as [1.0, 0.5, 0.5, 1.0]
         def self.hex_to_rgb(hex_string)
@@ -53,4 +53,4 @@ module Helpers
             [r, g, b, a]
         end
     end
-end
+end; end

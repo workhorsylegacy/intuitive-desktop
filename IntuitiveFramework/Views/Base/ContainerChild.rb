@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     class ContainerChild
         include MixinBindsToModel
         include MixinContainerChild
@@ -16,4 +16,4 @@ module Views; module Base
             @is_pressed = false
         end
     end
-end; end
+end; end; end

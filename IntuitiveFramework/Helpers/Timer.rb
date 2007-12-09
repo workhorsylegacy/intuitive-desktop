@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'monitor'
 
-module Helpers
+module ID; module Helpers
     class Timer
         attr_reader :status, :precision
         attr_reader :events_for_system_second, :events_for_system_minute, :events_for_system_hour
@@ -102,4 +102,4 @@ module Helpers
             end             
         end
     end
-end
+end; end

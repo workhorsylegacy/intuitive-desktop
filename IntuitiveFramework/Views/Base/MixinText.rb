@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinText
             def text
                 # Update the property if it gets changes from the model
@@ -81,4 +81,4 @@ module Views; module Base
             end
         end        
     end
-end; end
+end; end; end

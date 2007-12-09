@@ -1,6 +1,10 @@
 
-require '../../IntuitiveFramework.rb'
+path = File.dirname(File.expand_path(__FILE__))
+require "#{path}/../../../../IntuitiveFramework.rb"
 require $IntuitiveFramework_Controllers
+require $IntuitiveFramework_Models
+require $IntuitiveFramework_Helpers
+require $IntuitiveFramework_Views
 
 # FIXME: Rename to IntuitiveController
 class ProjectsController < ApplicationController
@@ -53,11 +57,13 @@ class ProjectsController < ApplicationController
   end
   
   def register_identity_start(name, public_key, description, ip_address, port, connection_id)
-      encrypted_proof = Controllers::UserController.create_ownership_test(public_key)
+      encrypted_proof = ID::Controllers::UserController.create_ownership_test(public_key)
+      
+      encrypted_proof
   end
   
   def register_identity_end(name, public_key, description, ip_address, port, connection_id, decrypted_proof)
-      passed = Controllers::UserController.passed_ownership_test?(public_key, decrypted_proof)
+      passed = ID::Controllers::UserController.passed_ownership_test?(public_key, decrypted_proof)
             
     # Make sure the test passed
     raise "Failed to confirm identity for #{name}." unless passed
@@ -73,7 +79,7 @@ class ProjectsController < ApplicationController
 
     raise identity.errors.collect { |e| "#{e.first}: e.last" }.inspect unless identity.save
     
-    Controllers::UserController.clear_ownership_test(public_key)
+    ID::Controllers::UserController.clear_ownership_test(public_key)
 
     passed
   end

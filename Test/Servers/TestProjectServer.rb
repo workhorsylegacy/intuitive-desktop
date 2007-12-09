@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Servers
 
-module Servers
+module ID; module Servers
   class TestProjectServer < Test::Unit::TestCase
       def setup
           Servers::CommunicationServer.force_kill_other_instances()
@@ -134,5 +134,5 @@ module Servers
                                                             program)
       end
     end
-end
+end; end
 

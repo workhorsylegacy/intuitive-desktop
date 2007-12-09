@@ -49,41 +49,41 @@ require 'TestProgram'
 Thread.abort_on_exception = true
 
     def helper_tests
-        [Helpers::TestBinding.suite,
-        Helpers::TestLogger.suite,
-        Helpers::TestProxy.suite,
-        Helpers::TestSystemProxy.suite]
+        [ID::Helpers::TestBinding.suite,
+        ID::Helpers::TestLogger.suite,
+        ID::Helpers::TestProxy.suite,
+        ID::Helpers::TestSystemProxy.suite]
     end
 
     def model_test
-        [Models::TestBranch.suite,
-        Models::TestProject.suite,
-        Models::TestDocument.suite,
-        Models::TestUser.suite,
-#        Models::TestGroup.suite,
-        Models::Data::TestXmlModelCreator.suite]
+        [ID::Models::TestBranch.suite,
+        ID::Models::TestProject.suite,
+        ID::Models::TestDocument.suite,
+        ID::Models::TestUser.suite,
+#        ID::Models::TestGroup.suite,
+        ID::Models::Data::TestXmlModelCreator.suite]
     end
 
     def controller_tests
-        [Controllers::TestCommunicationController.suite,
-#        Controllers::TestDataController.suite,
-        Controllers::TestRevisionedFileSystemController.suite,
-        Controllers::TestSearchController.suite,
-        Controllers::TestUserController.suite,
-        Controllers::TestSystemCommunicationController.suite]
+        [ID::Controllers::TestCommunicationController.suite,
+#        ID::Controllers::TestDataController.suite,
+        ID::Controllers::TestRevisionedFileSystemController.suite,
+        ID::Controllers::TestSearchController.suite,
+        ID::Controllers::TestUserController.suite,
+        ID::Controllers::TestSystemCommunicationController.suite]
     end
 
     def server_tests
-        [Servers::TestIdentityServer.suite,
-        Servers::TestProjectServer.suite,
-        Servers::TestCommunicationServer.suite]
+        [ID::Servers::TestIdentityServer.suite,
+        ID::Servers::TestProjectServer.suite,
+        ID::Servers::TestCommunicationServer.suite]
     end
     
     def view_tests
-        [Views::Base::TestMixinBindsToModel.suite,
-        Views::Base::TestMixinBindsChildrenToModels.suite,
-        Views::TestView.suite,
-        Views::TestContainer.suite]
+        [ID::Views::Base::TestMixinBindsToModel.suite,
+        ID::Views::Base::TestMixinBindsChildrenToModels.suite,
+        ID::Views::TestView.suite,
+        ID::Views::TestContainer.suite]
     end
 
     def desktop_test
@@ -101,7 +101,7 @@ Thread.abort_on_exception = true
 #            view_tests,
 #            desktop_test
 #            ]
-            [[Controllers::TestUserController.suite]
+            [[ID::Controllers::TestUserController.suite]
             ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite

@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class TestProject < Test::Unit::TestCase
         def setup
             # Create a branch
@@ -28,4 +28,4 @@ module Models
             assert_equal('go', project.main_controller_class_name)
         end
     end
-end
+end; end

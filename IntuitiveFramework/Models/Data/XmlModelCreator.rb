@@ -1,5 +1,5 @@
 
-module Models
+module ID; module Models
     module Data
     
         # Reads an xml model and turns it into an ActiveRecord model.
@@ -214,4 +214,4 @@ def create_active_record_models_from_xml(xml_element_tables)
   end
 
   model_classes
-end
+end; end

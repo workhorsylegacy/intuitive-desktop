@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class Document
         attr_reader :parent_project
         
@@ -91,4 +91,4 @@ module Models
             new_document
         end
     end
-end
+end; end

@@ -1,6 +1,6 @@
 
 
-module Servers
+module ID; module Servers
     # FIXME: Have this replace the DataController. Trash the old one.
     class ProjectServer
         def self.force_kill_other_instances
@@ -151,5 +151,6 @@ module Servers
             @use_local_web_service
         end
     end
-end
+end; end
+
 

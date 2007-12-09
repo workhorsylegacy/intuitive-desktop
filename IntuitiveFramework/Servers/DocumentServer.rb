@@ -3,7 +3,7 @@
 require $IntuitiveFramework_Servers
 require $IntuitiveFramework_Models
 
-module Servers
+module ID; module Servers
     # FIXME: Rename to DataServer
 	class DocumentServer
         attr_reader :generic_net_connection
@@ -140,6 +140,7 @@ module Servers
             @net_communicator.destroy_connection(temp_connection)
         end     
 	end
-end
+end; end
+
 
 =end

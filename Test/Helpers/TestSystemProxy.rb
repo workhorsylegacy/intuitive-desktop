@@ -2,7 +2,7 @@
 require $IntuitiveFramework_Helpers
 require $IntuitiveFramework_Controllers
 
-module Helpers
+module ID; module Helpers
   class TestSystemProxy < Test::Unit::TestCase
         def setup
             # Make sure nothing is using the name
@@ -147,5 +147,5 @@ module Helpers
 #            raise "Test what happens when the real object is disconnected"
 #        end
     end
-end
+end; end
 

@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Controllers
 
-module Controllers
+module ID; module Controllers
 	    class TestCommunicationController < Test::Unit::TestCase
 	       def setup
 	           @ip_address = "127.0.0.1"
@@ -88,5 +88,5 @@ module Controllers
                 assert_equal(0, in_commands[@connection_two[:id]].length)
             end
 	    end
-end
+end; end
 

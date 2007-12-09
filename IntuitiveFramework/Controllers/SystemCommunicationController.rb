@@ -3,7 +3,7 @@ require 'monitor'
 require 'socket'
 require 'fileutils'
 
-module Controllers
+module ID; module Controllers
     class SystemCommunicationController
       attr_reader :name, :is_open, :is_incoming_open, :is_outgoing_open
       
@@ -207,5 +207,5 @@ module Controllers
             end
         end
     end
-end
+end; end
 

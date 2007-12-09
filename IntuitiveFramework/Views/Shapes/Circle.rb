@@ -1,6 +1,5 @@
 
-module Views
-    module Shapes
+module ID; module Views; module Shapes
         class Circle
         	attr_reader :name, :model_radius
         	attr_accessor :background
@@ -28,5 +27,4 @@ module Views
         		new_circle
         	end
         end
-    end
-end
+end; end; end

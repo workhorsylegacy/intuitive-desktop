@@ -1,6 +1,5 @@
 
-module Views
-    module Styles
+module ID; module Views; module Styles
         class Color
         	attr_reader :value
         
@@ -21,5 +20,4 @@ module Views
         		Color.new(value)
         	end
         end
-    end
-end
+end; end; end

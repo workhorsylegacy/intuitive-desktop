@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Controllers
 
-module Controllers
+module ID; module Controllers
       class TestSystemCommunicationController < Test::Unit::TestCase
          def setup
             # Get the socket name, and make sure it does not exist
@@ -155,5 +155,5 @@ module Controllers
                 assert_equal("No connection named 'black hole' to send to.", e.message)
             end
       end
-end
+end; end
 

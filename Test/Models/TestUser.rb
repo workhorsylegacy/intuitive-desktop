@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Models
 
-module Models
+module ID; module Models
 		class TestUser < Test::Unit::TestCase	    
 		    def teardown
                 @user.destroy if @user
@@ -22,4 +22,4 @@ module Models
 		        assert_equal(User.find(@user.id).name, @user.name)
 		    end
 		end
-end
+end; end

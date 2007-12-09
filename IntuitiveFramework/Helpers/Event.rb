@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
-module Helpers
+module ID; module Helpers
     class Event
         attr_reader :name
         attr_accessor :method, :method_controller, :result, :argument
@@ -62,4 +62,4 @@ module Helpers
 			new_event
 		end    
     end
-end
+end; end

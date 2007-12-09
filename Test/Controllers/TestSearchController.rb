@@ -1,6 +1,6 @@
 
 
-module Controllers
+module ID; module Controllers
     class TestSearchController < Test::Unit::TestCase 
         def test_find_similar_string
             # Create the database of strings
@@ -32,4 +32,4 @@ module Controllers
             assert_equal(0, results.length)
         end
     end
-end
+end; end

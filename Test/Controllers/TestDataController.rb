@@ -4,7 +4,7 @@
 require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
-module Controllers
+module ID; module Controllers
 	class TestDataController < Test::Unit::TestCase
 			def setup
           # Add a user
@@ -203,6 +203,6 @@ CONTROLLER_CODE
         data_two.commit(:data => "things to buy for supper:\n 1. butter\n 2. crisco\n 3. vegtable oil")
       end     
 	end
-end
+end; end
 
 =end

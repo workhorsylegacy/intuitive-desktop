@@ -5,7 +5,7 @@ require 'socket'
 # FIXME: Rename to NetCommunicationController
 # TODO: Intead of using YAML to convert the messages to strings, use binary
 # TODO: Figure out how to make the wait_for methods not need to use fast sleep counts to be responsive
-module Controllers
+module ID; module Controllers
     class CommunicationController
 	    attr_reader :ip_address, :in_port, :is_open, :is_incoming_open
 	    
@@ -200,5 +200,5 @@ module Controllers
             end
         end
     end
-end
+end; end
 

@@ -2,7 +2,7 @@
 require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
-module Servers
+module ID; module Servers
 	class TestIdentityServer < Test::Unit::TestCase
 			def setup
 			   # get sockets for the server, local machine and remote machine
@@ -54,5 +54,5 @@ module Servers
 #			   throw "Implement these tests!"
 #			end
 		end
-end
+end; end
 

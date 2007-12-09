@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinMouseDrag
         attr_accessor :on_mouse_drag_event, :scroll_position
 
@@ -13,4 +13,4 @@ module Views; module Base
             self.refresh
         end
     end
-end; end
+end; end; end

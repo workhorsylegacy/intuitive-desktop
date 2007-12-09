@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
-module Helpers
+module ID; module Helpers
     class FileSystem
         def self.get_new_randomly_named_sub_directory(parent_directory, prefix)
           loop do
@@ -21,4 +21,4 @@ module Helpers
           end
         end 
     end
-end
+end; end

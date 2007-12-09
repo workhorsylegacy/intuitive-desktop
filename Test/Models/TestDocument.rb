@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class TestDocument < Test::Unit::TestCase
         def setup
             # Create a branch
@@ -34,4 +34,4 @@ module Models
             assert_equal(:view, document.document_type)
         end
     end
-end
+end; end

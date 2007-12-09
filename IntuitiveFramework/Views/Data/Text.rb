@@ -1,6 +1,5 @@
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Text < Views::Base::ContainerChild
             attr_reader :name, :default
             attr_accessor :spellcheck_style, :font_name, :font_color, :font_size, :on_text_changed_event
@@ -69,5 +68,4 @@ module Views
         		new_text
         	end
         end
-    end
-end
+end; end; end

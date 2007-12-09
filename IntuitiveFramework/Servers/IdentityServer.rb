@@ -4,7 +4,7 @@ path = File.dirname(File.expand_path(__FILE__))
 
 require "#{path}/Namespace"
 
-module Servers
+module ID; module Servers
 	class IdentityServer
         def self.force_kill_other_instances
             return unless Controllers::SystemCommunicationController.is_name_used?("IdentityServer")
@@ -48,18 +48,19 @@ module Servers
         def close
         end
         
-        def register_identity(connection, name, description, user_id)
+        def register_identity(connection, name, description, private_key)
+            encrypted_proof =
             @web_service.RegisterIdentityStart(name, 
-                                              user_id,
+                                              private_key,
                                               description, 
                                               connection[:ip_address],
                                               connection[:port],
                                               connection[:id])
-                                              
-            decrypted_proof = answer_ownership_test(private_key, encrypted_proof)
+
+            decrypted_proof = Controllers::UserController::answer_ownership_test(private_key, encrypted_proof)
             
             @web_service.RegisterIdentityEnd(name, 
-                                              user_id,
+                                              private_key,
                                               description, 
                                               connection[:ip_address],
                                               connection[:port],
@@ -71,5 +72,6 @@ module Servers
             @identities.has_key?(public_key)
         end
 	end
-end
+end; end
+
 

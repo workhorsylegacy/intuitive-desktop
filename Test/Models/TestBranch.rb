@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class TestBranch < Test::Unit::TestCase
         def test_branch_create
             # Create a branch
@@ -58,4 +58,4 @@ module Models
             assert_equal(branch.name, new_branch.name)
         end
     end
-end
+end; end

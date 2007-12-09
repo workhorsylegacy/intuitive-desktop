@@ -1,7 +1,6 @@
 
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Layer < Views::Base::ContainerChild
             attr_reader :name, :image
 			attr_accessor :offset_x, :offset_y, :rotate
@@ -140,5 +139,4 @@ module Views
                 new_layer
           end
         end
-    end
-end
+end; end; end

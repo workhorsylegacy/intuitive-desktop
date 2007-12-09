@@ -2,7 +2,7 @@
 path = File.dirname(File.expand_path(__FILE__))
 require "#{path}/Namespace"
 
-module Controllers
+module ID; module Controllers
   class SearchController
     def self.find_similar_strings(search_string, data_strings, limit = 10, ignore_common_words = false)
         # Create an array of common words to ignore
@@ -31,4 +31,4 @@ module Controllers
         results
     end
   end
-end
+end; end

@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinContainerParent
         attr_reader :children
         attr_accessor :pack_style
@@ -70,4 +70,4 @@ module Views; module Base
     	   child_y(child) + child_height
     	end
     end
-end; end
+end; end; end

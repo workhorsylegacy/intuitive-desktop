@@ -1,6 +1,5 @@
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Drawing < Views::Base::ContainerParentAndChild
             attr_reader :name, :animations
             attr_accessor :color
@@ -145,5 +144,4 @@ module Views
               new_drawing
           end         
         end
-    end
-end
+end; end; end

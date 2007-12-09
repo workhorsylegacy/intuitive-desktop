@@ -25,7 +25,7 @@ class ProjectsApi < ActionWebService::API::Base
   api_method :register_identity_start,
       :expects => [{:name => :string}, {:public_key => :string}, {:description => :string},
                    {:ip_address => :string}, {:port => :integer}, {:connection_id => :integer}],
-      :returns => [:bool]
+      :returns => [:string]
     
   api_method :register_identity_end,
       :expects => [{:name => :string}, {:public_key => :string}, {:description => :string},

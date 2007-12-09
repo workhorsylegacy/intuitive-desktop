@@ -2,7 +2,7 @@
 require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
-module Controllers
+module ID; module Controllers
   #FIXME: Rename to TestIdentityController
 	class TestUserController < Test::Unit::TestCase
 			def setup
@@ -41,8 +41,7 @@ module Controllers
 			end
 			
 			def test_can_register_and_locate_user
-			   # Register the 2 users
-         raise "This breaks because the web service cannot see the Controllers::UserController class, even after it is required"
+			   # Register the user
          passed =
 			   @identity_server.register_identity(@local_connection, 
                                            @local_user.name,
@@ -51,7 +50,7 @@ module Controllers
 			   
          assert passed
          
-			   # Make sure we can find the 2 users
+			   # Make sure we can find the user
 			   copy_local_user = UserController::find_user(@communication_server,
 			                             @local_connection,
 			                             @identity_server.local_connection,
@@ -62,5 +61,5 @@ module Controllers
                 assert_equal(@local_user.name, copy_local_user.name)                            
 			end
 		end
-end
+end; end
 

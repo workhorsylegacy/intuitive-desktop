@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Helpers
 
-module Helpers
+module ID; module Helpers
 	class TestLogger < Test::Unit::TestCase
         def setup
             @logger = nil
@@ -56,5 +56,5 @@ module Helpers
             assert_equal(was_logged_used, true)
         end        
     end
-end
+end; end
 

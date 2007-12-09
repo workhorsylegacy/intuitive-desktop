@@ -1,5 +1,5 @@
 
-module Helpers
+module ID; module Helpers
         class TestBinding < Test::Unit::TestCase
             def test_from_xml
                 # Create a Binding from xml
@@ -127,4 +127,4 @@ XML
                 raise "add these tests!"
             end
         end
-end
+end; end

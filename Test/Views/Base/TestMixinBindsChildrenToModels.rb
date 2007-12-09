@@ -2,7 +2,7 @@
 require $IntuitiveFramework_Views_Base
 require $IntuitiveFramework_Models
 
-module Views; module Base
+module ID; module Views; module Base
         class TestMixinBindsChildrenToModels < Test::Unit::TestCase
             class TestController < Controllers::DocumentController
                 attr_reader :event_triggered
@@ -105,4 +105,4 @@ XML
                 assert_equal(true, program.main_controller.event_triggered)        
             end
         end
-end; end
+end; end; end

@@ -1,6 +1,6 @@
 
 
-module Views
+module ID; module Views
     module Animations
         class Action
             attr_reader :name, :parent, :interval, :children
@@ -77,4 +77,4 @@ module Views
           end         
         end
     end
-end
+end; end

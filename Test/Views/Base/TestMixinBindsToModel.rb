@@ -2,8 +2,7 @@
 require $IntuitiveFramework_Views_Base
 require $IntuitiveFramework_Models
 
-module Views
-module Base
+module ID; module View; module Base
         class TestMixinBindsToModel < Test::Unit::TestCase
             def test_bind_to_model
                 # Create a button connected to a model
@@ -48,6 +47,5 @@ XML
                 assert_equal("fickle, 56", button.text)
             end
         end
-end
-end
+end; end; end
 

@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Views
 
-module Views
+module ID; module Views
     class TestContainer < Test::Unit::TestCase
             def test_load_from_string
                 xml = 
@@ -15,4 +15,4 @@ module Views
                 assert_equal(1, container.children.length)
             end
         end    	
-end
+end; end

@@ -1,7 +1,6 @@
 
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Button < Views::Base::ContainerChild
             attr_reader :name
             
@@ -57,5 +56,4 @@ module Views
         		new_button
         	end        	
         end
-    end
-end
+end; end; end

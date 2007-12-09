@@ -1,5 +1,5 @@
 
-module Models
+module ID; module Models
     module System
         class Resolution
             def self.width
@@ -11,4 +11,4 @@ module Models
             end
         end
     end
-end
+end; end

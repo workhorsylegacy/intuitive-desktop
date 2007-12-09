@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
-module Helpers
+module ID; module Helpers
     class ProxiedException < Exception
         attr_reader :backtrace, :message
     
@@ -199,4 +199,4 @@ module Helpers
     		end
         end
 	end
-end
+end; end

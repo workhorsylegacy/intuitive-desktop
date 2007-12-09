@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     class ContainerParentAndChild
         include MixinBindsToModel
         include MixinContainerParent
@@ -18,4 +18,4 @@ module Views; module Base
             @parent_container = nil
         end
     end
-end; end
+end; end; end

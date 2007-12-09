@@ -58,3 +58,11 @@ end
 # Mime::Type.register "application/x-mobile", :mobile
 
 # Include your application configuration below
+
+
+path = File.dirname(File.expand_path(__FILE__))
+require "#{path}/../../../IntuitiveFramework.rb"
+require $IntuitiveFramework_Controllers
+require $IntuitiveFramework_Models
+require $IntuitiveFramework_Helpers
+require $IntuitiveFramework_Views

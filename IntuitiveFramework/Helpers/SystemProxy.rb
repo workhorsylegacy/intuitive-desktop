@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
-module Helpers
+module ID; module Helpers
   class SystemProxy        
         def self.make_object_proxyable(object_to_serve, name=:random, proxy_timeout=60)
             communicator = Controllers::SystemCommunicationController.new(name)
@@ -168,4 +168,4 @@ module Helpers
         end
         end
   end
-end
+end; end

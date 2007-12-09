@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class Branch
         attr_reader :branch_number
         
@@ -104,4 +104,4 @@ module Models
             value
         end
     end
-end
+end; end

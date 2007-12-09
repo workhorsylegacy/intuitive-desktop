@@ -1,6 +1,6 @@
 
 
-module Controllers
+module ID; module Controllers
   class DataController
         def self.move_to_next_revision(branch)
             # Just return if the current revision is head
@@ -63,4 +63,4 @@ module Controllers
             RevisionedFileSystemController.patch_folders("#{branch.folder_name}deltas/", "#{branch.folder_name}revisions/#{revision_number}/", revision_number)
         end
     end
-end
+end; end

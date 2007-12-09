@@ -86,11 +86,11 @@ path = File.dirname(File.expand_path(__FILE__))
 $IntuitiveFramework = path
 
 # Create a constant for the user database connection
-unless defined? Models::USER_DATABASE_CONNECTION
-    module Models
+unless defined? ID::Models::USER_DATABASE_CONNECTION
+    module ID; module Models
         USER_DATABASE_CONNECTION = { :adapter => 'sqlite3',
     						    :database => $IntuitiveFramework + "/database/database.sqlite" }
-    end
+    end; end
 end
 
 $DataSystem = "#{path}/data_system/"
