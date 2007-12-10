@@ -146,12 +146,12 @@ module ID; module Controllers
       end
           
       def close
-          #just return if already closed
-          return unless @is_open
+          if @is_open
+              stop_incoming_thread
+              @is_open = false
+          end
           
-          stop_incoming_thread
-          
-          @is_open = false
+          File.delete(self.full_name) if File.exist?(self.full_name)
       end
       
       private

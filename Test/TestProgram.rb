@@ -1,4 +1,5 @@
 
+module ID
 
 path = File.dirname(File.expand_path(__FILE__))
 require "#{path}/../IntuitiveFramework/IntuitiveFramework.rb"
@@ -36,3 +37,5 @@ MODEL_XML
                 assert_not_nil(program.main_view.children[0].children[0])
             end
         end
+
+end

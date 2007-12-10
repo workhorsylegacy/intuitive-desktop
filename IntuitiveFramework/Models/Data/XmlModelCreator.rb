@@ -1,7 +1,5 @@
 
-module ID; module Models
-    module Data
-    
+module ID; module Models; module Data
         # Reads an xml model and turns it into an ActiveRecord model.
         class XmlModelCreator
             def self.models_from_xml_string(xml_string)
@@ -135,8 +133,7 @@ module ID; module Models
             new_value_plan
           end
         end
-    end
-end
+end; end; end
 
 # FIXME: This needs to be in the base namespace so any models created will start from the base namespace too.
 def create_active_record_models_from_xml(xml_element_tables)
@@ -155,7 +152,7 @@ def create_active_record_models_from_xml(xml_element_tables)
     end
                 
   # Read the xml tables into table plans
-  table_plans = xml_element_tables.collect{ |e| Models::Data::TablePlan::from_xml(e) }
+  table_plans = xml_element_tables.collect{ |e| ID::Models::Data::TablePlan::from_xml(e) }
 
     # Get the connection info for a new database
     connection_format =  { :adapter => 'sqlite3', :database => file_name }
@@ -214,4 +211,4 @@ def create_active_record_models_from_xml(xml_element_tables)
   end
 
   model_classes
-end; end
+end

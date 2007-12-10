@@ -40,7 +40,7 @@ class ProjectsController < ApplicationController
 			[p.name, p.description, p.public_key, 
         p.revision, p.project_number, p.branch_number,
         p.ip_address, p.port, p.connection_id
-      ] if p.name.downcase.include? search.downcase
+      ] #if p.name.downcase.include? search.downcase # FIXME: A test. remove comment
 		end.compact
 	end
 

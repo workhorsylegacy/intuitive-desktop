@@ -5,9 +5,7 @@ module ID; module Controllers
       class TestSystemCommunicationController < Test::Unit::TestCase
          def setup
             # Get the socket name, and make sure it does not exist
-             @service_name = "testo"
-             f = (Controllers::SystemCommunicationController.file_path + @service_name)
-             File.delete(f) if File.exist?(f)
+            @service_name = "testo"
              
              @communicator_one = Controllers::SystemCommunicationController.new(@service_name)
              @communicator_two = Controllers::SystemCommunicationController.new()

@@ -65,12 +65,14 @@ Thread.abort_on_exception = true
     end
 
     def controller_tests
-        [ID::Controllers::TestCommunicationController.suite,
-#        ID::Controllers::TestDataController.suite,
+        [
+        ID::Controllers::TestCommunicationController.suite,
+##        ID::Controllers::TestDataController.suite,
         ID::Controllers::TestRevisionedFileSystemController.suite,
         ID::Controllers::TestSearchController.suite,
         ID::Controllers::TestUserController.suite,
-        ID::Controllers::TestSystemCommunicationController.suite]
+        ID::Controllers::TestSystemCommunicationController.suite
+        ]
     end
 
     def server_tests
@@ -87,21 +89,19 @@ Thread.abort_on_exception = true
     end
 
     def desktop_test
-        [TestProgram.suite]
+        [ID::TestProgram.suite]
     end
     
     class TestSuite
         def self.suite
             master_suite = Test::Unit::TestSuite.new
             
-#            [helper_tests,
-#            model_test,
-#            controller_tests,
-#            server_tests,
-#            view_tests,
-#            desktop_test
-#            ]
-            [[ID::Controllers::TestUserController.suite]
+            [helper_tests,
+            model_test,
+            controller_tests,
+            server_tests,
+            view_tests,
+            desktop_test
             ].each do |suite_set|
                 suite_set.each do |suite|
                     master_suite << suite

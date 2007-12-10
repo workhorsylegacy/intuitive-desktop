@@ -1,4 +1,5 @@
 
+module ID
     class Program < Gtk::Window
         attr_reader :view_file
         attr_accessor :models, :views, :controllers, :states, :main_view, :main_controller
@@ -284,4 +285,6 @@
         widget.set_colormap(colormap)
         return false
     end
+end
+
 end

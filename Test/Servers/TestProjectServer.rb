@@ -83,6 +83,10 @@ module ID; module Servers
           assert_equal(project.project_number.to_s, details.first[:project_number])
       end
    
+      def test_search_projects
+          raise "Implement me!"
+      end
+   
       def test_run_project_online
           server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
           
@@ -117,7 +121,7 @@ module ID; module Servers
           
           # Advertise the project online
           connection = server.generic_incoming_connection
-          @project_server.advertise_project_online(server.generic_incoming_connection,
+          @project_server.advertise_project_online(connection,
                                                           project.name, project.description, project.parent_branch.user_id,
                                                           project.parent_branch.head_revision_number, project.project_number.to_s,
                                                           project.parent_branch.branch_number.to_s)

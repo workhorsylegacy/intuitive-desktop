@@ -80,7 +80,8 @@ module ID; module Servers
             projects.collect do |p|
                 { :name => p[0], :description => p[1], 
                   :user_id => p[2], :revision => p[3].to_i, 
-                  :project_number => p[4], :location => p[5] }
+                  :project_number => p[4], :branch_number => p[5],
+                  :ip_address => p[6], :port => p[7], :connection_id => p[8] }
             end
         end
             

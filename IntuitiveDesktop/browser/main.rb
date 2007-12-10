@@ -15,51 +15,63 @@ Dir.chdir(File.dirname(File.expand_path(__FILE__)))
 
 require 'libglade2'
 require "../../IntuitiveFramework/IntuitiveFramework.rb"
+require $IntuitiveFramework_Models
+require $IntuitiveFramework_Helpers
+require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
 def start_server
-    # Create a document server
-    proc = Proc.new { |status, message, exception| raise message }
-    @document_server = Servers::DocumentServer.new('127.0.0.1', 5000, 5001, proc)
-    $global_server_connection = @document_server.local_connection
+    # Create the servers
+    communication_server = ID::Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
+    project_server = ID::Servers::ProjectServer.new(true, :throw)
+    project_server.clear_everything()
 end
 
 def setup_user_and_projects
     # Add a user
-    public_key, private_key = Models::EncryptionKey.make_public_and_private_keys
-    user = Models::User.new
+    public_key, private_key = ID::Models::EncryptionKey.make_public_and_private_keys
+    user = ID::Models::User.new
     user.name = 'bobrick bobberton'
     user.public_universal_key = public_key.key.to_s
     user.private_key = private_key.key.to_s
     user.save!
     
     # Create the project
-    branch = Models::Branch.new('Map Example Trunk', user.public_universal_key)
-    project = Models::Project.new(branch, 'Map Example')
+    branch = ID::Models::Branch.new('Map Example Trunk', user.public_universal_key)
+    project = ID::Models::Project.new(branch, 'Map Example')
+    project.description = "A simple map navigation program."
     
-    document = Models::Document.new(project, 'Model')
+    document = ID::Models::Document.new(project, 'Model')
     document.data = File.new('../../examples/large_examples/maps/models.xml').read
     document.run_location = :client
     document.document_type = :model
     
-    document = Models::Document.new(project, 'State')
+    document = ID::Models::Document.new(project, 'State')
     document.data = File.new('../../examples/large_examples/maps/state.xml').read
     document.run_location = :client
     document.document_type = :state
     
-    document = Models::Document.new(project, 'View')
+    document = ID::Models::Document.new(project, 'View')
     document.data = File.new('../../examples/large_examples/maps/view.xml').read
     document.run_location = :client
     document.document_type = :view
     
-    document = Models::Document.new(project, 'Controller')
+    document = ID::Models::Document.new(project, 'Controller')
     document.data = File.new('../../examples/large_examples/maps/controller.rb').read
     document.run_location = :client
     document.document_type = :controller
     
     project.main_controller_class_name = "MapController"
     project.main_view_name = "main_window"
-    Controllers::DataController.save_revision(branch)
+    ID::Controllers::DataController.save_revision(branch)
+    
+    # Advertise the project online
+    @communication_server = ID::Helpers::SystemProxy.get_proxy_to_object("CommunicationServer")
+    @project_server = ID::Helpers::SystemProxy.get_proxy_to_object("ProjectServer")
+    @project_server.advertise_project_online(@communication_server.generic_incoming_connection,
+                                            project.name, project.description, project.parent_branch.user_id,
+                                            project.parent_branch.head_revision_number, project.project_number.to_s,
+                                            project.parent_branch.branch_number.to_s)
 end
 
 class Browser
@@ -83,8 +95,8 @@ class Browser
     @result_to_project_map = {}
     
     # Create a communication controller to talk to the server
-    @communicator = Controllers::CommunicationController.new('127.0.0.1', 6000, 6001)
-    @connection = @communicator.create_connection   
+    @communication_server = ID::Helpers::SystemProxy.get_proxy_to_object("CommunicationServer")
+    @project_server = ID::Helpers::SystemProxy.get_proxy_to_object("ProjectServer")  
     @search_thread = nil
     @search_projects = nil
     @is_communicating = false
@@ -110,20 +122,15 @@ class Browser
             
             # Search for the string
             @is_communicating = true
-            criteria = {:names => [search_string]}
-            @search_projects = Controllers::DataController.find_projects_over_network(
-                                                                  @communicator,
-                                                                  @connection,
-                                                                  $global_server_connection,
-                                                                  criteria)
+            @search_projects = @project_server.search_for_projects_online(search_string)
             @is_communicating = false
             
             project_names = Gtk::ListStore.new(String)
             @results_tree.model.clear
             @result_to_project_map.clear
             @search_projects.each do |project|
-                @results_tree.model.append[0] = project.name
-                @result_to_project_map[project.name] = project
+                @results_tree.model.append[0] = project[:name]
+                @result_to_project_map[project[:name]] = project
             end
         end
     end
@@ -132,13 +139,13 @@ class Browser
         if iter = widget.selection.selected
             name = iter[0]
             project = @result_to_project_map[name]
-            window = Window.new
-            program = Program.new(window)
-            Controllers::DataController.run_project_locally(
-                        window,
-                        program, 
-                        project)
-            window.run
+            program = ID::Program.new           
+            @project_server.run_project(@communication_server, @communication_server.generic_incoming_connection, 
+                                        project[:revision], 
+                                        project[:project_number].to_s,
+                                        project[:branch_number],
+                                        program)
+            program.run
         end
     end
     
@@ -166,6 +173,6 @@ Gtk.main
  . We need a way to search for identities by name and description too
  . We need a way to get the location of the document servers that are on our local network
  . We can use http://intuitive-dektop.org with a web service or restful service to get servers over the Internet
- . We NEED to change our communication controller to use XML so we can't get code injections. Only strings and numbers should go over the network
+ . We NEED to change our communication controller to use XML so we can't get code injections. Only basic types (strings, numbers, hasehs, arrays, nil) should go over the network
  . XML_RPC is looking even better
 =end
