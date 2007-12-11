@@ -14,6 +14,8 @@ module ID; module Controllers
 	       
 	       def teardown
 	           @communicator.close if @communicator
+             
+             ID::TestHelper.cleanup()
 	       end
 	       
 	       def test_is_open

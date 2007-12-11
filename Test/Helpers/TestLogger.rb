@@ -14,6 +14,8 @@ module ID; module Helpers
             @logger.close if @logger
             (Dir.entries(@dir_name) - ['..', '.']).each {|file|  File.delete(@dir_name + file) }
             Dir.rmdir(@dir_name)
+            
+            ID::TestHelper.cleanup()
         end
         
         def test_log_to_file

@@ -4,6 +4,10 @@ require $IntuitiveFramework_Models
 
 module ID; module Views; module Base
         class TestMixinBindsToModel < Test::Unit::TestCase
+          def teardown
+              ID::TestHelper.cleanup()           
+          end
+          
             def test_bind_to_model
                 # Create a button connected to a model
                 xml = 	

@@ -1,7 +1,11 @@
 
 
 module ID; module Controllers
-    class TestSearchController < Test::Unit::TestCase 
+    class TestSearchController < Test::Unit::TestCase
+        def teardown
+            ID::TestHelper.cleanup()
+        end
+        
         def test_find_similar_string
             # Create the database of strings
             data_strings = ["three flavors ice cream",

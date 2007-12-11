@@ -95,6 +95,7 @@ end
 
 $DataSystem = "#{path}/data_system/"
 $TempCommunicationDirectory = "#{path}/temp_communication/"
+$TempTables = "#{path}/temporary_tables/"
 
 # Create a global string for each namespace file
 $IntuitiveFramework_Helpers = "#{path}/Helpers/Namespace"

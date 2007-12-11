@@ -17,6 +17,8 @@ module ID; module Servers
       def teardown
           @communication_server.close if @communication_server
           @other_net_communicator.close if @other_net_communicator
+          
+          ID::TestHelper.cleanup()      
       end
 
       def test_is_running?

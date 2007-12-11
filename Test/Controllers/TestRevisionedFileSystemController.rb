@@ -11,6 +11,8 @@ module ID; module Controllers
     
         def teardown
             FileUtils.rm_rf(@test_folder) if File.directory?(@test_folder)
+            
+            ID::TestHelper.cleanup()
         end
     
         def test_diff_folder_simple

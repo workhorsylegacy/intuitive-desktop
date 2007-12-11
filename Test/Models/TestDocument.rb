@@ -9,6 +9,10 @@ module ID; module Models
             @project = Project.new(@branch, 'Cool Project')
         end
         
+        def teardown
+            ID::TestHelper.cleanup()
+        end        
+        
         def test_document_create
             # Create a document
             document = Document.new(@project, 'magic view')

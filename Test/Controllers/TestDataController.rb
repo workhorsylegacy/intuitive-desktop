@@ -21,6 +21,7 @@ module ID; module Controllers
           @communicator.close if @communicator
           @document_server.close if @document_server
           FileUtils.rm_rf($DataSystem)
+          ID::TestHelper.cleanup()
 			end
 			
 			def test_find_project

@@ -3,6 +3,10 @@ require $IntuitiveFramework_Views
 
 module ID; module Views
     class TestContainer < Test::Unit::TestCase
+          def teardown
+              ID::TestHelper.cleanup()   
+          end
+          
             def test_load_from_string
                 xml = 
                 "<Container pack_style=\"vertical\" > \

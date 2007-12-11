@@ -6,6 +6,10 @@ require "#{path}/../IntuitiveFramework/IntuitiveFramework.rb"
 
 
     class TestProgram < Test::Unit::TestCase
+            def teardown
+                ID::TestHelper.cleanup()
+            end
+            
             def test_load_from_string
                 view_xml =
 <<VIEW_XML

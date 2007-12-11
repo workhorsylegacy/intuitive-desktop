@@ -1,6 +1,10 @@
 
 module ID; module Models; module Data
         class TestXmlModelCreator < Test::Unit::TestCase
+            def teardown
+                ID::TestHelper.cleanup()
+            end
+            
             def test_model_from_xml
                 # Get the XML for the model
                 xml = 

@@ -28,6 +28,8 @@ module ID; module Helpers
         def teardown
             # Make sure the communicator released its resources
             assert_equal(false, Controllers::SystemCommunicationController.is_name_used?("Thingy"))
+            
+            ID::TestHelper.cleanup()
         end
         
         def test_proxy_object

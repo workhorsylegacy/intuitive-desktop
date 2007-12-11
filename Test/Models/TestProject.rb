@@ -8,6 +8,10 @@ module ID; module Models
             @branch = Branch.new('Cool Project Main', user_id)   
         end
         
+        def teardown
+           ID::TestHelper.cleanup()
+        end         
+        
         def test_project_create
             # Create a project
             project = Project.new(@branch, 'Cool Project')

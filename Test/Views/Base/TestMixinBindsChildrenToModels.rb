@@ -17,6 +17,10 @@ module ID; module Views; module Base
                 end
             end
             
+          def teardown
+              ID::TestHelper.cleanup()            
+          end
+            
             def test_bind_models
                 # Create a document that has a button connected to a model
                 xml = 	

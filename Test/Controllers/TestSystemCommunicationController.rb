@@ -14,6 +14,8 @@ module ID; module Controllers
          def teardown
              @communicator_one.close if @communicator_one
              @communicator_two.close if @communicator_two
+             
+             ID::TestHelper.cleanup()
          end
          
          def test_name_lookup

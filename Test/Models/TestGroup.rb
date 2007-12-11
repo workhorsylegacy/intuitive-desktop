@@ -15,6 +15,8 @@ module ID; module Models
 		    def teardown
 		        @user.destroy if @user
 		        @group.destroy if @group
+            
+            ID::TestHelper.cleanup()        
 		    end
 		    
 		    def test_can_create

@@ -29,6 +29,8 @@ module ID; module Servers
           @communication_server.close if @communication_server
           
           @user.destroy if @user
+          
+          ID::TestHelper.cleanup()
       end
             
       def test_is_running

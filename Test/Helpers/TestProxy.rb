@@ -31,6 +31,8 @@ module ID; module Helpers
         
         def teardown
             @communication_server.close if @communication_server
+            
+            ID::TestHelper.cleanup()
         end
         
         def test_proxy_object

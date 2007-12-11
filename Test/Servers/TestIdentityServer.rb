@@ -27,6 +27,8 @@ module ID; module Servers
           
           @identity_server.close if @identity_server
           @communication_server.close if @communication_server
+          
+          ID::TestHelper.cleanup()      
       end
       
       def test_can_register_and_locate_user

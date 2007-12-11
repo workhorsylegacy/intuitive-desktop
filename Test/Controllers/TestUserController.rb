@@ -11,6 +11,8 @@ module ID; module Controllers
             
       def teardown
           @local_user.destroy if @local_user
+          
+          ID::TestHelper.cleanup()
 			end
 			
 			def test_can_prove_identity
