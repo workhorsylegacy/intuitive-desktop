@@ -140,10 +140,13 @@ class Browser
             name = iter[0]
             project = @result_to_project_map[name]
             program = ID::Program.new           
-            @project_server.run_project(@communication_server, @communication_server.generic_incoming_connection, 
+            ID::Servers::ProjectServer.run_project(@communication_server,
                                         project[:revision], 
                                         project[:project_number].to_s,
                                         project[:branch_number],
+                                        project[:connection_id],
+                                        project[:port],
+                                        project[:ip_address],
                                         program)
             program.run
         end

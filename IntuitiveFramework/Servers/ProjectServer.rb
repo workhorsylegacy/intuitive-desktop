@@ -85,14 +85,23 @@ module ID; module Servers
             end
         end
             
-        def self.run_project(server, connection, revision_number, project_number, branch_number, program) 
+        def self.run_project(server, revision, project_number,
+                                        branch_number,
+                                        connection_id,
+                                        port,
+                                        ip_address,
+                                        program) 
+                                        
+            program_connection = {:connection_id => connection_id,
+                                  :port => port,
+                                  :ip_address => ip_address}
             out_connection = server.create_net_connection
             
             # Tell the Server that we want to run the project
             message = {:command => :run_project,
                         :project_number => project_number,
                         :branch_number => branch_number}
-            server.send_net_message(out_connection, connection, message)
+            server.send_net_message(out_connection, server.generic_incoming_connection, message)
         
             # Wait for the server to ok the process and give up a new connection to it
             while (message = server.get_net_message(out_connection, :ok_to_run_project)) == nil

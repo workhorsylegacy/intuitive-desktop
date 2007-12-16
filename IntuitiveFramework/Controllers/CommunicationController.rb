@@ -175,7 +175,7 @@ module ID; module Controllers
 	                id = result[:dest_connection][:id]
 	                
 #	                # FIXME: Dump the message here if it was sent to the wrong controller
-#	                raise @connections.inspect unless @connections.has_key?(id)
+#	                raise "Wrong connection " + result.inspect unless @connections.has_key?(id)
 	                
 	                # Make sure we know of this connection
 	                raise "There is no destination connection on this controller that matches that id." unless @connections.has_key?(id)
