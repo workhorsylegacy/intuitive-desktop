@@ -23,52 +23,51 @@ module ID; module Helpers
                     #timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
             
                     loop do
-                        commun.wait_for_any_command do |message|
-                            remote_connection = message[:source_connection]
+                        message = commun.wait_for_any_command
+                        remote_connection = message[:source_connection]
                             
-                            case message[:command]
-                                when :send_to_object
-                                    #puts Time.now.to_s + " " + object_to_serve.class.to_s + " " + message.inspect
-                                    name = message[:name]
-                                    args = message[:args].first
-                                    retval = nil
-                                    exception = nil
-                                    exception_class_name = nil
-                                    exception_backtrace = nil
+                        case message[:command]
+                            when :send_to_object
+                                #puts Time.now.to_s + " " + object_to_serve.class.to_s + " " + message.inspect
+                                name = message[:name]
+                                args = message[:args].first
+                                retval = nil
+                                exception = nil
+                                exception_class_name = nil
+                                exception_backtrace = nil
+                                
+                                # Try to call the method
+                                begin
+                                    raise NameError, "The method .method cannot be used with a proxy." if name == 'method'
+                                    raise NameError, "The method .class cannot be used with a proxy." if name == 'class' && args.length == 0
                                     
-                                    # Try to call the method
-                                    begin
-                                        raise NameError, "The method .method cannot be used with a proxy." if name == 'method'
-                                        raise NameError, "The method .class cannot be used with a proxy." if name == 'class' && args.length == 0
-                                        
-                                        retval = object.send(name, *args)
-                                    rescue Exception => e
-                                        exception = e.message
-                                        exception_class_name = e.class.name
-                                        exception_backtrace = e.backtrace
-                                    end
-                                    
-                                    # Return any result and exceptions
-                                    message = {:command => :send_to_object_return_value,
-                                                :return_value => retval,
-                                                :exception => exception,
-                                                :exception_class_name => exception_class_name,
-                                                :backtrace => exception_backtrace}
-                                    commun.send_command(remote_connection, message)
-                                #when :proxy_still_alive
-                                #    raise "Still Alive"
-                                #    timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
-                                #    message = { :command => :will_stay_alive }
-                                #    commun.send_command(remote_connection, message)                                    
-                                else
-                                    raise "Unknown command"
-                                    error = "The proxied object does not know what to do with the command '#{message[:command]}'."
-                                    message = {:command => :send_to_object_return_value,
-                                                :return_value => retval,
-                                                :exception => Exception.new(error),
-                                                :exception_class_name => Exception}
-                                    commun.send_command(remote_connection, message)
-                            end
+                                    retval = object.send(name, *args)
+                                rescue Exception => e
+                                    exception = e.message
+                                    exception_class_name = e.class.name
+                                    exception_backtrace = e.backtrace
+                                end
+                                
+                                # Return any result and exceptions
+                                message = {:command => :send_to_object_return_value,
+                                            :return_value => retval,
+                                            :exception => exception,
+                                            :exception_class_name => exception_class_name,
+                                            :backtrace => exception_backtrace}
+                                commun.send_command(remote_connection, message)
+                            #when :proxy_still_alive
+                            #    raise "Still Alive"
+                            #    timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
+                            #    message = { :command => :will_stay_alive }
+                            #    commun.send_command(remote_connection, message)                                    
+                            else
+                                raise "Unknown command"
+                                error = "The proxied object does not know what to do with the command '#{message[:command]}'."
+                                message = {:command => :send_to_object_return_value,
+                                            :return_value => retval,
+                                            :exception => Exception.new(error),
+                                            :exception_class_name => Exception}
+                                commun.send_command(remote_connection, message)
                         end
                     end
             end
