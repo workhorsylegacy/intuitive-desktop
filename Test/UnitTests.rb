@@ -94,7 +94,7 @@ Thread.abort_on_exception = true
     class TestSuite
         def self.suite
             master_suite = Test::Unit::TestSuite.new
-=begin
+
             [helper_tests,
             model_test,
             controller_tests,
@@ -106,9 +106,7 @@ Thread.abort_on_exception = true
                     master_suite << suite
                 end
             end
-=end
-            master_suite << ID::Controllers::TestSystemCommunicationController.suite
-            master_suite << ID::Helpers::TestSystemProxy.suite
+            
             return master_suite
         end
     end 
