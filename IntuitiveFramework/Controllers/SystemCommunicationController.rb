@@ -30,7 +30,8 @@ module ID; module Controllers
           @name = name
           
           # Get variables to store message
-          @in_commands = [].extend(MonitorMixin)
+          @waiting_for_any = nil
+          @waiting_for_command = {}.extend(MonitorMixin)
           
           self.open
       end
@@ -70,43 +71,38 @@ module ID; module Controllers
       
       # Will block until the next command is received, then return it
       def wait_for_any_command
-          loop do
-             message = nil
-             @in_commands.synchronize do
-                 if @in_commands.length > 0
-                     message = @in_commands.shift
-                 end
-             end
-             
-             if message != nil
-                 yield(message)
-                 return message
-             else
-                 sleep(0.1)
-             end
+          t = Thread.new do
+            curr_thread = Thread.current
+            @waiting_for_any =  Thread.current
+        
+            # Stop this thread, so it can be awoken by the incoming message
+            Thread.stop
           end
+        
+          t.join()
+          @waiting_for_any = nil
+          return t[:command]
       end            
       
       # Will wait for a command up to a certain amount of time before throwing
-      def wait_for_command(command, max_seconds_to_wait=10)          
-          start_time = Time.now
-
-          retval = nil
-          loop do
-              @in_commands.synchronize do
-                  @in_commands.each do |user_command|
-                      if user_command[:command] == command
-                          retval = @in_commands.delete(user_command)
-                          break
-                      end
-                  end
-              end
-              break if retval
-              raise "Timed out while waiting for the command '#{command}'" if (Time.now - start_time).to_i > max_seconds_to_wait
-              sleep(0.1)
+      def wait_for_command(command, max_seconds_to_wait=10)
+          t = Thread.new do
+            curr_thread = Thread.current
+            @waiting_for_command[command.to_s] =  curr_thread
+        
+            # Stop this thread, so it can be awoken by the incoming message
+            Thread.stop
           end
-          
-          return retval
+        
+          timeout_thread = Thread.new do
+              sleep max_seconds_to_wait
+              raise "Timed out while waiting for the command '#{command}'"
+          end
+        
+          t.join()
+          timeout_thread.kill()
+          @waiting_for_command.delete(command.to_s)
+          return t[:command]
       end            
       
         def send_command(dest_name, message)
@@ -182,10 +178,20 @@ module ID; module Controllers
                   end
 
                   raise "Message incoming to '#{name}' is not a Hash." unless result.class == Hash
-                  raise "Message incoming to '#{name}'is missing source_connection." unless result.has_key?(:source_connection)
-                  raise "Message incoming to '#{name}'is missing dest_connection." unless result.has_key?(:dest_connection)
+                  raise "Message incoming to '#{name}' is missing source_connection." unless result.has_key?(:source_connection)
+                  raise "Message incoming to '#{name}' is missing dest_connection." unless result.has_key?(:dest_connection)
+                  raise "Message incoming to '#{name}' is missing a command." unless result.has_key?(:command)
                   
-                  @in_commands.synchronize { @in_commands << result }
+                  thread = nil
+                  if @waiting_for_any != nil
+                      thread = @waiting_for_any
+                  elsif @waiting_for_command.has_key?(result[:command].to_s)
+                      thread = @waiting_for_command.delete(result[:command].to_s)
+                  else
+                      raise "Message '#{result[:command].to_s}' incoming to '#{name}' was not expected."
+                  end
+                  thread[:command]  = result
+                  thread.run()
               end
           end
       end
@@ -198,7 +204,8 @@ module ID; module Controllers
           @in_thread.exit
           @in_socket.close
           File.delete(self.full_name) if File.exist?(self.full_name)
-          @in_commands.clear
+          @waiting_for_any = nil
+          @waiting_for_command = {}.extend(MonitorMixin)
       end
       
       def validate_connection(connection)

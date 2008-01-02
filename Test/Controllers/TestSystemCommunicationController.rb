@@ -51,12 +51,6 @@ module ID; module Controllers
             # Make sure the files is created when re opened
             @communicator_one.open
             assert_equal(true, File.exist?(@communicator_one.full_name))
-             
-             # Make sure the buffers are cleared when closed
-             @communicator_one.instance_variable_set("@in_commands", [:some, :data].extend(MonitorMixin))
-             assert_equal(2, @communicator_one.instance_variable_get("@in_commands").length)
-             @communicator_one.close
-             assert_equal(0, @communicator_one.instance_variable_get("@in_commands").length)
          end
          
          def test_existing_file
@@ -81,70 +75,34 @@ module ID; module Controllers
             end
             assert_equal("The name 'testo' is already used by a service.", e.message)
          end
-         
-            def test_received_messages
-                @communicator_one.send_command(@communicator_two.name, { :command => :yo, :body => "what up?" }) 
-                @communicator_two.send_command(@communicator_one.name, { :command => :fu, :body => "your stank up fu" })
-              
-                # Make sure the communicators got the messages
-                sleep(0.5)
-                in_commands = @communicator_one.instance_variable_get("@in_commands")
-                assert_equal(:fu, in_commands.first[:command])
-                in_commands = @communicator_two.instance_variable_get("@in_commands")
-                assert_equal(:yo, in_commands.first[:command])
-            end
        
             def test_wait_for_any_command
-                @communicator_one.send_command(@communicator_two.name, { :command => :yo }) 
-                @communicator_two.send_command(@communicator_one.name, { :command => :fu })
-                sleep(0.5)
-                
-                # Make sure the communicator is saving the messages
-                in_commands = @communicator_one.instance_variable_get("@in_commands")
-                assert_equal(1, in_commands.length)
-                in_commands = @communicator_two.instance_variable_get("@in_commands")
-                assert_equal(1, in_commands.length)
-                
                 result = {}
-                @communicator_one.wait_for_any_command { |message| result[:one] = message[:command] }
-                @communicator_two.wait_for_any_command { |message| result[:two] = message[:command] }             
+                t = Thread.new do
+                    result[:one] = @communicator_one.wait_for_any_command[:command]
+                end
+                
+                @communicator_two.send_command(@communicator_one.name, { :command => :yo })
+                t.join
               
-                # Make sure the communicator is not storing any messages
-                in_commands = @communicator_one.instance_variable_get("@in_commands")
-                assert_equal(0, in_commands.length)
-                in_commands = @communicator_two.instance_variable_get("@in_commands")
-                assert_equal(0, in_commands.length)
-              
-                # Make sure the communicator got the messages
-                assert_equal({:one => :fu, :two => :yo}, result)
+                # Make sure the communicator got the message
+                assert_equal({:one => :yo}, result)
             end
             
             def test_wait_for_command
-                # Send some messages
-                @communicator_one.send_command(@communicator_two.name, { :command => :yo, :body => "what up?" }) 
-                @communicator_two.send_command(@communicator_one.name, { :command => :fu, :body => "your stank up fu" })
-              
-                # Make sure the communicator got the messages
-                sleep(0.5)
-                in_commands = @communicator_one.instance_variable_get("@in_commands")
-                assert_equal(:fu, in_commands.first[:command])
-                in_commands = @communicator_two.instance_variable_get("@in_commands")
-                assert_equal(:yo, in_commands.first[:command])
-              
-                # Wait for the commands
-                message_one = @communicator_one.wait_for_command(:fu)
-                message_two = @communicator_two.wait_for_command(:yo)
-              
-                # Make sure the communicator got the messages
-                sleep(0.5)
-                assert_equal(:fu, message_one[:command])
-                assert_equal(:yo, message_two[:command])
+                # Wait for the message
+                message = nil
+                t = Thread.new do
+                    message = @communicator_one.wait_for_command(:fu)
+                end
                 
-                # Make sure the messages are no longer on the communicator
-                in_commands = @communicator_one.instance_variable_get("@in_commands")
-                assert_equal(0, in_commands.length)
-                in_commands = @communicator_two.instance_variable_get("@in_commands")
-                assert_equal(0, in_commands.length)
+                # Send the message
+                @communicator_two.send_command(@communicator_one.name, { :command => :fu, :body => "your stank up fu" })
+                t.join
+              
+                # Make sure the communicator got the message
+                assert_equal(:fu, message[:command])
+                assert_equal("your stank up fu", message[:body])
             end            
             
             def test_missing_destination

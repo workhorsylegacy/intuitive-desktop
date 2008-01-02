@@ -42,6 +42,7 @@ module ID; module Helpers
             assert_equal("proxy of doom", @proxy.name)
         end
         
+=begin
         def test_send
             def @object.add(a, b)
                 a + b
@@ -90,7 +91,8 @@ module ID; module Helpers
           
           assert(another.name != nil)
           assert(yet_another.name != nil)
-      end        
+      end 
+=end       
         
 =begin FIXME: Add these tests to see what happens when the real object or proxy is GCed
               or the communicator or connections break or turn off

@@ -19,8 +19,8 @@ module ID; module Helpers
             # Perform any calls to the Object from the communicator
             proxy_thread = Thread.new(object_to_serve, communicator) do |object, commun|
                     # Create a thread to timeout the proxy connection
-                    timout_thread = nil
-                    timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
+                    #timout_thread = nil
+                    #timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
             
                     loop do
                         commun.wait_for_any_command do |message|
@@ -28,6 +28,7 @@ module ID; module Helpers
                             
                             case message[:command]
                                 when :send_to_object
+                                    #puts Time.now.to_s + " " + object_to_serve.class.to_s + " " + message.inspect
                                     name = message[:name]
                                     args = message[:args].first
                                     retval = nil
@@ -54,11 +55,13 @@ module ID; module Helpers
                                                 :exception_class_name => exception_class_name,
                                                 :backtrace => exception_backtrace}
                                     commun.send_command(remote_connection, message)
-                                when :proxy_still_alive
-                                    timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
-                                    message = { :command => :will_stay_alive }
-                                    commun.send_command(remote_connection, message)                                    
+                                #when :proxy_still_alive
+                                #    raise "Still Alive"
+                                #    timout_thread = reset_timeout_thread(timout_thread, proxy_thread, proxy_timeout)
+                                #    message = { :command => :will_stay_alive }
+                                #    commun.send_command(remote_connection, message)                                    
                                 else
+                                    raise "Unknown command"
                                     error = "The proxied object does not know what to do with the command '#{message[:command]}'."
                                     message = {:command => :send_to_object_return_value,
                                                 :return_value => retval,
@@ -106,21 +109,21 @@ module ID; module Helpers
         end
         
         # Create thread that tells the real object to stay alive
-        proxy_alive_thread = Thread.new(communicator, name) do |commun, name|
-            loop do
-                sleep proxy_timeout
-                
-                message = { :command => :proxy_still_alive }
-                commun.send_command(name, message)
-                
-                commun.wait_for_command(:will_stay_alive)
-            end
-        end       
+        #proxy_alive_thread = Thread.new(communicator, name) do |commun, name|
+        #    loop do
+        #        sleep proxy_timeout
+        #        
+        #        message = { :command => :proxy_still_alive }
+        #        commun.send_command(name, message)
+        #        
+        #        commun.wait_for_command(:will_stay_alive)
+        #    end
+        #end       
         
         # Stop telling the real object to live when the proxy is GCed
         ObjectSpace.define_finalizer(proxy) do
             communicator.close if communicator
-            proxy_alive_thread.terminate if proxy_alive_thread
+        #    proxy_alive_thread.terminate if proxy_alive_thread
         end
         
         # Make sure there is something to connect to

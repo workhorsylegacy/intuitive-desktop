@@ -22,9 +22,9 @@ require $IntuitiveFramework_Servers
 
 def start_server
     # Create the servers
-    communication_server = ID::Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
-    project_server = ID::Servers::ProjectServer.new(true, :throw)
-    project_server.clear_everything()
+    $communication_server = ID::Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
+    $project_server = ID::Servers::ProjectServer.new(true, :throw)
+    $project_server.clear_everything()
 end
 
 def setup_user_and_projects
@@ -104,6 +104,9 @@ class Browser
     # End the program when the window closes
     @main_window.signal_connect("destroy") do
         Gtk.main_quit
+        
+        $project_server.close()
+        $communication_server.close()
         
         # Delete the data system
         FileUtils.rm_rf($DataSystem) if File.directory?($DataSystem)
