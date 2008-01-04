@@ -78,7 +78,7 @@ module ID; module Helpers
         end
         
         def test_nothing_to_connect_to
-            assert_raise(RuntimeError) do
+            assert_raise(ProxiedException) do
                 Helpers::SystemProxy.get_proxy_to_object("Not There")
             end
         end

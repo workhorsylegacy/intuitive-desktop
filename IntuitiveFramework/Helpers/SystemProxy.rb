@@ -89,7 +89,13 @@ module ID; module Helpers
         proxy.instance_variable_set('@proxy_server_name', name)
         
         def proxy.method_missing(name, *args)
-            Helpers::SystemProxy.call_object(@proxy_communicator, @proxy_server_name, name, args)
+            begin
+                Helpers::SystemProxy.call_object(@proxy_communicator, @proxy_server_name, name, args)
+            rescue Exception => e
+                message = "Failed durring the call '#{name}(#{args.to_s})"
+                error = Helpers::ProxiedException.new(message, e.backtrace)
+                raise error
+            end
         end
         
         def proxy.is_proxy_connected?

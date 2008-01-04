@@ -71,6 +71,9 @@ module ID; module Controllers
       
       # Will block until the next command is received, then return it
       def wait_for_any_command
+          # Make sure no block was given
+          raise "This method does not except a block." if block_given?
+              
           t = Thread.new do
             curr_thread = Thread.current
             @waiting_for_any =  Thread.current
@@ -86,6 +89,9 @@ module ID; module Controllers
       
       # Will wait for a command up to a certain amount of time before throwing
       def wait_for_command(command, max_seconds_to_wait=10)
+          # Make sure no block was given
+          raise "This method does not except a block." if block_given?
+          
           t = Thread.new do
             curr_thread = Thread.current
             @waiting_for_command[command.to_s] =  curr_thread

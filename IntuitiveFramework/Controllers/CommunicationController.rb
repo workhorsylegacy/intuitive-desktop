@@ -21,7 +21,8 @@ module ID; module Controllers
 	        
 	        # Get variables to store message and id info
 	        @connections = {}.extend(MonitorMixin)
-	        @in_commands = {}.extend(MonitorMixin)
+          @waiting_for_any = {}.extend(MonitorMixin)
+          @waiting_for_command = {}.extend(MonitorMixin)
 	        
 	        self.open
 	    end
@@ -39,7 +40,6 @@ module ID; module Controllers
 	            
 	            # Save the new id
 	            @connections[new_id] = { :ip_address => @ip_address, :port => @in_port, :id => new_id }
-	            @in_commands[new_id] = [].extend(MonitorMixin)
 	            
 	            @connections[new_id]
 	        }
@@ -49,56 +49,57 @@ module ID; module Controllers
 	        @connections.synchronize {
                 id = connection[:id]
 	            @connections.delete(id)
-	            @in_commands.delete(id)
 	        }
 	    end
 	    
 	    # Will block until the next command is received, then return it
 	    def wait_for_any_command(connection)
-            # Make sure the connection is valid
-            validate_connection(connection)
-            id = connection[:id]
+          # Make sure no block was given
+          raise "This method does not except a block." if block_given?
+          
+          # Make sure the connection is valid
+          validate_connection(connection)
+          id = connection[:id]
             
-	        loop do
-	           message = nil
-	           @in_commands.synchronize do
-    	           if @in_commands[id].length > 0
-    	               message = @in_commands[id].shift
-    	           end
-	           end
-	           
-	           if message != nil
-	               yield(message) if block_given?
-	               return message
-	           else
-	               sleep(0.1)
-	           end
-	        end
+          t = Thread.new do
+            curr_thread = Thread.current
+            @waiting_for_any[id] =  Thread.current
+        
+            # Stop this thread, so it can be awoken by the incoming message
+            Thread.stop
+          end
+        
+          t.join()
+          @waiting_for_any.delete(id)
+          return t[:command]
 	    end            
 	    
 	    # Will wait for a command up to a certain amount of time before throwing
 	    def wait_for_command(connection, command, max_seconds_to_wait=10)
+          # Make sure no block was given
+          raise "This method does not except a block." if block_given?
+          
             # Make sure the connection is valid
             validate_connection(connection)
 	        
-	        start_time = Time.now
-	        user_commands = @in_commands[connection[:id]]
-	        retval = nil
-	        loop do
-	            #user_commands.synchronize {
-	                user_commands.each { |user_command|
-	                    if user_command[:command] == command
-	                        retval = user_commands.delete(user_command)
-	                        break
-	                    end
-	                }
-	            #}
-	            break if retval
-	            raise "Timed out while waiting for the command '#{command}'" if (Time.now - start_time).to_i > max_seconds_to_wait
-	            sleep(0.1)
-	        end
-	        
-	        return retval
+          id = [connection[:id], command]
+          t = Thread.new do
+            curr_thread = Thread.current
+            @waiting_for_command[id] =  Thread.current
+        
+            # Stop this thread, so it can be awoken by the incoming message
+            Thread.stop
+          end
+        
+          timeout_thread = Thread.new do
+              sleep max_seconds_to_wait
+              raise "Timed out while waiting for the command '#{command}'"
+          end  
+      
+          t.join()
+          timeout_thread.kill()
+          @waiting_for_command.delete(id)
+          return t[:command]
 	    end            
 	    
         def send_command(source_connection, dest_connection, message)
@@ -157,7 +158,7 @@ module ID; module Controllers
 	           raise "Communication controller could not bind to address: #{@ip_address}:#{@in_port} because it is already in use."
 	        end
 	            
-	        @in_thread = Thread.new {
+	        @in_thread = Thread.new do
 	            @is_incoming_open = true
 	            while @is_incoming_open
                   begin
@@ -172,17 +173,27 @@ module ID; module Controllers
 	                raise "Incoming message not a Hash." unless result.class == Hash
 	                raise "Incoming message missing source_connection." unless result.has_key?(:source_connection)
 	                raise "Incoming message missing dest_connection." unless result.has_key?(:dest_connection)
+                  raise "Message incoming to '#{@ip_address}:#{@in_port}' is missing a command." unless result.has_key?(:command)
 	                id = result[:dest_connection][:id]
 	                
-#	                # FIXME: Dump the message here if it was sent to the wrong controller
-#	                raise "Wrong connection " + result.inspect unless @connections.has_key?(id)
+	                # FIXME: Dump the message here if it was sent to the wrong controller
+	                raise "Wrong connection " + result.inspect unless @connections.has_key?(id)
 	                
 	                # Make sure we know of this connection
 	                raise "There is no destination connection on this controller that matches that id." unless @connections.has_key?(id)
 	                
-	                @in_commands.synchronize { @in_commands[id] << result }
+	                thread = nil
+                  if @waiting_for_any.has_key? id
+                      thread = @waiting_for_any.delete(id)
+                  elsif @waiting_for_command.has_key?([id, result[:command]])
+                      thread = @waiting_for_command.delete([id, result[:command]])
+                  else
+                      raise "Message '#{result[:command].to_s}' incoming to '#{@ip_address}:#{@in_port}' was not expected."
+                  end
+                  thread[:command]  = result
+                  thread.run()
 	            end
-	        }
+	        end
 	    end
 	    
 	    def stop_incoming_thread
