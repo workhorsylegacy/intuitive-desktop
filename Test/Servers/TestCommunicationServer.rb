@@ -25,42 +25,50 @@ module ID; module Servers
           assert(@communication_server.is_running?)
       end
 
-#      def test_send_net_message
-#          # Get a connection to the communication server
-#          server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
-#          assert_not_nil(server)
-#         
-#          # Make sure we can get a net connection
-#          connection = server.create_net_connection
-#          assert(connection.is_a?(Hash))
-#          
-#          # Make sure we can use the send_net_message
-#          message = {:command => :sup_other}
-#          server.send_net_message(connection, @other_connection, message)
-#          got_message = 
-#          @other_net_communicator.wait_for_command(@other_connection, :sup_other)
-#          assert_equal(message[:command], got_message[:command])
-#      end
-#      
-#      def test_get_net_message
-#          # Get a connection to the communication server
-#          server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
-#          assert_not_nil(server)
-#         
-#          # Make sure we can get a net connection
-#          connection = server.create_net_connection
-#          assert(connection.is_a?(Hash))
-#          
-#          # Make sure we can use the wait_for_net_message
-#          message = {:command => :sup_server}
-#          @other_net_communicator.send_command(@other_connection, connection, message)
-#          
-#          while (got_message = server.get_net_message(connection, :sup_server)) == nil
-#              sleep 0.1
-#          end          
-#          
-#          assert_equal(message[:command], got_message[:command])
-#      end
+      def test_send_net_message
+          # Get a connection to the communication server
+          server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
+          assert_not_nil(server)
+         
+          # Make sure we can get a net connection
+          connection = server.create_net_connection
+          assert(connection.is_a?(Hash))
+          
+          # Make sure we can use the send_net_message
+          got_message = nil
+          t = Thread.new do
+              got_message = @other_net_communicator.wait_for_command(@other_connection, :sup_other)
+          end
+          
+          message = {:command => :sup_other}
+          server.send_net_message(connection, @other_connection, message)
+          t.join
+          
+          assert_equal(message[:command], got_message[:command])
+      end
+      
+      def test_wait_for_message
+          # Get a connection to the communication server
+          server = Helpers::SystemProxy::get_proxy_to_object("CommunicationServer")
+          assert_not_nil(server)
+         
+          # Make sure we can get a net connection
+          connection = server.create_net_connection
+          assert(connection.is_a?(Hash))
+          
+          # Make sure we can use the wait_for_net_message
+          got_message = nil
+          t = Thread.new do
+              got_message = server.wait_for_message(connection, :sup_server)
+          end
+          
+          message = {:command => :sup_server}
+          raise "FIXME: For some reason, this message is not received by the waiting connection above."
+          @other_net_communicator.send_command(@other_connection, connection, message)
+          t.join
+          
+          assert_equal(message[:command], got_message[:command])
+      end
 #      
 #      def test_get_any_net_message
 #          # Get a connection to the communication server

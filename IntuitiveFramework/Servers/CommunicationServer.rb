@@ -63,38 +63,18 @@ module ID; module Servers
             @net_communicator.send_command(source_connection, dest_connection, message)
         end
         
-        def get_net_message(connection, command)
-            in_commands = @net_communicator.instance_variable_get("@in_commands")
-            commands = in_commands[connection[:id]]
-            
-            commands.each do |message|
-                return commands.delete(message) if message[:command] == command
-            end
-            
-            nil
+        def wait_for_message(connection, command)
+            # Make sure no block was given
+            raise "This method does not except a block." if block_given?
+          
+            @net_communicator.wait_for_command(connection, command)
         end
         
-        def get_any_net_message(connection)
-            in_commands = @net_communicator.instance_variable_get("@in_commands")
-            
-            #FIXME: This is a hack. For some reason the connection is not immedetly in the in_commands hash
-            # Here we are just asking the connection if it belongs to the communicator, instead of asking
-            # the communicator if it has that channel.
-            if connection[:ip_address] == @net_communicator.ip_address &&
-                connection[:port] == @net_communicator.in_port
-                return nil unless in_commands.has_key?(connection[:id])
-            end
-            
-            message = "There is no connection with the id #{connection[:id]} on this net communication controller."
-            raise message unless in_commands.has_key?(connection[:id])
-            
-            commands = in_commands[connection[:id]]
-            
-            if commands.length > 0
-                commands.shift
-            else
-                nil
-            end
+        def wait_for_any_message(connection)
+            # Make sure no block was given
+            raise "This method does not except a block." if block_given?
+          
+            @net_communicator.wait_for_any_command(connection)
         end
         
         private
@@ -103,11 +83,7 @@ module ID; module Servers
             @generic_incoming_thread = 
             Thread.new(@generic_incoming_connection) do |conn|
                 loop do
-                    message = self.get_any_net_message(conn)
-                    unless message
-                        sleep 0.1
-                        next
-                    end
+                    message = self.wait_for_any_message(conn)
                     
                     # FIXME: The find_project should be called from the same place as the run_project
                     case message[:command]
@@ -133,10 +109,7 @@ module ID; module Servers
             self.send_net_message(temp_connection, remote_connection, message)
             
             # Confirm that the client is using the new connection
-            loop do
-                break if self.get_net_message(temp_connection, :confirm_new_connection) != nil
-                sleep 0.1
-            end
+            self.wait_for_message(temp_connection, :confirm_new_connection)
             
             # Get the Project
             branch = Models::Branch.from_number(branch_number)

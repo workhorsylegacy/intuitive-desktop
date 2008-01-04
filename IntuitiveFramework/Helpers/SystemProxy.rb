@@ -92,7 +92,7 @@ module ID; module Helpers
             begin
                 Helpers::SystemProxy.call_object(@proxy_communicator, @proxy_server_name, name, args)
             rescue Exception => e
-                message = "Failed durring the call '#{name}(#{args.to_s})"
+                message = "Failed durring the call '#{name}(#{args.inspect})"
                 error = Helpers::ProxiedException.new(message, e.backtrace)
                 raise error
             end
