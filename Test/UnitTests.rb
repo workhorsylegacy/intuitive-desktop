@@ -110,7 +110,7 @@ Thread.abort_on_exception = true
 #            end
             
             master_suite << ID::Helpers::TestEasySocket.suite
-            #master_suite << ID::Servers::TestCommunicationServer.suite
+            master_suite << ID::Servers::TestCommunicationServer.suite
             #master_suite << ID::Controllers::TestCommunicationController.suite
             #master_suite << ID::Helpers::TestProxy.suite
             #master_suite << ID::Helpers::TestSystemProxy.suite

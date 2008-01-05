@@ -71,6 +71,29 @@ module ID; module Helpers
           t.join
           assert_equal(:blah, message[:command])
       end
+      
+      def test_fails_on_missing_net_destination
+          socket_args = {:ip_address => "127.0.0.1",
+                         :port => "5005"}
+          
+          # Send a message to a non existant net socket
+          source_socket = Helpers::EasySocket.new(:net)
+          out_message = {:command => :blah}
+          assert_raise(RuntimeError) do
+              source_socket.write_message(out_message, socket_args)
+          end
+      end
+      
+      def test_fails_on_missing_system_destination
+          socket_args = {:name => "not implemented here"}
+          
+          # Send a message to a non existant net socket
+          source_socket = Helpers::EasySocket.new(:system)
+          out_message = {:command => :blah}
+          assert_raise(RuntimeError) do
+              source_socket.write_message(out_message, socket_args)
+          end
+      end
    end
 end; end
 

@@ -1,7 +1,5 @@
 
-require 'monitor'
-require 'socket'
-require 'fileutils'
+require $IntuitiveFramework_Helpers
 
 module ID; module Servers
     class CommunicationServer
@@ -33,8 +31,7 @@ module ID; module Servers
             return if @is_open
             
             @is_open = true
-            self.start_system_thread
-            self.start_net_thread
+            start_threads
         end
         
         def close
@@ -42,12 +39,15 @@ module ID; module Servers
             return unless @is_open
             
             @is_open = false
-            self.stop_net_thread
-            self.stop_system_thread
+            stop_threads
         end
         
         def self.file_path
           $TempCommunicationDirectory
+        end
+        
+        def self.full_name
+            file_path + "CommunicationServer"
         end
       
       def self.is_system_name_used?(name)
@@ -62,19 +62,24 @@ module ID; module Servers
         
         private
         
-        def start_system_thread
-            socket = Helpers::EasySocket(:system)
-            
-            socket.read_messages(:name => self.full_name) do |message_as_yaml|
-                forward_message(message_as_yaml, :system)
-            end
+        def stop_threads
+            @system_socket.close
+            @net_socket.close
         end
         
-        def start_net_thread
-            socket = Helpers::EasySocket(:net)
+        def start_threads
+            @system_socket = Helpers::EasySocket.new(:system)
+            @system_thread = Thread.new do
+                @system_socket.read_messages(:name => self.class.full_name) do |message_as_yaml|
+                    forward_message(message_as_yaml, :system)
+                end
+            end
             
-            socket.read_messages(:ip_address => @ip_address, :port => @port) do |message_as_yaml|
-                forward_message(message_as_yaml, :net)
+            @net_socket = Helpers::EasySocket.new(:net)
+            @net_thread = Thread.new do
+                @net_socket.read_messages(:ip_address => @ip_address, :port => @port) do |message_as_yaml|
+                    forward_message(message_as_yaml, :net)
+                end
             end
         end 
        
@@ -82,10 +87,10 @@ module ID; module Servers
             message_as_ruby = YAML.load(message_as_yaml)
             
             # Make sure the message is valid
-            raise "Message incoming to '#{name}' is not a Hash." unless message_as_ruby.class == Hash
-            raise "Message incoming to '#{name}' is missing source_connection." unless message_as_ruby.has_key?(:source_connection)
-            raise "Message incoming to '#{name}' is missing dest_connection." unless message_as_ruby.has_key?(:dest_connection)
-            raise "Message incoming to '#{name}' is missing a command." unless message_as_ruby.has_key?(:command)
+            raise "The message is not a Hash." unless message_as_ruby.class == Hash
+            raise "The message is missing source." unless message_as_ruby.has_key?(:source)
+            raise "The message is missing destination." unless message_as_ruby.has_key?(:destination)
+            raise "The message is missing a command." unless message_as_ruby.has_key?(:command)
                   
             # Make sure the communication controller exits and is set to accept system messages
             dest_name = message_as_ruby[:dest_connection]

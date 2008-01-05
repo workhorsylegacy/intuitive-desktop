@@ -17,7 +17,9 @@ libs = {'gtk2' => ["'gtk2'",  :require, "ruby-gnome2 or libcairo-ruby packages"]
         'openssl' => ["'openssl'", :require, "libopenssl-ruby package"],
         'base64' => ["'base64'", :require, "libruby or ruby1.8-dev packages"],
         'sqlite3' => ["'sqlite3'", :require, "libsqlite3-ruby package"],
-        'soap/wsdlDriver' => ["'WSDL Driver'", :require, "standard Ruby install"]}
+        'soap/wsdlDriver' => ["'WSDL Driver'", :require, "standard Ruby install"],
+        'socket' => ["'socket'", :require, "standard Ruby install"],
+        'fileutils' => ["'file utils'", :require, "standard Ruby install"]}
 
 # Load all the libraries and create a list of coherent errors if any are not installed.
 error_messages = []

@@ -17,12 +17,27 @@ module ID; module Helpers
             begin
                 case @type
                     when :system:
-                      out_socket = UNIXSocket.new(args[:name])
-                      out_socket.write YAML.dump(message)
+                        unless args.has_key? :name
+                            raise "Socket of type :system requires arguments :name in args hash."
+                        end
+                        begin
+                            out_socket = UNIXSocket.new(args[:name])
+                            out_socket.write YAML.dump(message)
+                        rescue Errno::ENOENT
+                            raise "No system socket called '#{args[:name]}' to write to."
+                        end
                     when :net:
-                      out_socket = TCPSocket.open(args[:ip_address], args[:port])
-                      out_socket.send(YAML.dump(message), 0)
-                    else; raise "Only :net and :system are supported for type."
+                        unless args.has_key? :ip_address and args.has_key? :port
+                            raise "Socket of type :net requires arguments :ip_address and :port in args hash."
+                        end
+                        begin
+                            out_socket = TCPSocket.open(args[:ip_address], args[:port])
+                            out_socket.send(YAML.dump(message), 0)
+                        rescue Errno::ECONNREFUSED
+                            raise "No net socket at '#{args[:ip_address]}:#{args[:port]}' to write to."
+                        end
+                    else
+                        raise "Only :net and :system are supported for type."
                 end
             ensure
                 out_socket.close if out_socket
@@ -30,8 +45,10 @@ module ID; module Helpers
         end
         
         def close
+            return unless @is_open
             @is_open = false
-            @in_socket.close
+            #@in_socket.close if @in_socket # FIXME: For some reason this explodes when closing while reading
+            @in_socket = nil if @in_socket
             @read_thread.kill if @read_thread
             @read_thread = nil
         end
