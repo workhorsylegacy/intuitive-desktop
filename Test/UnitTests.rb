@@ -16,6 +16,7 @@ require 'Helpers/TestBinding'
 require 'Helpers/TestLogger'
 require 'Helpers/TestProxy'
 require 'Helpers/TestSystemProxy'
+require 'Helpers/TestEasySocket'
 
 # Models
 require 'Models/TestBranch'
@@ -52,6 +53,7 @@ Thread.abort_on_exception = true
     def helper_tests
         [ID::Helpers::TestBinding.suite,
         ID::Helpers::TestLogger.suite,
+        ID::Helpers::TestEasySocket.suite,
 #        ID::Helpers::TestProxy.suite, #FIXME: Make this not explode the tests
         ID::Helpers::TestSystemProxy.suite]
     end
@@ -107,7 +109,8 @@ Thread.abort_on_exception = true
 #                end
 #            end
             
-            master_suite << ID::Servers::TestCommunicationServer.suite
+            master_suite << ID::Helpers::TestEasySocket.suite
+            #master_suite << ID::Servers::TestCommunicationServer.suite
             #master_suite << ID::Controllers::TestCommunicationController.suite
             #master_suite << ID::Helpers::TestProxy.suite
             #master_suite << ID::Helpers::TestSystemProxy.suite

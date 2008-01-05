@@ -16,12 +16,13 @@ module ID; module Helpers
             out_socket = nil
             begin
                 case @type
-                    when :System:
+                    when :system:
                       out_socket = UNIXSocket.new(args[:name])
-                      out_socket.write message
+                      out_socket.write YAML.dump(message)
                     when :net:
                       out_socket = TCPSocket.open(args[:ip_address], args[:port])
-                      out_socket.send(message, 0)
+                      out_socket.send(YAML.dump(message), 0)
+                    else; raise "Only :net and :system are supported for type."
                 end
             ensure
                 out_socket.close if out_socket
@@ -31,43 +32,67 @@ module ID; module Helpers
         def close
             @is_open = false
             @in_socket.close
+            @read_thread.kill if @read_thread
+            @read_thread = nil
         end
         
         def read_messages(args)
             # Make sure a block was given
             raise "Block required" unless block_given?
         
-            begin
-                @in_socket = 
-                case @type
-                    when :net: TCPServer.new(args[:ip_address], args[:port])
-                    when :system: UNIXSocket.new(args[:name])
+            @read_thread = Thread.new do
+                begin
+                    @in_socket = 
+                    case @type
+                        when :net:
+                            unless args.has_key? :ip_address and args.has_key? :port
+                                raise "Socket of type :net requires arguments :ip_address and :port in args hash."
+                            end
+                            TCPServer.new(args[:ip_address], args[:port])
+                        when :system:
+                            unless args.has_key? :name
+                                raise "Socket of type :system requires arguments :name in args hash."
+                            end
+                            UNIXServer.new(args[:name])
+                        else
+                            raise "Only :net and :system are supported for type."
+                    end
+                rescue Errno::EADDRINUSE
+                    case @type
+                        when :net: raise "The network could not bind to the address '#{args[:ip_address]}:#}{args[:port]}' because it is already in use."
+                        when :system: raise "The system socket could not bind to the name '#{@name}' because it is already in use."
+                    end
                 end
-            rescue Errno::EADDRINUSE
-                case @type
-                    when :net: raise "The network could not bind to the address '#{args[:ip_address]}:#}{args[:port]}' because it is already in use."
-                    when :system: raise "The system socket could not bind to the name '#{@name}' because it is already in use."
+              
+                # Have the system socket file garbage collected with the socket
+                if @in_socket.is_a? UNIXServer
+                    ObjectSpace.define_finalizer(@in_socket) do
+                        FileUtils.rm(args[:name])
+                    end
                 end
-            end
-          
-            @is_open = true
-            while @is_open
-                  message_as_yaml = nil
-                  begin
-                      # Get the yamled data from the socket
-                      sock = @in_socket.accept_nonblock
-                      message_as_yaml = sock.read
-                      sock.close
+              
+                @is_open = true
+                while @is_open
+                      message_as_yaml = nil
+                      begin
+                          # Get the yamled data from the socket
+                          sock = @in_socket.accept_nonblock
+                          message_as_yaml = sock.read
+                          sock.close
+                          
+                          # Get the data from the yaml if there is any
+                          next if message_as_yaml.length == 0
+                      rescue Errno::EAGAIN, Errno::ECONNABORTED, Errno::EPROTO, Errno::EINTR
+                          IO.select([@in_socket])
+                          retry
+                      end
                       
-                      # Get the data from the yaml if there is any
-                      next if message_as_yaml.length == 0
-                  rescue Errno::EAGAIN, Errno::ECONNABORTED, Errno::EPROTO, Errno::EINTR
-                      IO.select([@in_socket])
-                      retry
-                  end
-                  
-                  yield(message_as_yaml)
+                      yield(message_as_yaml)
+                end
             end
+            
+            @read_thread.join
+            @read_thread = nil
         end
     end
 end; end

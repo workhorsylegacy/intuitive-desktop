@@ -15,19 +15,21 @@ module ID; module Servers
 
       def test_forwards_system_message
           # Create a unix socket that will accept the message
+          socket_name = {:name => Servers::CommunicationServer.file_path + "destination:net"}
           message = nil
           t = Thread.new do
               dest_socket = Helpers::EasySocket.new(:system)
                   
-              name = {:name => Servers::CommunicationServer.file_path + "destination:net"}
-              dest_socket.read_messages(name) do |message_as_yaml|
+              dest_socket.read_messages(socket_name) do |message_as_yaml|
                   message = YAML.load(message_as_yaml)
                   dest_socket.close
               end
           end
           
           # Send a message to the system communicator that will forward it to the destination
-          
+          source_socket = Helpers::EasySocket.new(:system)
+          out_message = {:command => :blah}
+          source_socket.write_message(out_message, socket_name)
       end   
     end
 end; end
