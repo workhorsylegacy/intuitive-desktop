@@ -1,15 +1,17 @@
 
+require 'monitor'
+require 'socket'
+require 'fileutils'
 
 module ID; module Servers
     class CommunicationServer
-        attr_reader :generic_incoming_connection
-        
-        def self.force_kill_other_instances
-            return unless Controllers::SystemCommunicationController.is_name_used?("CommunicationServer")
-            
-            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("CommunicationServer")
-            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
-        end
+        attr_reader :is_open, :ip_address, :port, :system_name, :on_error
+#        def self.force_kill_other_instances
+#            return unless Controllers::SystemCommunicationController.is_system_name_used?("CommunicationServer")
+#            
+#            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("CommunicationServer")
+#            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
+#        end
         
         def initialize(ip_address, in_port, use_local_web_service, on_error)
             # Make sure the on_error is valid
@@ -17,85 +19,89 @@ module ID; module Servers
             message = "The Communication Server can only use #{on_error_options.join(', ')} for on_error."
             raise message unless on_error_options.include? on_error.to_sym
             @on_error = on_error
+            
+            @is_open = false
+            @ip_address = ip_address
+            @port = port
+            @system_name = "CommunicationServer"
 
-            # Create the net communicator
-            @net_communicator = Controllers::CommunicationController.new(ip_address, in_port)
-
-            # Create a generic connection for incoming messages from remote systems
-            @generic_incoming_connection = self.create_net_connection
-
-            start_generic_incoming_thread
-
-            # Make the server available over the system communicator
-            Helpers::SystemProxy.make_object_proxyable(self, "CommunicationServer")
+            self.open
         end
         
-        def is_running?
-            true
+        def open
+            # Just return if it is already open
+            return if @is_open
+            
+            @is_open = true
+            self.start_system_thread
+            self.start_net_thread
         end
         
         def close
-            @generic_incoming_thread.kill if @generic_incoming_thread
-            @net_communicator.close if @net_communicator
-        end
+            # Just return if it is already closed
+            return unless @is_open
             
-        def ip_address
-            @net_communicator.ip_address
-        end
-            
-        def in_port
-            @net_communicator.in_port
-        end
-            
-        def on_error
-            @on_error.to_s
-        end
-            
-        def create_net_connection
-            @net_communicator.create_connection
-        end
-            
-        def destroy_net_connection(connection)
-            @net_communicator.destroy_connection(connection)
-        end
-            
-        def send_net_message(source_connection, dest_connection, message)
-            @net_communicator.send_command(source_connection, dest_connection, message)
+            @is_open = false
+            self.stop_net_thread
+            self.stop_system_thread
         end
         
-        def wait_for_message(connection, command)
-            # Make sure no block was given
-            raise "This method does not except a block." if block_given?
-          
-            @net_communicator.wait_for_command(connection, command)
+        def self.file_path
+          $TempCommunicationDirectory
         end
+      
+      def self.is_system_name_used?(name)
+          full_name = file_path + name + ":system"
+          return File.exist?(full_name)
+      end
         
-        def wait_for_any_message(connection)
-            # Make sure no block was given
-            raise "This method does not except a block." if block_given?
-          
-            @net_communicator.wait_for_any_command(connection)
-        end
+      def self.is_net_name_used?(name)
+          full_name = file_path + name + ":net"
+          return File.exist?(full_name)
+      end
         
         private
         
-        def start_generic_incoming_thread
-            @generic_incoming_thread = 
-            Thread.new(@generic_incoming_connection) do |conn|
-                loop do
-                    message = self.wait_for_any_message(conn)
-                    
-                    # FIXME: The find_project should be called from the same place as the run_project
-                    case message[:command]
-                        when :run_project
-                            run_project(message)
-                        else
-                          raise "The command #{message[:command]} was not expected."
-                    end
-                end
+        def start_system_thread
+            socket = Helpers::EasySocket(:system)
+            
+            socket.read_messages(:name => self.full_name) do |message_as_yaml|
+                forward_message(message_as_yaml, :system)
             end
         end
         
+        def start_net_thread
+            socket = Helpers::EasySocket(:net)
+            
+            socket.read_messages(:ip_address => @ip_address, :port => @port) do |message_as_yaml|
+                forward_message(message_as_yaml, :net)
+            end
+        end 
+       
+        def forward_message(message_as_yaml, type)
+            message_as_ruby = YAML.load(message_as_yaml)
+            
+            # Make sure the message is valid
+            raise "Message incoming to '#{name}' is not a Hash." unless message_as_ruby.class == Hash
+            raise "Message incoming to '#{name}' is missing source_connection." unless message_as_ruby.has_key?(:source_connection)
+            raise "Message incoming to '#{name}' is missing dest_connection." unless message_as_ruby.has_key?(:dest_connection)
+            raise "Message incoming to '#{name}' is missing a command." unless message_as_ruby.has_key?(:command)
+                  
+            # Make sure the communication controller exits and is set to accept system messages
+            dest_name = message_as_ruby[:dest_connection]
+            destination_exist =
+            case type
+                when :net: is_net_name_used(dest_name)
+                when :system: is_system_name_used(dest_name)
+            end
+            raise "No communication controller named '#{dest_name}' to send to." unless destination_exist
+                  
+            # Forward the message to the communication controller's unix socket
+            out_socket = Helpers::EasySocket.new(:system)
+            out_socket.write(message_as_yaml, {:name => self.file_name + message_as_ruby[:destination] + ":system"})
+        end
+        
+=begin
         # FIXME: This should not be in the communication server
         def run_project(message)
             # Get the information
@@ -152,6 +158,7 @@ module ID; module Servers
             # Remove the temporary connection
             self.destroy_net_connection(temp_connection)
         end 
+=end
     end
 end; end
 

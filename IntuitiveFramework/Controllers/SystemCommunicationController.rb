@@ -183,6 +183,7 @@ module ID; module Controllers
                       retry
                   end
 
+                  # Make sure the message is valid
                   raise "Message incoming to '#{name}' is not a Hash." unless result.class == Hash
                   raise "Message incoming to '#{name}' is missing source_connection." unless result.has_key?(:source_connection)
                   raise "Message incoming to '#{name}' is missing dest_connection." unless result.has_key?(:dest_connection)

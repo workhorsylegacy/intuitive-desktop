@@ -9,6 +9,7 @@ path = File.dirname(File.expand_path(__FILE__))
 'FileSystem',
 'Color',
 'Logger',
+'EasySocket',
 'MacroFilter',
 'Proxy',
 'SystemProxy',
