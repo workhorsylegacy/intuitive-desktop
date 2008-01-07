@@ -22,6 +22,7 @@ module ID; module Helpers
                         end
                         begin
                             out_socket = UNIXSocket.new(args[:name])
+                            message.merge!(:source => "local")
                             out_socket.write YAML.dump(message)
                         rescue Errno::ENOENT
                             raise "No system socket called '#{args[:name]}' to write to."
@@ -32,6 +33,7 @@ module ID; module Helpers
                         end
                         begin
                             out_socket = TCPSocket.open(args[:ip_address], args[:port])
+                            message.merge!(:source => "#{out_socket.addr[3]}:#{out_socket.addr[1]}")
                             out_socket.send(YAML.dump(message), 0)
                         rescue Errno::ECONNREFUSED
                             raise "No net socket at '#{args[:ip_address]}:#{args[:port]}' to write to."

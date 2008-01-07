@@ -16,7 +16,7 @@ module ID; module Servers
 
       def test_forwards_system_message
           # Create a system socket that will accept the message
-          socket_name = {:name => Servers::CommunicationServer.file_path + "destination:net"}
+          socket_name = {:name => Servers::CommunicationServer.file_path + "destination:system"}
           message = nil
           t = Thread.new do
               dest_socket = Helpers::EasySocket.new(:system)
@@ -33,20 +33,18 @@ module ID; module Servers
               raise "Timed out before the message was received."
           end
           
-          # Send a message to the system communicator that will forward it to the destination
-          raise "This fails because the communication server does not know how to redirect messages to the dest socket yet."
+          # Send a message to the communication server that will forward it to the destination
           source_socket = Helpers::EasySocket.new(:system)
           out_message = {:command => :blah, 
-                         :destination => "destination:net"}
-          source_socket.write_message(out_message, :name => Servers::CommunicationServer.file_path + "CommunicationServer")
+                         :destination => Servers::CommunicationServer.file_path + "destination:system"}
+          source_socket.write_message(out_message, :name => Servers::CommunicationServer.full_name)
           t.join
           
           # Make sure all the message has the same keys
           assert_equal(out_message[:command], message[:command])
           
           # Make sure the message has the new keys that were added by the communication server
-          assert_equal("127.0.0.1:5555:destination:net", message[:destination])
-          assert_equal("127.0.0.1:5555:destination:net", message[:source])
+          assert_equal("local", message[:source])
       end
       
       def test_forwards_net_messages

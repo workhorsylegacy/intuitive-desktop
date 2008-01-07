@@ -50,14 +50,13 @@ module ID; module Servers
             file_path + "CommunicationServer"
         end
       
-      def self.is_system_name_used?(name)
-          full_name = file_path + name + ":system"
-          return File.exist?(full_name)
+      def self.is_name_used?(name)
+          validate_name(name)
+          File.exist?(name)
       end
         
-      def self.is_net_name_used?(name)
-          full_name = file_path + name + ":net"
-          return File.exist?(full_name)
+      def self.validate_name(name)
+          raise "The name must end with :net or :system." unless ['net', 'system'].include?(name.split(':').last)
       end
         
         private
@@ -93,17 +92,12 @@ module ID; module Servers
             raise "The message is missing a command." unless message_as_ruby.has_key?(:command)
                   
             # Make sure the communication controller exits and is set to accept system messages
-            dest_name = message_as_ruby[:dest_connection]
-            destination_exist =
-            case type
-                when :net: is_net_name_used(dest_name)
-                when :system: is_system_name_used(dest_name)
-            end
-            raise "No communication controller named '#{dest_name}' to send to." unless destination_exist
+            dest_name = message_as_ruby[:destination]
+            raise "No destination named '#{dest_name}' to send to." unless self.class.is_name_used?(dest_name)
                   
             # Forward the message to the communication controller's unix socket
             out_socket = Helpers::EasySocket.new(:system)
-            out_socket.write(message_as_yaml, {:name => self.file_name + message_as_ruby[:destination] + ":system"})
+            out_socket.write_message(YAML.load(message_as_yaml), {:name => message_as_ruby[:destination]})
         end
         
 =begin
