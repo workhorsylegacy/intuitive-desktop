@@ -48,15 +48,7 @@ module ID; module Servers
       end
       
       def test_forwards_net_messages
-          warn "implement me"
-      end
-      
-      def test_cant_send_from_net_to_system
-          warn "implement me"
-      end
-      
-      def test_cant_send_from_system_to_net
-          warn "implement me"
+          warn "TODO: Go from a local system socket, to the server, to a local net socket."
       end
     end
 end; end

@@ -32,7 +32,6 @@ require 'Controllers/TestDataController'
 require 'Controllers/TestRevisionedFileSystemController'
 require 'Controllers/TestSearchController'
 require 'Controllers/TestUserController'
-require 'Controllers/TestSystemCommunicationController'
 
 # Servers
 require 'Servers/TestIdentityServer'
@@ -111,7 +110,7 @@ Thread.abort_on_exception = true
             
             master_suite << ID::Helpers::TestEasySocket.suite
             master_suite << ID::Servers::TestCommunicationServer.suite
-            #master_suite << ID::Controllers::TestCommunicationController.suite
+            master_suite << ID::Controllers::TestCommunicationController.suite
             #master_suite << ID::Helpers::TestProxy.suite
             #master_suite << ID::Helpers::TestSystemProxy.suite
             return master_suite
