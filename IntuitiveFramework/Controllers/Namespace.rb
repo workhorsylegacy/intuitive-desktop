@@ -9,5 +9,4 @@ path = File.dirname(File.expand_path(__FILE__))
 'DocumentController',
 'RevisionedFileSystemController',
 'SearchController',
-'UserController',
-'SystemCommunicationController'].each { |file_name| require "#{path}/#{file_name}" }
+'UserController'].each { |file_name| require "#{path}/#{file_name}" }
