@@ -77,6 +77,9 @@ class Symbol
     def <=>(other)
         self.to_s <=> other.to_s
     end
+    def is_a?(type)
+        self.class == type
+    end
 end
 
 

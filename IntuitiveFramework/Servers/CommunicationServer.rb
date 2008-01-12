@@ -50,13 +50,8 @@ module ID; module Servers
             file_path + "CommunicationServer"
         end
       
-      def self.is_name_used?(name)
-          validate_name(name)
-          File.exist?(name)
-      end
-        
-      def self.validate_name(name)
-          raise "The name must end with :net or :system." unless ['net', 'system'].include?(name.split(':').last)
+      def self.is_name_used?(name, type)
+          File.exist? "#{name}:#{type}"
       end
         
         private
@@ -92,8 +87,8 @@ module ID; module Servers
             raise "The message is missing a command." unless message_as_ruby.has_key?(:command)
                   
             # Make sure the communication controller exits and is set to accept system messages
-            dest_name = message_as_ruby[:destination]
-            raise "No destination named '#{dest_name}' to send to." unless self.class.is_name_used?(dest_name)
+            dest_name, dest_type = message_as_ruby[:destination].split(':')
+            raise "No destination named '#{dest_name}:#{dest_type}' to send to." unless self.class.is_name_used?(dest_name, dest_type)
                   
             # Forward the message to the communication controller's unix socket
             out_socket = Helpers::EasySocket.new(:system)

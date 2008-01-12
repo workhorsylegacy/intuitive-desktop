@@ -2,27 +2,30 @@
 
 module ID; module Controllers
     class CommunicationController
-	    attr_reader :name, :is_open
+	    attr_reader :name, :type, :is_open
       
-	    def initialize(name = :random)
+	    def initialize(args)
+          @name, @type = args[:name], args[:type]
+          
 	        # Validate arguments
-          raise "The name cannot be nil" unless name
-          raise "The name '#{name}' is already used by a service." if name != :random && Servers::CommunicationServer.is_name_used?(name)
-	        Servers::CommunicationServer.validate_name(name)
+          raise "The name parameter cannot be nil" unless @name
+          raise "The type parameter cannot be nil" unless @type
+          if @name != :random
+              raise "The name '#{@name}' is already used by a service." if Servers::CommunicationServer.is_name_used?(@name, @type)
+          end
           
           # Generate a random name if it was :random
-          if name == :random
+          if @name == :random
+              srand
               new_name = nil
               loop do
                   srand
                   new_name = rand(2**16).to_s
-                  break unless Servers::CommunicationServer.is_name_used?(new_name)
+                  break unless Servers::CommunicationServer.is_name_used?(new_name, @type)
               end
-              name = new_name
+              @name = new_name
           end
           
-	        @name = name
-	        
           # Get variables to store message
           @waiting_for_any = nil
           @waiting_for_command = {}.extend(MonitorMixin)
@@ -30,8 +33,12 @@ module ID; module Controllers
           self.open
 	    end
 	    
+      def name_type
+          "#{@name}:#{@type}"
+      end
+      
       def full_name
-          Servers::CommunicationServer.file_path + @name
+          Servers::CommunicationServer.file_path + self.name_type
       end
       
       # Will block until the next command is received, then return it
@@ -77,6 +84,10 @@ module ID; module Controllers
       end         
 	    
         def send_command(dest_name, message)
+            # Make sure the destination is formatted correctly
+            dest_name = dest_name.to_s if dest_name.is_a? Symbol
+            raise "The destination '#{dest_name}' is not formatted correctly." if dest_name.split(':').length != 2
+        
             # Make sure the socket is open
             raise "The outgoing channel is closed" unless @is_open
                     
@@ -85,7 +96,7 @@ module ID; module Controllers
             raise "The destination name info is nil" unless dest_name
             
             # Get the complete connection info
-            complete_message = message.merge({:source => self.name, 
+            complete_message = message.merge({:source => self.name_type, 
                                               :destination => Servers::CommunicationServer.file_path + dest_name})
             
             # Get the message in YAML format

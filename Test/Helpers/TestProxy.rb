@@ -5,10 +5,9 @@ require $IntuitiveFramework_Controllers
 module ID; module Helpers
 	class TestProxy < Test::Unit::TestCase
         def setup
-            Servers::CommunicationServer.force_kill_other_instances()
-          
             # Start the communication server
-            @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)    
+            ID::TestHelper.cleanup()
+            @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)  
         
             # Create an object that will be accessed by a proxy
             @object = Object.new
@@ -21,8 +20,7 @@ module ID; module Helpers
             @object.name = "my name is object"
             
             # Start proxying the object
-            remote_connection = Helpers::Proxy.make_object_proxyable(@object)
-            assert(remote_connection.is_a?(Hash))
+            Helpers::Proxy.make_object_proxyable(@object)
             
             # Get a proxy to the real object
             @proxy = Helpers::Proxy.get_proxy_to_object(remote_connection)
@@ -31,7 +29,6 @@ module ID; module Helpers
         
         def teardown
             @communication_server.close if @communication_server
-            
             ID::TestHelper.cleanup()
         end
         
@@ -45,40 +42,40 @@ module ID; module Helpers
             assert_equal("proxy of doom", @proxy.name)
         end
         
-        def test_send
-            def @object.add(a, b)
-                a + b
-            end
-            
-            # Make sure .send works
-            assert_equal(11, @proxy.send(:add, 4, 7))
-            assert_equal(11, @proxy.add(4, 7))
-        end
-        
-        def test_exceptions
-            # Make sure it forwards exceptions
-            assert_raise(Helpers::ProxiedException) { @proxy.kaboom }
-            
-            # Make sure the exception did not break the real object
-            assert_equal("my name is object", @object.name)
-        end
-        
-        def test_object_methods
-            # Add a common methods that is present in all Objects
-            def @object.respond_to?(name)
-                'only on the weekends'
-            end
-            
-            # Make sure that method is forwarded too
-            assert_equal('only on the weekends', @proxy.respond_to?(:something_fake))
-        end
-        
-        def test_class
-            assert_equal(Object, @object.class)
-            
-            # Make sure that .class does not work
-            assert_raise(Helpers::ProxiedException) { @proxy.class }
-        end
+#        def test_send
+#            def @object.add(a, b)
+#                a + b
+#            end
+#            
+#            # Make sure .send works
+#            assert_equal(11, @proxy.send(:add, 4, 7))
+#            assert_equal(11, @proxy.add(4, 7))
+#        end
+#        
+#        def test_exceptions
+#            # Make sure it forwards exceptions
+#            assert_raise(Helpers::ProxiedException) { @proxy.kaboom }
+#            
+#            # Make sure the exception did not break the real object
+#            assert_equal("my name is object", @object.name)
+#        end
+#        
+#        def test_object_methods
+#            # Add a common methods that is present in all Objects
+#            def @object.respond_to?(name)
+#                'only on the weekends'
+#            end
+#            
+#            # Make sure that method is forwarded too
+#            assert_equal('only on the weekends', @proxy.respond_to?(:something_fake))
+#        end
+#        
+#        def test_class
+#            assert_equal(Object, @object.class)
+#            
+#            # Make sure that .class does not work
+#            assert_raise(Helpers::ProxiedException) { @proxy.class }
+#        end
         
 =begin FIXME: Add these tests to see what happens when the real object or proxy is GCed
               or the communicator or connections break or turn off
