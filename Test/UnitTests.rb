@@ -15,7 +15,6 @@ require 'test/unit/testcase'
 require 'Helpers/TestBinding'
 require 'Helpers/TestLogger'
 require 'Helpers/TestProxy'
-require 'Helpers/TestSystemProxy'
 require 'Helpers/TestEasySocket'
 
 # Models
@@ -53,8 +52,7 @@ Thread.abort_on_exception = true
         [ID::Helpers::TestBinding.suite,
         ID::Helpers::TestLogger.suite,
         ID::Helpers::TestEasySocket.suite,
-#        ID::Helpers::TestProxy.suite, #FIXME: Make this not explode the tests
-        ID::Helpers::TestSystemProxy.suite]
+        ID::Helpers::TestProxy.suite]
     end
 
     def model_test
