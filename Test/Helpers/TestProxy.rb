@@ -20,10 +20,10 @@ module ID; module Helpers
             @object.name = "my name is object"
             
             # Start proxying the object
-            Helpers::Proxy.make_object_proxyable(@object)
+            Helpers::Proxy.make_object_proxyable(:object => @object, :name => :object, :type => :system)
             
             # Get a proxy to the real object
-            @proxy = Helpers::Proxy.get_proxy_to_object(remote_connection)
+            @proxy = Helpers::Proxy.get_proxy_to_object(:name => :object, :type => :system)
             assert_not_nil(@proxy)
         end
         
@@ -42,40 +42,40 @@ module ID; module Helpers
             assert_equal("proxy of doom", @proxy.name)
         end
         
-#        def test_send
-#            def @object.add(a, b)
-#                a + b
-#            end
-#            
-#            # Make sure .send works
-#            assert_equal(11, @proxy.send(:add, 4, 7))
-#            assert_equal(11, @proxy.add(4, 7))
-#        end
-#        
-#        def test_exceptions
-#            # Make sure it forwards exceptions
-#            assert_raise(Helpers::ProxiedException) { @proxy.kaboom }
-#            
-#            # Make sure the exception did not break the real object
-#            assert_equal("my name is object", @object.name)
-#        end
-#        
-#        def test_object_methods
-#            # Add a common methods that is present in all Objects
-#            def @object.respond_to?(name)
-#                'only on the weekends'
-#            end
-#            
-#            # Make sure that method is forwarded too
-#            assert_equal('only on the weekends', @proxy.respond_to?(:something_fake))
-#        end
-#        
-#        def test_class
-#            assert_equal(Object, @object.class)
-#            
-#            # Make sure that .class does not work
-#            assert_raise(Helpers::ProxiedException) { @proxy.class }
-#        end
+        def test_send
+            def @object.add(a, b)
+                a + b
+            end
+            
+            # Make sure .send works
+            assert_equal(11, @proxy.send(:add, 4, 7))
+            assert_equal(11, @proxy.add(4, 7))
+        end
+        
+        def test_exceptions
+            # Make sure it forwards exceptions
+            assert_raise(Helpers::ProxiedException) { @proxy.kaboom }
+            
+            # Make sure the exception did not break the real object
+            assert_equal("my name is object", @object.name)
+        end
+        
+        def test_object_methods
+            # Add a common methods that is present in all Objects
+            def @object.respond_to?(name)
+                'only on the weekends'
+            end
+            
+            # Make sure that method is forwarded too
+            assert_equal('only on the weekends', @proxy.respond_to?(:something_fake))
+        end
+        
+        def test_class
+            assert_equal(Object, @object.class)
+            
+            # Make sure that .class does not work
+            assert_raise(Helpers::ProxiedException) { @proxy.class }
+        end
         
 =begin FIXME: Add these tests to see what happens when the real object or proxy is GCed
               or the communicator or connections break or turn off

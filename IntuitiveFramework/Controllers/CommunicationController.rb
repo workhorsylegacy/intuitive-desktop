@@ -144,7 +144,7 @@ module ID; module Controllers
                   elsif @waiting_for_command.has_key?(message[:command].to_s)
                       thread = @waiting_for_command.delete(message[:command].to_s)
                   else
-                      raise "Message '#{message[:command].to_s}' incoming to '#{name}' was not expected."
+                      raise "Message '#{message[:command].to_s}' incoming to '#{name_type}' was not expected."
                   end
                   thread[:command]  = message
                   thread.run()

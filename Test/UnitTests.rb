@@ -111,8 +111,7 @@ Thread.abort_on_exception = true
             master_suite << ID::Helpers::TestEasySocket.suite
             master_suite << ID::Servers::TestCommunicationServer.suite
             master_suite << ID::Controllers::TestCommunicationController.suite
-            #master_suite << ID::Helpers::TestProxy.suite
-            #master_suite << ID::Helpers::TestSystemProxy.suite
+            master_suite << ID::Helpers::TestProxy.suite
             return master_suite
         end
     end 

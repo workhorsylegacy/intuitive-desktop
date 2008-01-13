@@ -36,7 +36,8 @@ module ID; module Servers
           # Send a message to the communication server that will forward it to the destination
           source_socket = Helpers::EasySocket.new(:system)
           out_message = {:command => :blah, 
-                         :destination => Servers::CommunicationServer.file_path + "destination:system"}
+                         :destination => Servers::CommunicationServer.file_path + "destination:system",
+                         :source => "source:system"}
           source_socket.write_message(out_message, :name => Servers::CommunicationServer.full_name)
           t.join
           
@@ -44,7 +45,7 @@ module ID; module Servers
           assert_equal(out_message[:command], message[:command])
           
           # Make sure the message has the new keys that were added by the communication server
-          assert_equal("local", message[:source])
+          assert_equal("source:system", message[:source])
       end
       
       def test_forwards_net_messages
