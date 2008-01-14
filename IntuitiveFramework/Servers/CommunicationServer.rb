@@ -43,7 +43,7 @@ module ID; module Servers
         end
         
         def self.file_path
-          $TempCommunicationDirectory
+          ID::Config.comm_dir
         end
         
         def self.full_name

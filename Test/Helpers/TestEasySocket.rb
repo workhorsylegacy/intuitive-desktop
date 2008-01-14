@@ -15,7 +15,7 @@ module ID; module Helpers
 
       def test_system
           # Create a system socket that will accept the message
-          socket_args = {:name => $TempCommunicationDirectory + "destination"}
+          socket_args = {:name => ID::Config.comm_dir + "destination"}
           message = nil
           t = Thread.new do
               dest_socket = Helpers::EasySocket.new(:system)

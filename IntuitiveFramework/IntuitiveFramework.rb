@@ -72,11 +72,13 @@ class FalseClass
     end
 end
 
-# This lets us compare symbols
 class Symbol
+    # This lets us compare symbols
     def <=>(other)
         self.to_s <=> other.to_s
     end
+    
+    # This lets us call .is_a? on a symbol
     def is_a?(type)
         self.class == type
     end
@@ -98,11 +100,8 @@ unless defined? ID::Models::USER_DATABASE_CONNECTION
     end; end
 end
 
-$DataSystem = "#{path}/data_system/"
-$TempCommunicationDirectory = "#{path}/temp_communication/"
-$TempTables = "#{path}/temporary_tables/"
-
 # Create a global string for each namespace file
+$IntuitiveFramework_Config = "#{path}/config.yaml"
 $IntuitiveFramework_Helpers = "#{path}/Helpers/Namespace"
 
 $IntuitiveFramework_Models = "#{path}/Models/Namespace"
@@ -127,7 +126,8 @@ $IntuitiveFramework_Controllers,
 $IntuitiveFramework_Views].each { |namespace| require namespace }
 
 # Load the root classes
-['Program'].each { |file_name| require "#{path}/#{file_name}" }
+['Program',
+'Config'].each { |file_name| require "#{path}/#{file_name}" }
 
 # Create a random seed to give us better random numbers
 Kernel.srand

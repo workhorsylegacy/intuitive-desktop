@@ -138,12 +138,12 @@ end; end; end
 # FIXME: This needs to be in the base namespace so any models created will start from the base namespace too.
 def create_active_record_models_from_xml(xml_element_tables)
 
-	FileUtils.mkdir($TempTables) unless File.exist?($TempTables)
+	FileUtils.mkdir(ID::Config.table_dir) unless File.exist?(ID::Config.table_dir)
 
     # Create a folder for the databases
     file_name = nil
     loop do
-        dir_name = $TempTables + "/#{rand(2**32)}/"
+        dir_name = ID::Config.table_dir + "/#{rand(2**32)}/"
         unless File.directory? dir_name
             Dir.mkdir dir_name
             file_name = "#{dir_name}temp.sqlite"

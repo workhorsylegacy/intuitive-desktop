@@ -109,7 +109,7 @@ class Browser
         $communication_server.close()
         
         # Delete the data system
-        FileUtils.rm_rf($DataSystem) if File.directory?($DataSystem)
+        FileUtils.rm_rf(ID::Config.data_dir) if File.directory?(ID::Config.data_dir)
     end
     
     # When a user enters text in the search_entry, search for that text

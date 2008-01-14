@@ -1,0 +1,18 @@
+
+--- 
+:development:
+  :ip_address: 127.0.0.1
+  :port: 5555
+  :web_service: http://service.intuitive-desktop.org/projects/service.wsdl
+  :data_dir: ~/.IntuitiveDesktop/tmp/development/data_system/
+  :comm_dir: ~/.IntuitiveDesktop/tmp/development/temp_communication/
+  :table_dir: ~/.IntuitiveDesktop/tmp/development/temporary_tables/
+	
+:test:
+  :ip_address: 127.0.0.1
+  :port: 6666
+  :web_service: http://localhost:3000/projects/service.wsdl
+  :data_dir: ~/.IntuitiveDesktop/tmp/test/data_system/
+  :comm_dir: ~/.IntuitiveDesktop/tmp/test/temp_communication/
+  :table_dir: ~/.IntuitiveDesktop/tmp/test/temporary_tables/
+	

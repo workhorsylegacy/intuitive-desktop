@@ -48,6 +48,9 @@ require 'TestProgram'
 
 Thread.abort_on_exception = true
 
+$ID_ENV = :test
+ID::Config.load_config
+
     def helper_tests
         [ID::Helpers::TestBinding.suite,
         ID::Helpers::TestLogger.suite,
@@ -69,8 +72,7 @@ Thread.abort_on_exception = true
 ##        ID::Controllers::TestDataController.suite,
         ID::Controllers::TestRevisionedFileSystemController.suite,
         ID::Controllers::TestSearchController.suite,
-        ID::Controllers::TestUserController.suite,
-        ID::Controllers::TestSystemCommunicationController.suite]
+        ID::Controllers::TestUserController.suite]
     end
 
     def server_tests
@@ -93,6 +95,9 @@ Thread.abort_on_exception = true
     class TestSuite
         def self.suite
             master_suite = Test::Unit::TestSuite.new
+
+#            master_suite << ID::Servers::TestCommunicationServer.suite
+#            master_suite << ID::Servers::TestIdentityServer.suite
 
 #            [helper_tests,
 #            model_test,

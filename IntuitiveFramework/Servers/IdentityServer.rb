@@ -6,13 +6,6 @@ require "#{path}/Namespace"
 
 module ID; module Servers
 	class IdentityServer
-        def self.force_kill_other_instances
-            return unless Controllers::SystemCommunicationController.is_name_used?("IdentityServer")
-            
-            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("IdentityServer")
-            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
-        end
-        
         def initialize(use_local_web_service, on_error)
             # Make sure the on_error is valid
             on_error_options = [:log_to_file, :log_to_std_error, :throw]
@@ -40,31 +33,27 @@ module ID; module Servers
             raise "Could not connect to the web service at '#{wsdl}'." unless @web_service.IsRunning
             
             #@logger = Helpers::Logger.new(logger_output)
-            
-            # Make the server available over the system communicator
-            Helpers::SystemProxy.make_object_proxyable(self, "IdentityServer")
         end
         
         def close
         end
         
-        def register_identity(connection, name, description, public_key, private_key)
+        def register_identity(name, description, public_key, private_key)
+            raise "We need a way to get the com server's info here. This needs to work transparently in debug or production mode too. Have it use a yaml config file, and use $DEBUG?"
             encrypted_proof =
             @web_service.RegisterIdentityStart(name, 
                                               public_key,
                                               description, 
-                                              connection[:ip_address],
-                                              connection[:port],
-                                              connection[:id])
+                                              ID::Config.Ip_address,
+                                              ID::Config.port)
 
             decrypted_proof = Controllers::UserController::answer_ownership_test(private_key, encrypted_proof)
             
             @web_service.RegisterIdentityEnd(name, 
                                               public_key,
                                               description, 
-                                              connection[:ip_address],
-                                              connection[:port],
-                                              connection[:id],
+                                              ID::Config.ip_address,
+                                              ID::Config.port,
                                               decrypted_proof)
         end
         

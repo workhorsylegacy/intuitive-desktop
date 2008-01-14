@@ -20,7 +20,7 @@ module ID; module Controllers
           @user.destroy if @user
           @communicator.close if @communicator
           @document_server.close if @document_server
-          FileUtils.rm_rf($DataSystem)
+          FileUtils.rm_rf(ID::Config.data_dir)
           ID::TestHelper.cleanup()
 			end
 			

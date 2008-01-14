@@ -5,17 +5,12 @@ require $IntuitiveFramework_Servers
 module ID; module Servers
 	class TestIdentityServer < Test::Unit::TestCase
       def setup
-          Servers::CommunicationServer.force_kill_other_instances()
-          Servers::IdentityServer.force_kill_other_instances()
-          
+          ID::TestHelper.cleanup()
           @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
           
           # Add 2 users
           @local_user = ID::Controllers::UserController::create_user('matt jones')
-          @local_connection = @communication_server.create_net_connection
-                
-          @remote_user = ID::Controllers::UserController::create_user('bobrick')
-          @remote_connection = @communication_server.create_net_connection                
+          @remote_user = ID::Controllers::UserController::create_user('bobrick')                
                 
           # Have the logger throw when it gets anything
           @identity_server = Servers::IdentityServer.new(true, :throw)
@@ -34,8 +29,7 @@ module ID; module Servers
       def test_can_register_and_locate_user
          # Register the user
          passed =
-         @identity_server.register_identity(@local_connection, 
-                                           @local_user.name,
+         @identity_server.register_identity(@local_user.name,
                                            "The happy identity of your doom",
                                            @local_user.public_universal_key,
                                            @local_user.private_key)

@@ -10,7 +10,7 @@ module ID; module Servers
 
         def initialize(logger_output=$stdout)
             # Make the data system if it does not exist
-            Dir.mkdir($DataSystem) unless File.directory?($DataSystem)
+            Dir.mkdir(ID::Config.data_dir) unless File.directory?(ID::Config.data_dir)
             
             # a hash to store known identities
             @identities = {}.extend(MonitorMixin)
