@@ -7,7 +7,7 @@ module ID; module Helpers
         def setup
             # Start the communication server
             ID::TestHelper.cleanup()
-            @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)  
+            @communication_server = Servers::CommunicationServer.new(:throw)  
         
             # Create an object that will be accessed by a proxy
             @object = Object.new

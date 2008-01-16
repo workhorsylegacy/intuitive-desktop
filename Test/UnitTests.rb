@@ -96,9 +96,6 @@ ID::Config.load_config
         def self.suite
             master_suite = Test::Unit::TestSuite.new
 
-#            master_suite << ID::Servers::TestCommunicationServer.suite
-#            master_suite << ID::Servers::TestIdentityServer.suite
-
 #            [helper_tests,
 #            model_test,
 #            controller_tests,
@@ -115,6 +112,7 @@ ID::Config.load_config
             master_suite << ID::Servers::TestCommunicationServer.suite
             master_suite << ID::Controllers::TestCommunicationController.suite
             master_suite << ID::Helpers::TestProxy.suite
+            #master_suite << ID::Servers::TestIdentityServer.suite
             return master_suite
         end
     end 

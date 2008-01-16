@@ -5,7 +5,7 @@ module ID; module Controllers
 	    class TestCommunicationController < Test::Unit::TestCase
 	       def setup
             ID::TestHelper.cleanup()
-            @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
+            @communication_server = Servers::CommunicationServer.new(:throw)
 	           @communicator_one = Controllers::CommunicationController.new(:name => :one, :type => :system)
              @communicator_two = Controllers::CommunicationController.new(:name => :two, :type => :system)
 	       end

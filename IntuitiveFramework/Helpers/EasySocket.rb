@@ -48,8 +48,8 @@ module ID; module Helpers
         def close
             return unless @is_open
             @is_open = false
-            #@in_socket.close if @in_socket # FIXME: For some reason this explodes when closing while reading
-            @in_socket = nil if @in_socket
+            @in_socket.close if @in_socket
+            @in_socket = nil
             @read_thread.kill if @read_thread
             @read_thread = nil
         end
@@ -77,7 +77,7 @@ module ID; module Helpers
                     end
                 rescue Errno::EADDRINUSE
                     case @type
-                        when :net: raise "The network could not bind to the address '#{args[:ip_address]}:#}{args[:port]}' because it is already in use."
+                        when :net: raise "The network could not bind to the address '#{args[:ip_address]}:#{args[:port]}' because it is already in use."
                         when :system: raise "The system socket could not bind to the name '#{@name}' because it is already in use."
                     end
                 end
@@ -100,8 +100,13 @@ module ID; module Helpers
                           
                           # Get the data from the yaml if there is any
                           next if message_as_yaml.length == 0
+                      # Retry if there is an error. If we try to reselect the socket IO and fail, assume the socket was forced closed
                       rescue Errno::EAGAIN, Errno::ECONNABORTED, Errno::EPROTO, Errno::EINTR
-                          IO.select([@in_socket])
+                          begin
+                              IO.select([@in_socket])
+                          rescue IOError
+                              break
+                          end
                           retry
                       end
                       

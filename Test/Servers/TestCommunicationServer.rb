@@ -6,7 +6,7 @@ module ID; module Servers
       def setup
           ID::TestHelper.cleanup()
           # Start the communication server
-          @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
+          @communication_server = Servers::CommunicationServer.new(:throw)
       end
             
       def teardown

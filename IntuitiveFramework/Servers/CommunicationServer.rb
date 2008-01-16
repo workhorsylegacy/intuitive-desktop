@@ -11,7 +11,7 @@ module ID; module Servers
 #            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
 #        end
         
-        def initialize(ip_address, in_port, use_local_web_service, on_error)
+        def initialize(on_error)
             # Make sure the on_error is valid
             on_error_options = [:log_to_file, :log_to_std_error, :throw]
             message = "The Communication Server can only use #{on_error_options.join(', ')} for on_error."
@@ -19,8 +19,8 @@ module ID; module Servers
             @on_error = on_error
             
             @is_open = false
-            @ip_address = ip_address
-            @port = port
+            @ip_address = ID::Config.ip_address
+            @port = ID::Config.port
             @system_name = "CommunicationServer"
 
             self.open
@@ -59,6 +59,8 @@ module ID; module Servers
         def stop_threads
             @system_socket.close
             @net_socket.close
+            @system_thread.kill
+            @net_thread.kill
         end
         
         def start_threads
