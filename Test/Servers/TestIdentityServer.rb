@@ -6,14 +6,14 @@ module ID; module Servers
 	class TestIdentityServer < Test::Unit::TestCase
       def setup
           ID::TestHelper.cleanup()
-          @communication_server = Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
+          @communication_server = Servers::CommunicationServer.new(:throw)
           
           # Add 2 users
           @local_user = ID::Controllers::UserController::create_user('matt jones')
           @remote_user = ID::Controllers::UserController::create_user('bobrick')                
                 
           # Have the logger throw when it gets anything
-          @identity_server = Servers::IdentityServer.new(true, :throw)
+          @identity_server = Servers::IdentityServer.new(:throw)
       end
       
       def teardown
