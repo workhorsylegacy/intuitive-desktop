@@ -3,38 +3,24 @@
 module ID; module Servers
     # FIXME: Have this replace the DataController. Trash the old one.
     class ProjectServer
-        def self.force_kill_other_instances
-            return unless Controllers::SystemCommunicationController.is_name_used?("ProjectServer")
-            
-            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("ProjectServer")
-            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
-        end
-        
-        def initialize(use_local_web_service, on_error)
+        def initialize(on_error)
             # Make sure the on_error is valid
             on_error_options = [:log_to_file, :log_to_std_error, :throw]
             message = "The Project Server can only use #{on_error_options.join(', ')} for on_error."
             raise message unless on_error_options.include? on_error.to_sym
             @on_error = on_error
-                
-            # Save the web service connection type
-            @use_local_web_service = use_local_web_service
             
             # Determine if we are using the local or global web service
-            wsdl = 
-            if @use_local_web_service
-                "http://localhost:3000/projects/service.wsdl"
-            else
-                "http://service.intuitive-desktop.org/projects/service.wsdl"
-            end
+            wsdl = ID::Config.web_service
             
             # Connect to the web service
+            message = "Could not connect to web service at '#{wsdl}'."
             begin
                 @web_service = SOAP::WSDLDriverFactory.new(wsdl).create_rpc_driver
             rescue
-                raise "Could not connect to web service at '#{wsdl}'."
+                raise message
             end
-            raise "Could not connect to the web service at '#{wsdl}'." unless @web_service.IsRunning
+            raise message unless @web_service.IsRunning
             
             # Create an internal Document Server for now
             #FIXME: Move the Document Server to be an item on the system that only uses the system communicator.
@@ -42,9 +28,6 @@ module ID; module Servers
 #            proc = Proc.new { |status, message, exception| raise message }
 #            @document_server = Servers::DocumentServer.new("127.0.0.1", 5000, 6000, proc)
 #            @document_server_connection = @document_server.instance_variable_get("@generic_net_connection")
-            
-            # Make the server available over the system communicator
-            Helpers::SystemProxy.make_object_proxyable(self, "ProjectServer")
         end
         
         def close
@@ -61,16 +44,16 @@ module ID; module Servers
         end
             
         # FIXME: This should not be manual. Update when we add group permissions to the DataController
-        def advertise_project_online(connection, name, description, user_id, head_revision_number, project_number, branch_number)
+        def advertise_project_online(name, description, user_id, head_revision_number, project_number, branch_number)
             @web_service.RegisterProject(name, 
                                          description, 
                                          user_id, 
                                          head_revision_number,
                                          project_number,
                                          branch_number,
-                                         connection[:ip_address],
-                                         connection[:port],
-                                         connection[:id])
+                                         ID::Config.ip_address,
+                                              ID::Config.port, 
+                                              0)
             
             nil
         end
@@ -85,45 +68,41 @@ module ID; module Servers
             end
         end
             
-        def self.run_project(server, revision, project_number,
+        def self.run_project(project_connection,
+                             revision, project_number,
                                         branch_number,
-                                        connection_id,
-                                        port,
-                                        ip_address,
                                         program) 
                                         
-            program_connection = {:connection_id => connection_id,
-                                  :port => port,
-                                  :ip_address => ip_address}
-            out_connection = server.create_net_connection
+            communicator = Controllers::CommunicationController.new(:name => :random, :type => :system)
             
             # Tell the Server that we want to run the project
             message = {:command => :run_project,
                         :project_number => project_number,
                         :branch_number => branch_number}
-            server.send_net_message(out_connection, server.generic_incoming_connection, message)
+            communicator.send_command(project_connection, message)
         
             # Wait for the server to ok the process and give up a new connection to it
-            while (message = server.get_net_message(out_connection, :ok_to_run_project)) == nil
-                sleep 0.1
+            communicator.get_command(project_connection, :ok_to_run_project) do |message|
+                new_server_connection = message[:new_connection]
+                
+                # Confirm that we got the new server connection
+                message = { :command => :confirm_new_connection }
+                communicator.send_command(project_connection, message)
             end
-            new_server_connection = message[:new_connection]
-            
-            # Confirm that we got the new server connection
-            message = { :command => :confirm_new_connection }
-            server.send_net_message(out_connection, new_server_connection, message)
             
             # Get a new connection for the Model and Controller
-            while (message = server.get_net_message(out_connection, :got_model_and_controller_connections)) == nil
-                sleep 0.1
+            model_connections, main_controller_connection, 
+            document_states, document_views, main_view_name = nil
+                
+            communicator.get_command(:got_model_and_controller_connections) do |message|
+                model_connections = message[:model_connections]
+                main_controller_connection = message[:main_controller_connection]
+                document_states = message[:document_states]
+                document_views = message[:document_views]
+                main_view_name = message[:main_view_name]
             end
-            model_connections = message[:model_connections]
-            main_controller_connection = message[:main_controller_connection]
-            document_states = message[:document_states]
-            document_views = message[:document_views]
-            main_view_name = message[:main_view_name]
             
-            server.destroy_net_connection(out_connection)
+            communicator.close
             
             # Create a proxy Models and Controller
             models = {}
@@ -155,10 +134,6 @@ module ID; module Servers
             
         def on_error
             @on_error.to_s
-        end
-            
-        def use_local_web_service
-            @use_local_web_service
         end
     end
 end; end

@@ -26,6 +26,8 @@ module ID; module Controllers
               @name = new_name
           end
           
+          @name = @name.to_s
+          
           # Get variables to store message
           @waiting_for_any = nil
           @waiting_for_command = {}.extend(MonitorMixin)
@@ -38,6 +40,10 @@ module ID; module Controllers
       end
       
       def full_name
+          "#{ID::Config.ip_address}:#{ID::Config.port}:#{self.name}"
+      end
+      
+      def file_name
           Servers::CommunicationServer.file_path + self.name_type
       end
       
@@ -131,7 +137,7 @@ module ID; module Controllers
           @in_thread = Thread.new do
               @in_socket = Helpers::EasySocket.new(:system)
               
-              @in_socket.read_messages(:name => self.full_name) do |message|
+              @in_socket.read_messages(:name => self.file_name) do |message|
                   message = YAML.load(message)
 	                raise "Incoming message not a Hash." unless message.class == Hash
 	                raise "Incoming message missing source_connection." unless message.has_key?(:source)

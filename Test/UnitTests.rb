@@ -77,7 +77,7 @@ ID::Config.load_config
 
     def server_tests
         [ID::Servers::TestIdentityServer.suite,
-#        ID::Servers::TestProjectServer.suite,  #FIXME: Make this not explode the tests
+        ID::Servers::TestProjectServer.suite,  #FIXME: Make this not explode the tests
         ID::Servers::TestCommunicationServer.suite]
     end
     
@@ -109,10 +109,12 @@ ID::Config.load_config
 #            end
             
             master_suite << ID::Helpers::TestEasySocket.suite
-            master_suite << ID::Servers::TestCommunicationServer.suite
-            master_suite << ID::Controllers::TestCommunicationController.suite
-            master_suite << ID::Helpers::TestProxy.suite
-            master_suite << ID::Servers::TestIdentityServer.suite
+#            master_suite << ID::Servers::TestCommunicationServer.suite
+#            master_suite << ID::Controllers::TestCommunicationController.suite
+#            master_suite << ID::Helpers::TestProxy.suite
+#            master_suite << ID::Servers::TestIdentityServer.suite
+#             master_suite << ID::Servers::TestProjectServer.suite
+
             return master_suite
         end
     end 

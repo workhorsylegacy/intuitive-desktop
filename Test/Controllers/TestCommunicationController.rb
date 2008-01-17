@@ -19,8 +19,8 @@ module ID; module Controllers
 	       
 	       def test_basic
 	           assert @communicator_one.is_open
-             assert_equal "one:system", @communicator_one.name_type
-             assert_equal(Servers::CommunicationServer.file_path + "one:system", @communicator_one.full_name)
+             assert_equal "one", @communicator_one.name
+             assert_equal("#{ID::Config.ip_address}:#{ID::Config.port}:one", @communicator_one.full_name)
 	       end
 	     
          def test_random_name
@@ -32,8 +32,8 @@ module ID; module Controllers
             
             # Make sure it has a name
             assert_not_nil @communicator_one
-            assert_not_equal "*", @communicator_one.name.split(':').first
-            assert @communicator_one.name.split(':').first.length > 0
+            assert_not_equal "random", @communicator_one.name.to_s
+            assert @communicator_one.name.length > 0
          end
        
             def test_wait_for_any_command

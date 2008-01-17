@@ -15,12 +15,11 @@ module ID; module Helpers
 
       def test_system
           # Create a system socket that will accept the message
-          socket_args = {:name => ID::Config.comm_dir + "destination"}
           message = nil
           t = Thread.new do
-              dest_socket = Helpers::EasySocket.new(:system)
+              dest_socket = Helpers::EasySocket.new(:name => "destination")
                   
-              dest_socket.read_messages(socket_args) do |message_as_yaml|
+              dest_socket.read_messages do |message_as_yaml|
                   message = YAML.load(message_as_yaml)
                   dest_socket.close
               end
@@ -33,9 +32,10 @@ module ID; module Helpers
           end
           
           # Send a message to the destination socket
-          source_socket = Helpers::EasySocket.new(:system)
-          out_message = {:command => :blah}
-          source_socket.write_message(out_message, socket_args)
+          out_message = {:command => :blah, 
+                          :destination => {:name => "destination"}}
+          source_socket = Helpers::EasySocket.new(:name => :source)
+          source_socket.write_message(out_message)
           
           # Make sure we got the message
           t.join
@@ -44,13 +44,11 @@ module ID; module Helpers
     
       def test_net
           # Create a system socket that will accept the message
-          socket_args = {:ip_address => "127.0.0.1",
-                         :port => "5000"}
           message = nil
           t = Thread.new do
-              dest_socket = Helpers::EasySocket.new(:net)
+              dest_socket = Helpers::EasySocket.new(:ip_address => "127.0.0.1", :port => "5000", :name => "destination")
                   
-              dest_socket.read_messages(socket_args) do |message_as_yaml|
+              dest_socket.read_messages do |message_as_yaml|
                   message = YAML.load(message_as_yaml)
                   dest_socket.close
               end
@@ -63,35 +61,22 @@ module ID; module Helpers
           end
           
           # Send a message to the destination socket
-          source_socket = Helpers::EasySocket.new(:net)
-          out_message = {:command => :blah}
-          source_socket.write_message(out_message, socket_args)
+          out_message = {:command => :blah,
+                          :destination => {:ip_address => "127.0.0.1", :port => "5000", :name => "destination"}}
+          source_socket = Helpers::EasySocket.new(:name => "source")
+          source_socket.write_message(out_message)
           
           # Make sure we got the message
           t.join
           assert_equal(:blah, message[:command])
       end
       
-      def test_fails_on_missing_net_destination
-          socket_args = {:ip_address => "127.0.0.1",
-                         :port => "5005"}
-          
+      def test_fails_on_missing_destination
           # Send a message to a non existant net socket
-          source_socket = Helpers::EasySocket.new(:net)
+          source_socket = Helpers::EasySocket.new(:ip_address => "127.0.0.1", :port => "5005", :name => "d")
           out_message = {:command => :blah}
           assert_raise(RuntimeError) do
-              source_socket.write_message(out_message, socket_args)
-          end
-      end
-      
-      def test_fails_on_missing_system_destination
-          socket_args = {:name => "not implemented here"}
-          
-          # Send a message to a non existant net socket
-          source_socket = Helpers::EasySocket.new(:system)
-          out_message = {:command => :blah}
-          assert_raise(RuntimeError) do
-              source_socket.write_message(out_message, socket_args)
+              source_socket.write_message(out_message)
           end
       end
    end
