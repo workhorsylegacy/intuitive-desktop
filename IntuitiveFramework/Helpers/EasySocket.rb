@@ -15,13 +15,15 @@ module ID; module Helpers
                     raise "Socket of type :system requires arguments :name in args hash." unless args.has_key? :name
                     @name = args[:name]
                 when :net:
-                    unless args.has_key? :ip_address and args.has_key? :port and args.has_key? :name
-                        raise "Socket of type :net requires arguments :ip_address, :port, and :name in args hash."
+                    unless args.has_key? :ip_address and args.has_key? :port
+                        raise "Socket of type :net requires arguments :ip_address, and :port in args hash."
                     end
                     @ip_address = args[:ip_address]
                     @port = args[:port]
-                    @name = args[:name]
             end
+            
+            # If the name is :random, replace it with a random-unused name
+            @name = self.class.get_random_unused_name if @name == :random
         end
         
         def name_as_file
@@ -38,14 +40,16 @@ module ID; module Helpers
         
         def write_message(message)
             out_socket = nil
-            message.merge!(:source => self.full_name)
+            
+            # Rewrite the source and destinations to be relative to the destination
+            message.merge!(:source => self.full_name) unless message.has_key?(:source)
             
             # Make sure there is a destination
             raise "No :destination in the message." unless message.has_key? :destination
             destination = message[:destination]
             
-            # Make sure the destination has all the keys
-            raise "The destination was missing the key :name" unless destination.has_key? :name
+            # Determine if the destination is a system or net socket
+            is_remote = destination.has_key?(:ip_address) && destination.has_key?(:port)
             
             # Get the address for the destination
             dest_ip_address = destination[:ip_address]
@@ -53,7 +57,7 @@ module ID; module Helpers
             dest_name = destination[:name]
             
             begin
-                if dest_ip_address == nil
+                unless is_remote
                         begin
                             out_socket = UNIXSocket.new(ID::Config.comm_dir + dest_name)
                             out_socket.write YAML.dump(message)
@@ -133,6 +137,16 @@ module ID; module Helpers
             
             @read_thread.join
             @read_thread = nil
+        end
+        
+        def self.get_random_unused_name
+              new_name = nil
+              loop do
+                  srand
+                  new_name = rand(2**16).to_s
+                  break unless Servers::CommunicationServer.is_name_used?(new_name)
+              end
+              new_name
         end
     end
 end; end

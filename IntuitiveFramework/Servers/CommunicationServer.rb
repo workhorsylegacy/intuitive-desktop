@@ -4,12 +4,6 @@ require $IntuitiveFramework_Helpers
 module ID; module Servers
     class CommunicationServer
         attr_reader :is_open, :ip_address, :port, :system_name, :on_error
-#        def self.force_kill_other_instances
-#            return unless Controllers::SystemCommunicationController.is_system_name_used?("CommunicationServer")
-#            
-#            unix_socket_file = Controllers::SystemCommunicationController.get_socket_file_name("CommunicationServer")
-#            File.delete(unix_socket_file) if File.exist?(unix_socket_file)
-#        end
         
         def initialize(on_error)
             # Make sure the on_error is valid
@@ -47,11 +41,11 @@ module ID; module Servers
         end
         
         def self.full_name
-            file_path + "CommunicationServer"
+            file_path + @system_name
         end
       
-      def self.is_name_used?(name, type)
-          File.exist? "#{name}:#{type}"
+      def self.is_name_used?(name)
+          File.exist? file_path + name
       end
         
         private
@@ -64,37 +58,50 @@ module ID; module Servers
         end
         
         def start_threads
-            @system_socket = Helpers::EasySocket.new(:system)
+            @system_socket = Helpers::EasySocket.new(:name => @system_name)
             @system_thread = Thread.new do
-                @system_socket.read_messages(:name => self.class.full_name) do |message_as_yaml|
-                    forward_message(message_as_yaml, :system)
+                @system_socket.read_messages do |message_as_yaml|
+                    forward_message(message_as_yaml)
                 end
             end
             
-            @net_socket = Helpers::EasySocket.new(:net)
+            @net_socket = Helpers::EasySocket.new(:ip_address => @ip_address, :port => @port)
             @net_thread = Thread.new do
-                @net_socket.read_messages(:ip_address => @ip_address, :port => @port) do |message_as_yaml|
-                    forward_message(message_as_yaml, :net)
+                @net_socket.read_messages do |message_as_yaml|
+                    forward_message(message_as_yaml)
                 end
             end
         end 
        
-        def forward_message(message_as_yaml, type)
+        private
+        
+        def forward_message(message_as_yaml)
             message_as_ruby = YAML.load(message_as_yaml)
             
             # Make sure the message is valid
             raise "The message is not a Hash." unless message_as_ruby.class == Hash
-            raise "The message is missing source." unless message_as_ruby.has_key?(:source)
-            raise "The message is missing destination." unless message_as_ruby.has_key?(:destination)
-            raise "The message is missing a command." unless message_as_ruby.has_key?(:command)
+            raise "The message is missing the source." unless message_as_ruby.has_key?(:source)
+            raise "The message is missing the destination." unless message_as_ruby.has_key?(:destination)
+            raise "The message is missing the real destination." unless message_as_ruby.has_key?(:real_destination)
+            raise "The message is missing the command." unless message_as_ruby.has_key?(:command)
                   
-            # Make sure the communication controller exits and is set to accept system messages
-            dest_name, dest_type = message_as_ruby[:destination].split(':')
-            raise "No destination named '#{dest_name}:#{dest_type}' to send to." unless self.class.is_name_used?(dest_name, dest_type)
+            # Determine if we are sending to a local socket, or remote socket
+            destination = message_as_ruby[:destination]
+            is_remote = destination.has_key?(:ip_address) && destination.has_key?(:port)
                   
-            # Forward the message to the communication controller's unix socket
-            out_socket = Helpers::EasySocket.new(:system)
-            out_socket.write_message(YAML.load(message_as_yaml), {:name => message_as_ruby[:destination]})
+            # Make sure the destination exist if it is local
+            unless is_remote
+                dest_name = destination[:name]
+                raise "No system destination named '#{dest_name}' to send to." unless self.class.is_name_used?(dest_name)
+            end
+             
+            # Change the destination to be the real destination
+            message_as_ruby[:destination] = message_as_ruby.delete(:real_destination)
+             
+            # Forward the message to the dest socket socket
+            out_socket = Helpers::EasySocket.new(:name => :random)
+            out_socket.write_message(message_as_ruby)
+            out_socket.close()
         end
         
 =begin

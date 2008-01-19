@@ -16,12 +16,11 @@ module ID; module Servers
 
       def test_forwards_system_message
           # Create a system socket that will accept the message
-          socket_name = {:name => Servers::CommunicationServer.file_path + "destination:system"}
           message = nil
           t = Thread.new do
-              dest_socket = Helpers::EasySocket.new(:system)
+              dest_socket = Helpers::EasySocket.new(:name => "destination")
                   
-              dest_socket.read_messages(socket_name) do |message_as_yaml|
+              dest_socket.read_messages do |message_as_yaml|
                   message = YAML.load(message_as_yaml)
                   dest_socket.close
               end
@@ -34,29 +33,27 @@ module ID; module Servers
           end
           
           # Send a message to the communication server that will forward it to the destination
-          source_socket = Helpers::EasySocket.new(:system)
+          source_socket = Helpers::EasySocket.new(:name => "source")
           out_message = {:command => :blah, 
-                         :destination => Servers::CommunicationServer.file_path + "destination:system",
-                         :source => "source:system"}
-          source_socket.write_message(out_message, :name => Servers::CommunicationServer.full_name)
+                         :destination => {:name => "CommunicationServer"},
+                         :real_destination => {:name => "destination"}}
+          source_socket.write_message(out_message)
           t.join
           
           # Make sure all the message has the same keys
           assert_equal(out_message[:command], message[:command])
           
           # Make sure the message has the new keys that were added by the communication server
-          assert_equal("source:system", message[:source])
+          assert_equal("source", message[:source][:name])
       end
       
       def test_forwards_net_messages
-          #raise "TODO: Go from a local system socket, to the server, to a local net socket."
           # Create a system socket that will accept the message
-          socket_name = {:name => Servers::CommunicationServer.file_path + "destination:system"}
           message = nil
           t = Thread.new do
-              dest_socket = Helpers::EasySocket.new(:system)
+              dest_socket = Helpers::EasySocket.new(:ip_address => "127.0.0.1", :port => 4567)
                   
-              dest_socket.read_messages(socket_name) do |message_as_yaml|
+              dest_socket.read_messages do |message_as_yaml|
                   message = YAML.load(message_as_yaml)
                   dest_socket.close
               end
@@ -69,19 +66,18 @@ module ID; module Servers
           end
           
           # Send a message to the communication server that will forward it to the destination
-          raise "This needs to be able to send messages with this style addresses '127.0.0.1:5555:blah' instead of just this '/crap/blah' style ones."
-          source_socket = Helpers::EasySocket.new(:system)
+          source_socket = Helpers::EasySocket.new(:name => "source")
           out_message = {:command => :blah, 
-                         :destination => Servers::CommunicationServer.file_path + "destination:system",
-                         :source => "source:system"}
-          source_socket.write_message(out_message, :name => Servers::CommunicationServer.full_name)
+                         :destination => {:name => "CommunicationServer"},
+                         :real_destination => {:ip_address => "127.0.0.1", :port => 4567}}
+          source_socket.write_message(out_message)
           t.join
           
           # Make sure all the message has the same keys
           assert_equal(out_message[:command], message[:command])
           
           # Make sure the message has the new keys that were added by the communication server
-          assert_equal("source:system", message[:source])
+          assert_equal("source", message[:source][:name])
       end
     end
 end; end

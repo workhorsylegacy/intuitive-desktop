@@ -15,16 +15,7 @@ module ID; module Controllers
           end
           
           # Generate a random name if it was :random
-          if @name == :random
-              srand
-              new_name = nil
-              loop do
-                  srand
-                  new_name = rand(2**16).to_s
-                  break unless Servers::CommunicationServer.is_name_used?(new_name, @type)
-              end
-              @name = new_name
-          end
+          @name = Helpers::EasySocket.get_random_unused_name if @name == :random
           
           @name = @name.to_s
           
