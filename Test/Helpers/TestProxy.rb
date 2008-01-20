@@ -7,7 +7,7 @@ module ID; module Helpers
         def setup
             # Start the communication server
             ID::TestHelper.cleanup()
-            @communication_server = Servers::CommunicationServer.new(:throw)  
+            @communication_server = Servers::CommunicationServer.new(:throw)
         
             # Create an object that will be accessed by a proxy
             @object = Object.new
@@ -20,10 +20,10 @@ module ID; module Helpers
             @object.name = "my name is object"
             
             # Start proxying the object
-            Helpers::Proxy.make_object_proxyable(:object => @object, :name => :object, :type => :system)
+            Helpers::Proxy.make_object_proxyable(:object => @object, :name => "object")
             
             # Get a proxy to the real object
-            @proxy = Helpers::Proxy.get_proxy_to_object(:name => :object, :type => :system)
+            @proxy = Helpers::Proxy.get_proxy_to_object(:name => "object")
             assert_not_nil(@proxy)
         end
         

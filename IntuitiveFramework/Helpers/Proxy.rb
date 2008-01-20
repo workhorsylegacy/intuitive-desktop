@@ -33,7 +33,6 @@ module Helpers
             raise "The argument must be a hash." unless args.is_a? Hash
             raise "The argument 'object' is missing." unless args[:object]
             raise "The argument 'name' is missing." unless args[:name]
-            raise "The argument 'type' is missing." unless args[:type]
             
             # Add a method for testing the connection
             object_to_serve = args[:object]
@@ -43,7 +42,7 @@ module Helpers
             
             # Perform any calls to the Object from the communicator
             proxy_thread = Thread.new do
-                communicator = Controllers::CommunicationController.new(args)
+                communicator = Controllers::CommunicationController.new(args[:name].to_s)
                 
                 loop do
                     communicator.wait_for_any_command do |message|
@@ -71,18 +70,20 @@ module Helpers
                                         
                                 # Return any result and exceptions
                                 message = {:command => :return,
+                                           :destination => source,
                                            :return_value => retval,
                                            :exception => exception,
                                            :exception_class_name => exception_class_name,
                                            :backtrace => exception_backtrace}
-                                communicator.send_command(source, message)
+                                communicator.send_command(message)
                             else
                                 error = "The proxied object does not know what to do with the command '#{message[:command]}'."
                                 message = {:command => :return,
+                                           :destination => source,
                                            :return_value => retval,
                                            :exception => Exception.new(error),
                                            :exception_class_name => Exception}
-                                communicator.send_command(source, message)
+                                communicator.send_command(message)
                         end
                     end
                 end
@@ -101,17 +102,20 @@ module Helpers
             # Make sure the arguments are valid
             raise "The argument must be a hash." unless args.is_a? Hash
             raise "The argument 'name' is missing." unless args[:name]
-            raise "The argument 'type' is missing." unless args[:type]
             
-        communicator = Controllers::CommunicationController.new(:name => :random, :type => args[:type])
+        communicator = Controllers::CommunicationController.new(:random)
 		    proxy = Object.new
 		    
 		    # Save the connection info in instance variables
+        proxy_address = {}
+        proxy_address.merge! :name => args[:name]
+        proxy_address.merge! :ip_address => args[:ip_address] if args.has_key? :ip_address
+        proxy_address.merge! :port => args[:port] if args.has_key? :port
 		    proxy.instance_variable_set('@proxy_communicator', communicator)
-		    proxy.instance_variable_set('@proxy_name', "#{args[:name]}:#{args[:type]}")
+		    proxy.instance_variable_set('@proxy_address', proxy_address)
 		    
             def proxy.method_missing(name, *args)
-                Helpers::Proxy.call_object(@proxy_communicator, @proxy_name, name, args)
+                Helpers::Proxy.call_object(@proxy_communicator, @proxy_address, name, args)
             end
 		    
           def proxy.is_proxy_connected?
@@ -133,7 +137,7 @@ module Helpers
         begin
             proxy.is_proxy_connected?
         rescue
-            raise "No object named '#{args[:name]}:#{args[:type]}' to connect to."
+            raise "No object named '#{args[:name]}' to connect to."
         end        
         
 		    proxy
@@ -141,13 +145,14 @@ module Helpers
 		
 		private
 		
-        def self.call_object(communicator, object_name, method_name, *args)
+        def self.call_object(communicator, proxy_address, method_name, *args)
         	begin
                 # Forward the method call to the object on the Server
                 message = { :command => :send_to_object,
+                            :destination => proxy_address,
                                     :name => method_name,
                                     :args => args }
-                communicator.send_command(object_name, message)
+                communicator.send_command(message)
     
                 # Get the return value of the call
                 communicator.wait_for_command(:return) do |message|

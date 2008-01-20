@@ -6,7 +6,7 @@ module ID; module Controllers
 	    attr_reader :is_open
       
 	    def initialize(name)
-          raise "The name parameter must be a string." unless name.is_a? String
+          raise "The name parameter must be a string." unless name.is_a? String or name.is_a? Symbol
           @name = name
           
 	        # Validate arguments
@@ -101,10 +101,10 @@ module ID; module Controllers
             raise "The message to send was nil" unless message
             raise "The command to send was nil" unless message[:command]
             
-            # Add the source to the message
+            # Add the source to the message here, so it wont be added by the temp sending socket
             complete_message = message.clone
-            complete_message.merge! :source => @name
-            
+            complete_message.merge! :source => {:name => @name} 
+           
             # Move the real destination to the :real_destination
             complete_message.merge! :real_destination => complete_message.delete(:destination)
             
