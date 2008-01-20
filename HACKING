@@ -32,11 +32,11 @@ No software installation packages are available yet.
 
 Getting Started on Ubuntu
 ======================================================================
-0. Make sure the system is fuly up-to-date with the commands:
+0. Make sure the system is fully up-to-date with the commands:
 sudo apt-get update
 sudo apt-get upgrade
 
-1. Install the prerequsites with the command:
+1. Install the prerequisites with the command:
 TODO: Make sure this is all you need to do by testing it in a VM
 sudo apt-get install build-essential ruby ruby1.8 ruby1.8-dev ruby-gnome2 rails rubygems libsqlite3-ruby libopenssl-ruby bzr
 
@@ -66,7 +66,7 @@ the decision making process. It is ok to talk about things and plan
 in private, but not when making a decision.
 
 2. We use Test Driven Development. Code that does not have unit tests,
-will not be merged into the Main branch. It is highly recomended that
+will not be merged into the Main branch. It is highly recommended that
 you write the tests before the code. You don't build a house, then
 write its plans.
 
@@ -84,10 +84,11 @@ into your branch. This way, maintainers can quickly get your code in,
 instead of having to butcher it while trying to merge it themselves.
 
 6. The coding style is: 
-	a. Seperate the code into blocks with a comment above each block.
-	b. Try to eliminate nesting as mutch as possible.
-	c. Coments and code must be written in English.
-	d. Try to stick to the Ruby coding style as mutch as possible.
+	a. Separate the code into blocks with a comment above each block.
+	b. Try to eliminate nesting as much as possible.
+	c. Comments and code must be written in English.
+	d. Try to stick to the Ruby coding style as much as possible.
+	e. Try to keep the lines short, so they don't go off the screen.
 	
 7. Only report bugs in the Main branch. Report all bugs to launchpad. 
 
@@ -100,6 +101,10 @@ don't bloat the repository. They look like this:
 =begin
 	Comments go here ...
 =end
+
+11. Patches can be accepted on the mailing list. Make sure to include
+your name as you want it in the commit comment. It is preferred that 
+you create a branch on Launchpad instead of using patches.
  
  
 Resources
