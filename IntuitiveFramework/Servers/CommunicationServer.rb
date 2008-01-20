@@ -40,12 +40,20 @@ module ID; module Servers
           ID::Config.comm_dir
         end
         
+        def full_address
+            retval = {}
+            retval.merge!(:ip_address => @ip_address) if @ip_address
+            retval.merge!(:port => @port) if @port
+            retval.merge!(:name => @system_name)
+            retval
+        end
+        
         def self.full_name
             file_path + @system_name
         end
       
       def self.is_name_used?(name)
-          File.exist? file_path + name
+          File.exist? file_path + name.to_s
       end
         
         private
@@ -96,6 +104,7 @@ module ID; module Servers
             end
              
             # Change the destination to be the real destination
+            message_as_ruby[:routing] = message_as_ruby.delete(:destination)
             message_as_ruby[:destination] = message_as_ruby.delete(:real_destination)
              
             # Forward the message to the dest socket socket

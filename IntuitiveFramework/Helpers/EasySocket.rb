@@ -3,20 +3,22 @@
 
 module ID; module Helpers
     class EasySocket
+        attr_reader :name, :ip_address, :port, :mode
+        
         def initialize(args)
-            # Make sure the type is valid
-            @type = args.has_key?(:ip_address) ? :net : :system
+            # Make sure the mode is valid
+            @mode = args.has_key?(:ip_address) ? :net : :system
             @is_open = false
             @name, @port, @ip_address = nil
             
-            # Make sure the args are correct for the type
-            case @type
+            # Make sure the args are correct for the mode
+            case @mode
                 when :system:
-                    raise "Socket of type :system requires arguments :name in args hash." unless args.has_key? :name
+                    raise "Socket of mode :system requires arguments :name in args hash." unless args.has_key? :name
                     @name = args[:name]
                 when :net:
                     unless args.has_key? :ip_address and args.has_key? :port
-                        raise "Socket of type :net requires arguments :ip_address, and :port in args hash."
+                        raise "Socket of mode :net requires arguments :ip_address, and :port in args hash."
                     end
                     @ip_address = args[:ip_address]
                     @port = args[:port]
@@ -30,7 +32,7 @@ module ID; module Helpers
             ID::Config.comm_dir + @name
         end
         
-        def full_name
+        def full_address
             retval = {}
             retval.merge!(:ip_address => @ip_address) if @ip_address
             retval.merge!(:port => @port) if @port
@@ -42,11 +44,12 @@ module ID; module Helpers
             out_socket = nil
             
             # Rewrite the source and destinations to be relative to the destination
-            message.merge!(:source => self.full_name) unless message.has_key?(:source)
+            message.merge!(:source => self.full_address) unless message.has_key?(:source)
             
             # Make sure there is a destination
             raise "No :destination in the message." unless message.has_key? :destination
             destination = message[:destination]
+            raise "The :destination was not a hash." unless destination.is_a? Hash
             
             # Determine if the destination is a system or net socket
             is_remote = destination.has_key?(:ip_address) && destination.has_key?(:port)
@@ -92,12 +95,12 @@ module ID; module Helpers
         
             @read_thread = Thread.new do
                 begin
-                    @in_socket = case @type
+                    @in_socket = case @mode
                         when :net: TCPServer.new(@ip_address, @port)
                         when :system: UNIXServer.new(self.name_as_file)
                     end
                 rescue Errno::EADDRINUSE
-                    case @type
+                    case @mode
                         when :net: raise "The network could not bind to the address '#{@ip_address}:#{@port}' because it is already in use."
                         when :system: raise "The system socket could not bind to the name '#{@name}' because it is already in use."
                     end

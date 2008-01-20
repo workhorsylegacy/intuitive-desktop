@@ -1,17 +1,18 @@
 
 
 module ID; module Controllers
+    # Basically a system socket that relays all its messages through the communication server.
     class CommunicationController
-	    attr_reader :name, :type, :is_open
+	    attr_reader :is_open
       
-	    def initialize(args)
-          @name, @type = args[:name], args[:type]
+	    def initialize(name)
+          raise "The name parameter must be a string." unless name.is_a? String
+          @name = name
           
 	        # Validate arguments
           raise "The name parameter cannot be nil" unless @name
-          raise "The type parameter cannot be nil" unless @type
           if @name != :random
-              raise "The name '#{@name}' is already used by a service." if Servers::CommunicationServer.is_name_used?(@name, @type)
+              raise "The name '#{@name}' is already used by a service." if Servers::CommunicationServer.is_name_used?(@name)
           end
           
           # Generate a random name if it was :random
@@ -25,17 +26,29 @@ module ID; module Controllers
           
           self.open
 	    end
-	    
-      def name_type
-          "#{@name}:#{@type}"
+      
+      def mode
+          @in_socket.mode
       end
       
-      def full_name
-          "#{ID::Config.ip_address}:#{ID::Config.port}:#{self.name}"
+      def name
+          @name
+      end
+      
+      def ip_address
+          @in_socket.ip_address
+      end
+      
+      def port
+          @in_socket.port
+      end
+      
+      def full_address
+          @in_socket.full_address
       end
       
       def file_name
-          Servers::CommunicationServer.file_path + self.name_type
+          Servers::CommunicationServer.file_path + @name
       end
       
       # Will block until the next command is received, then return it
@@ -80,28 +93,28 @@ module ID; module Controllers
           yield t[:command]
       end         
 	    
-        def send_command(dest_name, message)
-            # Make sure the destination is formatted correctly
-            dest_name = dest_name.to_s if dest_name.is_a? Symbol
-            raise "The destination '#{dest_name}' is not formatted correctly." if dest_name.split(':').length != 2
-        
+        def send_command(message)
             # Make sure the socket is open
             raise "The outgoing channel is closed" unless @is_open
                     
             # Make sure the arguments are valid
             raise "The message to send was nil" unless message
-            raise "The destination name info is nil" unless dest_name
+            raise "The command to send was nil" unless message[:command]
             
-            # Get the complete connection info
-            complete_message = message.merge({:source => self.name_type, 
-                                              :destination => Servers::CommunicationServer.file_path + dest_name})
+            # Add the source to the message
+            complete_message = message.clone
+            complete_message.merge! :source => @name
             
-            # Get the message in YAML format
-            message_yaml = YAML.dump(complete_message)
+            # Move the real destination to the :real_destination
+            complete_message.merge! :real_destination => complete_message.delete(:destination)
+            
+            # Set the communication server as the :destination
+            complete_message.merge! :destination => {:name => "CommunicationServer"}
             
             # Send a message to the communication server that will forward it to the destination
-            source_socket = Helpers::EasySocket.new(:system)
-            source_socket.write_message(complete_message, :name => Servers::CommunicationServer.full_name)
+            source_socket = Helpers::EasySocket.new(:name => :random)
+            source_socket.write_message(complete_message)
+            source_socket.close
         end
 	    
 	    def open
@@ -126,9 +139,9 @@ module ID; module Controllers
 	    
 	    def start_incoming_thread
           @in_thread = Thread.new do
-              @in_socket = Helpers::EasySocket.new(:system)
+              @in_socket = Helpers::EasySocket.new(:name => @name)
               
-              @in_socket.read_messages(:name => self.file_name) do |message|
+              @in_socket.read_messages do |message|
                   message = YAML.load(message)
 	                raise "Incoming message not a Hash." unless message.class == Hash
 	                raise "Incoming message missing source_connection." unless message.has_key?(:source)
@@ -141,7 +154,7 @@ module ID; module Controllers
                   elsif @waiting_for_command.has_key?(message[:command].to_s)
                       thread = @waiting_for_command.delete(message[:command].to_s)
                   else
-                      raise "Message '#{message[:command].to_s}' incoming to '#{name_type}' was not expected."
+                      raise "Message '#{message[:command].to_s}' incoming to '#{@name}' was not expected."
                   end
                   thread[:command]  = message
                   thread.run()
