@@ -1,0 +1,128 @@
+
+======================================================================
+================= The Intuitive Desktop Hacking Guide ================
+======================================================================
+
+Basic Intro
+======================================================================
+The Intuitive Desktop is designed to solve all the problems with the
+current 'Enterprise Desktop' and web browser. 
+
+The code is currently stored in a Bazaar code repository and hosted on
+Launchpad. All development should be done on Launchpad and the mailing
+lists. 
+
+It is written in the Ruby programming language, but parts of the 
+framework (or all of it) may be re-written in a native language when 
+the framework is stable. The native language may be D or Vala. 
+
+The software is primarily written using the current release
+version of Ubuntu Gnu/Linux, but may run on other Linux-like systems. 
+It is very Gnome heavy, and does not use any KDE centric libraries.
+
+The software is currently released under the Gnu General Public 
+License Version 2, but may be changed to the GPL v3 in the future.
+
+All contributors are attributed copyright in the AUTHORS file. For
+specific details on who owns what code, the Bazaar repository can be 
+examined with the "bzr list" command.
+
+No software installation packages are available yet.
+
+
+Getting Started on Ubuntu
+======================================================================
+0. Make sure the system is fuly up-to-date with the commands:
+sudo apt-get update
+sudo apt-get upgrade
+
+1. Install the prerequsites with the command:
+TODO: Make sure this is all you need to do by testing it in a VM
+sudo apt-get install build-essential ruby ruby1.8 ruby1.8-dev ruby-gnome2 rails rubygems libsqlite3-ruby libopenssl-ruby bzr
+
+2. Setup your Bazaar whoami:
+bzr whoami Your Full Legal Name <your.email@whatever.org>
+
+3. Checkout the Main branch using the Bazaar:
+bzr branch http://bazaar.launchpad.net/~workhorsy/intuitive-desktop/main
+cd main
+
+4. Start a local Rails web service with the command (this is needed by the tests and examples):
+ruby IntuitiveFramework/WebServices/service/script/server
+
+5. Run the test suite to make sure everything works:
+ruby Test/UnitTests.rb
+
+6. Run the other examples:
+ruby examples/large_examples/clock/main.rb
+ruby examples/large_examples/maps/main.rb
+
+
+Rules
+======================================================================
+1. All decision making happens in the mailing list. That way people 
+that don't have time to sit on IRC all day, will not be left out of 
+the decision making process. It is ok to talk about things and plan
+in private, but not when making a decision.
+
+2. We use Test Driven Development. Code that does not have unit tests,
+will not be merged into the Main branch. It is highly recomended that
+you write the tests before the code. You don't build a house, then
+write its plans.
+
+3. Make sure to setup the bzr whoami to your name and email address 
+and format it like: "Bobrick Bobberton <bobrick@workhorsy.org>".
+
+4. Add yourself to the AUTHORS file using the same info you use in 
+your bzr whoami. This should be done to all branches that you want
+merged into Main. Do not add any copyright info to code files. Exact 
+details on your contributions can be seen using Bazaar's "bzr list"
+command.
+
+5. Before you ask for your branch to be merged into Main, merge Main 
+into your branch. This way, maintainers can quickly get your code in,
+instead of having to butcher it while trying to merge it themselves.
+
+6. The coding style is: 
+	a. Seperate the code into blocks with a comment above each block.
+	b. Try to eliminate nesting as mutch as possible.
+	c. Coments and code must be written in English.
+	d. Try to stick to the Ruby coding style as mutch as possible.
+	
+7. Only report bugs in the Main branch. Report all bugs to launchpad. 
+
+8. Code in the Main branch must always work, and its tests must pass.
+
+9. Make sure your commit comments make sense to other people.
+
+10. If you comment out code, use the Ruby multi-line comments, so we 
+don't bloat the repository. They look like this:
+=begin
+	Comments go here ...
+=end
+ 
+ 
+Resources
+======================================================================
+Mailing List:
+TODO: Not up yet
+http://lists.intuitive-desktop.org/listinfo.cgi/listname-intuitive-desktop.org
+
+User Website:
+http://intuitive-desktop.org
+
+Developer Website:
+http://launchpad.net/intuitive-desktop
+
+
+Links to Related Projects
+======================================================================
+http://www.ruby-lang.org/en/
+http://www.rubyonrails.org/
+https://launchpad.net/
+http://bazaar-vcs.org/
+http://www.ubuntu.com/
+http://www.digitalmars.com/d/
+http://live.gnome.org/Vala
+http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+

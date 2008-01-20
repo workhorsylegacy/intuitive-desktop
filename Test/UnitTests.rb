@@ -111,9 +111,9 @@ ID::Config.load_config
 #            master_suite << ID::Helpers::TestEasySocket.suite
 #            master_suite << ID::Servers::TestCommunicationServer.suite
 #            master_suite << ID::Controllers::TestCommunicationController.suite
-            master_suite << ID::Helpers::TestProxy.suite
+#            master_suite << ID::Helpers::TestProxy.suite
 #            master_suite << ID::Servers::TestIdentityServer.suite
-#             master_suite << ID::Servers::TestProjectServer.suite
+             master_suite << ID::Servers::TestProjectServer.suite
 
             return master_suite
         end
