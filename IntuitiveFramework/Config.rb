@@ -4,7 +4,8 @@ module ID
     class Config
         def self.load_config
             # Make sure the mode constant is defined
-            raise "The $ID_ENV global has not been set." unless defined? $ID_ENV
+            $ID_CONFIG_LOADED = true
+            ensure_initialized
             envs = [:test, :production, :development]
             raise "The $ID_ENV global can only be set with #{envs.join(', ')}" unless envs.include? $ID_ENV
             
@@ -37,27 +38,40 @@ module ID
         end
         
         def self.ip_address
+            ensure_initialized
             $ID_CONFIG[$ID_ENV][:ip_address]
         end
         
         def self.port
+            ensure_initialized
             $ID_CONFIG[$ID_ENV][:port]
         end
         
         def self.web_service
+            ensure_initialized
             $ID_CONFIG[$ID_ENV][:web_service]
         end
         
         def self.data_dir
+            ensure_initialized
             $ID_CONFIG[$ID_ENV][:data_dir]
         end
         
         def self.comm_dir
+            ensure_initialized
             $ID_CONFIG[$ID_ENV][:comm_dir]
         end
         
         def self.table_dir
+            ensure_initialized
             $ID_CONFIG[$ID_ENV][:table_dir]
+        end
+        
+        private
+        
+        def self.ensure_initialized
+            raise "The $ID_ENV global has not been set." unless defined? $ID_ENV
+            raise "The configuration has not been loaded" unless defined? $ID_CONFIG_LOADED
         end
     end
 end

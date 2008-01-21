@@ -56,7 +56,7 @@ module ID; module Controllers
             
             # Make sure the message has the routing info added to it
             assert message.has_key?(:routing)
-            assert_equal({:name => "CommunicationServer"}, message[:routing])
+            assert_equal([{:name => "one"}, {:name => "CommunicationServer"}], message[:routing])
             assert_equal({:name => "one"}, message[:source])
          end
        
