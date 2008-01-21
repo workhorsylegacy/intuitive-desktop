@@ -73,7 +73,7 @@ module ID; module Servers
                                         branch_number,
                                         program) 
                                         
-            communicator = Controllers::CommunicationController.new(:name => :random, :type => :system)
+            communicator = Controllers::CommunicationController.new(:name => :random)
             
             # Tell the Server that we want to run the project
             message = {:command => :run_project,

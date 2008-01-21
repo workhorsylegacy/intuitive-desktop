@@ -30,7 +30,7 @@ examined with the "bzr list" command.
 No software installation packages are available yet.
 
 
-Getting Started on Ubuntu
+Getting Started on Ubuntu Gutsy Gibbon 7.10
 ======================================================================
 0. Make sure the system is fully up-to-date with the commands:
 sudo apt-get update
@@ -47,8 +47,11 @@ bzr whoami Your Full Legal Name <your.email@whatever.org>
 bzr branch http://bazaar.launchpad.net/~workhorsy/intuitive-desktop/main
 cd main
 
-4. Start a local Rails web service with the command (this is needed by the tests and examples):
-ruby IntuitiveFramework/WebServices/service/script/server
+4. Start a local Rails web service with the command below. This is 
+needed by the tests and examples. Also note that the web service must 
+be run from the same location as below, or you will get strange errors:
+cd IntuitiveFramework/WebServices/service
+ruby script/server
 
 5. Run the test suite to make sure everything works:
 ruby Test/UnitTests.rb
@@ -56,6 +59,8 @@ ruby Test/UnitTests.rb
 6. Run the other examples:
 ruby examples/large_examples/clock/main.rb
 ruby examples/large_examples/maps/main.rb
+
+7. Report any problems in this guide to the mailing list
 
 
 Rules
