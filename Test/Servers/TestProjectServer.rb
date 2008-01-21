@@ -120,16 +120,17 @@ module ID; module Servers
                                                    project.parent_branch.branch_number.to_s)
           
           # Look for the project online. Get its connection info from the web service.
-          # FIXME: for now, just hard code the address of the local server
-          raise "Change the connection to be a string like 192.168.1.1:5555:blah"
-          project_connection = {:ip_address => ID::Config.ip_address, :port => ID::Config.port}
+          # FIXME: for now we will just hard code the local connection, but it should
+          #         get the project server's socket and name from the 
+          #         search_for_projects_online function.
+          server_address = @project_server.net_address
           
           # Create a local program that is running off the document server
           program = Program.new
 #          # FIXME: This is breaking because it is proxing the program to the server and trying to run it.
 #          # We need to gather all the project details and proxy them here to run them. The program object
 #          # has a bunch of gobjects that can't be serialized over the net!
-          Servers::ProjectServer.run_project(project_connection,
+          Servers::ProjectServer.run_project(server_address,
                                              project.parent_branch.head_revision_number, 
                                              project.project_number.to_s,
                                              project.parent_branch.branch_number.to_s,

@@ -100,16 +100,21 @@ module ID; module Controllers
             # Make sure the arguments are valid
             raise "The message to send was nil" unless message
             raise "The command to send was nil" unless message[:command]
+            raise "There is no destination." unless message[:destination]
             
-            # Add the source to the message here, so it wont be added by the temp sending socket
+            # Add the source to the message here, so it won't be added by the temp sending socket
             complete_message = message.clone
-            complete_message.merge! :source => {:name => @name} 
+            complete_message[:source] = {:name => @name}
            
             # Move the real destination to the :real_destination
-            complete_message.merge! :real_destination => complete_message.delete(:destination)
+            complete_message[:real_destination] = complete_message.delete(:destination)
             
             # Set the communication server as the :destination
-            complete_message.merge! :destination => {:name => "CommunicationServer"}
+            complete_message[:destination] = {:name => "CommunicationServer"}
+            
+            # Add the routing info
+            complete_message[:routing] ||= []
+            complete_message[:routing] << self.full_address
             
             # Send a message to the communication server that will forward it to the destination
             source_socket = Helpers::EasySocket.new(:name => :random)

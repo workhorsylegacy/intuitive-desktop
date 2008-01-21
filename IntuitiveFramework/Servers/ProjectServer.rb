@@ -22,21 +22,32 @@ module ID; module Servers
             end
             raise message unless @web_service.IsRunning
             
-            # Create an internal Document Server for now
-            #FIXME: Move the Document Server to be an item on the system that only uses the system communicator.
-            # It should not be nested in here, but a separate service.
-#            proc = Proc.new { |status, message, exception| raise message }
-#            @document_server = Servers::DocumentServer.new("127.0.0.1", 5000, 6000, proc)
-#            @document_server_connection = @document_server.instance_variable_get("@generic_net_connection")
+            # Start the communication thread
+            self.open
         end
         
         def close
-#            @system_communicator.close if @system_communicator
-#            @net_communicator.close if @net_communicator
-#            @system_communicator = nil
-#            @net_communicator = nil
- #           @document_server.close if @document_server
- #           @document_server = nil
+            @is_open = false
+            
+            @communicator.close if @communicator
+            @communicator = nil
+            @in_thread.kill if @in_thread
+            @in_thread = nil
+        end
+    
+        def open
+            @communicator = Controllers::CommunicationController.new("ProjectServer")
+            
+            @is_open = true
+            @in_thread = Thread.new do
+                while @is_open
+                    @communicator.wait_for_any_command do |message|
+                        case message[:command]
+                            when :run_project: run_project_request(message)
+                        end
+                    end
+                end
+            end
         end
     
         def is_running
@@ -67,34 +78,43 @@ module ID; module Servers
                   :ip_address => p[6], :port => p[7], :connection_id => p[8] }
             end
         end
+           
+        def net_address
+            # FIXME: This will just be localhost for now
+            {:name => @communicator.name,
+             :ip_address => ID::Config.ip_address,
+             :port => ID::Config.port}
+        end
             
-        def self.run_project(project_connection,
+        def self.run_project(server_address,
                              revision, project_number,
                                         branch_number,
                                         program) 
                                         
-            communicator = Controllers::CommunicationController.new(:name => :random)
+            communicator = Controllers::CommunicationController.new(:random)
             
             # Tell the Server that we want to run the project
             message = {:command => :run_project,
                         :project_number => project_number,
-                        :branch_number => branch_number}
-            communicator.send_command(project_connection, message)
+                        :branch_number => branch_number,
+                        :destination => server_address}
+            communicator.send_command(message)
         
             # Wait for the server to ok the process and give up a new connection to it
-            communicator.get_command(project_connection, :ok_to_run_project) do |message|
+            communicator.wait_for_command(:ok_to_run_project) do |message|
                 new_server_connection = message[:new_connection]
                 
                 # Confirm that we got the new server connection
-                message = { :command => :confirm_new_connection }
-                communicator.send_command(project_connection, message)
+                message = { :command => :confirm_new_connection,
+                             :destination => new_server_connection }
+                communicator.send_command(message)
             end
             
             # Get a new connection for the Model and Controller
             model_connections, main_controller_connection, 
             document_states, document_views, main_view_name = nil
                 
-            communicator.get_command(:got_model_and_controller_connections) do |message|
+            communicator.wait_for_command(:got_model_and_controller_connections) do |message|
                 model_connections = message[:model_connections]
                 main_controller_connection = message[:main_controller_connection]
                 document_states = message[:document_states]
@@ -134,6 +154,68 @@ module ID; module Servers
             
         def on_error
             @on_error.to_s
+        end
+        
+        private
+        
+        def run_project_request(message)
+            # Get the information
+            remote_connection = message[:source]
+            project_number = message[:project_number]
+            branch_number = message[:branch_number]
+
+            # Create another communicator just for this conversation and tell the remote machine to use it
+            temp_communicator = Controllers::CommunicationController.new(:random)
+            message = {:command => :ok_to_run_project, 
+                        :new_connection => temp_communicator.full_address,
+                        :destination => remote_connection}
+            @communicator.send_command(message)
+            
+            # Confirm that the client is using the new connection
+            temp_communicator.wait_for_command(:confirm_new_connection) do |message|
+            end
+            
+            # Get the Project
+            branch = Models::Branch.from_number(branch_number)
+            project = Models::Project.from_number(branch, project_number)
+            
+            # Create the Models
+            new_models = nil
+            begin
+                new_models = Models::Data::XmlModelCreator::models_from_documents(project.document_models)
+            rescue Exception => e
+                raise "Could not load the document's models because: " + e.message
+            end
+            
+            # Make the Models available to proxy through the connection
+            models_connections =
+            new_models.collect do |name, model|
+                Helpers::Proxy.make_object_proxyable(:object => model, :name => :random)
+            end
+            
+            # Create the Controller
+            new_controller = nil
+            begin
+                project.document_controllers.each { |document| Kernel.eval(document.data) }
+                new_controller = Kernel.eval(project.main_controller_class_name).new(new_models)
+            rescue Exception => e
+                raise "Could not load the document's controller because: " + e.message
+            end
+            
+            # Make the Controller available to proxy through the connection
+            controller_connection = Helpers::Proxy.make_object_proxyable(:object => new_controller, :name => :random)
+            # Send the client a connection for talking to the Model and Controller
+            message = {:command => :got_model_and_controller_connections,
+                        :model_connections => models_connections,
+                        :main_controller_connection => controller_connection,
+                        :document_states => project.document_states,
+                        :document_views => project.document_views,
+                        :main_view_name => project.main_view_name,
+                        :destination => remote_connection}
+            temp_communicator.send_command(message)
+            
+            # Remove the temporary connection
+            temp_communicator.close
         end
     end
 end; end

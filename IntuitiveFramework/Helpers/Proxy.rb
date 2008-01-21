@@ -40,10 +40,10 @@ module Helpers
                 true
             end            
             
+            communicator = Controllers::CommunicationController.new(args[:name])
+            
             # Perform any calls to the Object from the communicator
             proxy_thread = Thread.new do
-                communicator = Controllers::CommunicationController.new(args[:name].to_s)
-                
                 loop do
                     communicator.wait_for_any_command do |message|
                         source = message[:source]
@@ -95,7 +95,7 @@ module Helpers
                 proxy_thread.kill if proxy_thread
             end
 
-            nil
+            communicator.full_address
         end
 		
 		def self.get_proxy_to_object(args)

@@ -104,73 +104,25 @@ module ID; module Servers
             end
              
             # Change the destination to be the real destination
-            message_as_ruby[:routing] = message_as_ruby.delete(:destination)
-            message_as_ruby[:destination] = message_as_ruby.delete(:real_destination)
-             
+            complete_message = message_as_ruby.clone
+            complete_message[:routing] ||= []
+            complete_message[:routing] << {:name => "CommunicationServer"}
+            complete_message[:destination] = complete_message.delete(:real_destination)
+            
+            # If the destination is a net socket with the address of this communication server 
+            # remove the ip address and port, so it won't get relayed back to here again
+            destination = complete_message[:destination]
+            if destination[:ip_address] == @net_socket.ip_address &&
+               destination[:port] == @net_socket.port
+               destination.delete(:ip_address)
+               destination.delete(:port)
+            end
+            
             # Forward the message to the dest socket socket
             out_socket = Helpers::EasySocket.new(:name => :random)
-            out_socket.write_message(message_as_ruby)
+            out_socket.write_message(complete_message)
             out_socket.close()
         end
-        
-=begin
-        # FIXME: This should not be in the communication server
-        def run_project(message)
-            # Get the information
-            remote_connection = message[:source_connection]
-            project_number = message[:project_number]
-            branch_number = message[:branch_number]
-
-            # Create another connection just for this conversation and tell the remote machine to use it
-            temp_connection = self.create_net_connection
-            message = {:command => :ok_to_run_project, :new_connection => temp_connection}
-            self.send_net_message(temp_connection, remote_connection, message)
-            
-            # Confirm that the client is using the new connection
-            self.wait_for_message(temp_connection, :confirm_new_connection)
-            
-            # Get the Project
-            branch = Models::Branch.from_number(branch_number)
-            project = Models::Project.from_number(branch, project_number)
-            
-            # Create the Models
-            new_models = nil
-            begin
-                new_models = Models::Data::XmlModelCreator::models_from_documents(project.document_models)
-            rescue Exception => e
-                raise "Could not load the document's models because: " + e.message
-            end
-            
-            # Make the Models available to proxy through the connection
-            models_connections =
-            new_models.collect do |name, model|
-                Helpers::Proxy.make_object_proxyable(model)
-            end                               
-            
-            # Create the Controller
-            new_controller = nil
-            begin
-                project.document_controllers.each { |document| Kernel.eval(document.data) }
-                new_controller = Kernel.eval(project.main_controller_class_name).new(new_models)
-            rescue Exception => e
-                raise "Could not load the document's controller because: " + e.message
-            end
-            
-            # Make the Controller available to proxy through the connection
-            controller_connection = Helpers::Proxy.make_object_proxyable(new_controller)
-            # Send the client a connection for talking to the Model and Controller
-            message = {:command => :got_model_and_controller_connections,
-                        :model_connections => models_connections,
-                        :main_controller_connection => controller_connection,
-                        :document_states => project.document_states,
-                        :document_views => project.document_views,
-                        :main_view_name => project.main_view_name}
-            self.send_net_message(temp_connection, remote_connection, message)
-            
-            # Remove the temporary connection
-            self.destroy_net_connection(temp_connection)
-        end 
-=end
     end
 end; end
 
