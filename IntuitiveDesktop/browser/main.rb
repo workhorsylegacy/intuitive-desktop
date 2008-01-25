@@ -2,7 +2,7 @@
 =begin
   WARNING!!!!!!!!!!!!
   This Desktop Browser is a very ugly hack. It is just a test to create a mock desktop.
-  It does not use the Intuitive Frawework for anything but a few internal things. It does
+  It does not use the Intuitive Framework for anything but a few internal things. It does
   not accuratly represent how applications will be developed on the Intuitive Desktop.
   This is more like the 'traditional' way that Gtk/Ruby applications are made. Someone will
   rewrite this later when the Intuitive Framework has more controlls supported.
@@ -20,10 +20,14 @@ require $IntuitiveFramework_Helpers
 require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
+$ID_ENV = :development
+ID::Config.load_config
+
 def start_server
     # Create the servers
-    $communication_server = ID::Servers::CommunicationServer.new("127.0.0.1", 5555, true, :throw)
-    $project_server = ID::Servers::ProjectServer.new(true, :throw)
+    # FIXME: These should not be globals
+    $communication_server = ID::Servers::CommunicationServer.new(:throw)
+    $project_server = ID::Servers::ProjectServer.new(:throw)
     $project_server.clear_everything()
 end
 
@@ -66,12 +70,43 @@ def setup_user_and_projects
     ID::Controllers::DataController.save_revision(branch)
     
     # Advertise the project online
-    @communication_server = ID::Helpers::SystemProxy.get_proxy_to_object("CommunicationServer")
-    @project_server = ID::Helpers::SystemProxy.get_proxy_to_object("ProjectServer")
-    @project_server.advertise_project_online(@communication_server.generic_incoming_connection,
-                                            project.name, project.description, project.parent_branch.user_id,
-                                            project.parent_branch.head_revision_number, project.project_number.to_s,
-                                            project.parent_branch.branch_number.to_s)
+    $project_server.advertise_project_online(project.name, project.description, project.parent_branch.user_id,
+                                             project.parent_branch.head_revision_number, project.project_number.to_s,
+                                             project.parent_branch.branch_number.to_s)
+                                             
+    # Create the project
+    branch = ID::Models::Branch.new('Clock Example Trunk', user.public_universal_key)
+    project = ID::Models::Project.new(branch, 'Clock Example')
+    project.description = "A simple clock program."
+    
+    document = ID::Models::Document.new(project, 'Model')
+    document.data = File.new('../../examples/large_examples/clock/models.xml').read
+    document.run_location = :client
+    document.document_type = :model
+    
+    document = ID::Models::Document.new(project, 'State')
+    document.data = File.new('../../examples/large_examples/clock/state.xml').read
+    document.run_location = :client
+    document.document_type = :state
+    
+    document = ID::Models::Document.new(project, 'View')
+    document.data = File.new('../../examples/large_examples/clock/view.xml').read
+    document.run_location = :client
+    document.document_type = :view
+    
+    document = ID::Models::Document.new(project, 'Controller')
+    document.data = File.new('../../examples/large_examples/clock/controller.rb').read
+    document.run_location = :client
+    document.document_type = :controller
+    
+    project.main_controller_class_name = "ClockController"
+    project.main_view_name = "main_window"
+    ID::Controllers::DataController.save_revision(branch)
+    
+    # Advertise the project online
+    $project_server.advertise_project_online(project.name, project.description, project.parent_branch.user_id,
+                                             project.parent_branch.head_revision_number, project.project_number.to_s,
+                                             project.parent_branch.branch_number.to_s)
 end
 
 class Browser
@@ -81,7 +116,10 @@ class Browser
   def initialize(path_or_data, root = nil, domain = nil, localedir = nil, flag = GladeXML::FILE)
     # Load the glade file and get references to its widgets
     bindtextdomain(domain, localedir, nil, "UTF-8")
-    @glade = GladeXML.new(path_or_data, root, domain, localedir, flag) {|handler| method(handler)}
+    @glade = GladeXML.new(path_or_data, root, domain, localedir, flag) do |handler|
+        method(handler)
+    end
+    
     @main_window = @glade.get_widget("main_window")
     @search_entry = @glade.get_widget("search_entry")
     @results_tree = @glade.get_widget("results_tree")
@@ -94,9 +132,6 @@ class Browser
     @results_tree.model = Gtk::ListStore.new(String)
     @result_to_project_map = {}
     
-    # Create a communication controller to talk to the server
-    @communication_server = ID::Helpers::SystemProxy.get_proxy_to_object("CommunicationServer")
-    @project_server = ID::Helpers::SystemProxy.get_proxy_to_object("ProjectServer")  
     @search_thread = nil
     @search_projects = nil
     @is_communicating = false
@@ -125,7 +160,7 @@ class Browser
             
             # Search for the string
             @is_communicating = true
-            @search_projects = @project_server.search_for_projects_online(search_string)
+            @search_projects = $project_server.search_for_projects_online(search_string)
             @is_communicating = false
             
             project_names = Gtk::ListStore.new(String)
@@ -142,15 +177,14 @@ class Browser
         if iter = widget.selection.selected
             name = iter[0]
             project = @result_to_project_map[name]
-            program = ID::Program.new           
-            ID::Servers::ProjectServer.run_project(@communication_server,
-                                        project[:revision], 
-                                        project[:project_number].to_s,
-                                        project[:branch_number],
-                                        project[:connection_id],
-                                        project[:port],
-                                        project[:ip_address],
-                                        program)
+            server_address = $project_server.net_address
+            
+            program = ID::Program.new
+            ID::Servers::ProjectServer.run_project(server_address,
+                                              project[:revision], 
+                                              project[:project_number].to_s,
+                                              project[:branch_number],
+                                              program)
             program.run
         end
     end
@@ -168,17 +202,20 @@ setup_user_and_projects
 # Start the browser
 PROG_PATH = "browser.glade"
 PROG_NAME = "Intuitive Desktop Browser"
-PROG_VER = "0.4.50"
+PROG_VER = "0.4.XX"
 Gnome::Program.new(PROG_NAME, PROG_VER)
 Browser.new(PROG_PATH, nil, PROG_NAME)
 Gtk.main
 
 
 =begin
- What is painfully obvious from this demo:
- . We need a way to search for identities by name and description too
- . We need a way to get the location of the document servers that are on our local network
- . We can use http://intuitive-dektop.org with a web service or restful service to get servers over the Internet
- . We NEED to change our communication controller to use XML so we can't get code injections. Only basic types (strings, numbers, hasehs, arrays, nil) should go over the network
- . XML_RPC is looking even better
+    Things to fix:
+    . Create a class called test desktop that holds the servers. 
+    . Make sure the servers are completely isolated from the browser.
+    . The SVGs are not transfered to the client with the Views, so the clock crashes.
+    . Make the searching actually work, instead of returning everything
+    . Have ProjectServer.run_project start the projects in a separate process
+    . Programs seem to use some of the same data. IE: Multiple maps search to the same place!
 =end
+
+
