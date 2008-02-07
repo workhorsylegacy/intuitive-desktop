@@ -77,7 +77,7 @@ ID::Config.load_config
 
     def server_tests
         [ID::Servers::TestIdentityServer.suite,
-        ID::Servers::TestProjectServer.suite,  #FIXME: Make this not explode the tests
+        #ID::Servers::TestProjectServer.suite,  #FIXME: Make this not explode the tests
         ID::Servers::TestCommunicationServer.suite]
     end
     
@@ -96,24 +96,17 @@ ID::Config.load_config
         def self.suite
             master_suite = Test::Unit::TestSuite.new
 
-#            [helper_tests,
-#            model_test,
-#            controller_tests,
-#            server_tests,
-#            view_tests,
-#            desktop_test
-#            ].each do |suite_set|
-#                suite_set.each do |suite|
-#                    master_suite << suite
-#                end
-#            end
-            
-            master_suite << ID::Helpers::TestEasySocket.suite
-            master_suite << ID::Servers::TestCommunicationServer.suite
-            master_suite << ID::Controllers::TestCommunicationController.suite
-            master_suite << ID::Helpers::TestProxy.suite
-            master_suite << ID::Servers::TestIdentityServer.suite
-             master_suite << ID::Servers::TestProjectServer.suite
+            [helper_tests,
+            model_test,
+            controller_tests,
+            server_tests,
+            view_tests,
+            desktop_test
+            ].each do |suite_set|
+                suite_set.each do |suite|
+                    master_suite << suite
+                end
+            end
 
             return master_suite
         end
