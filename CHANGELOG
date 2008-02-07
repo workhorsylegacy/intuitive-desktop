@@ -1,0 +1,13 @@
+
+4.8.0 Changes:
+	1. Added a new communication system that does not use any 
+	   sleeping, polling, or buffering. It uses a centralized 
+	   communication server to route communication, allowing for both 
+	   IPC and network communication.
+	2. Changed proxies and servers to use the new communication 
+	   system.
+	3. Programs can be run on the client or the server using the new
+	   Browser.
+	4. Moved all settings to a configuration file.
+	5. Added the HACKING and CHANGELOG documents to help contributors
+	    get started.
