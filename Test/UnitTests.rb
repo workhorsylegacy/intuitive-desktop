@@ -107,6 +107,8 @@ ID::Config.load_config
                     master_suite << suite
                 end
             end
+            
+            #master_suite << ID::Servers::TestProjectServer.suite
 
             return master_suite
         end

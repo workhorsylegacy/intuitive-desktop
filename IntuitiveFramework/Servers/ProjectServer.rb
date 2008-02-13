@@ -31,7 +31,6 @@ module ID; module Servers
             
             @communicator.close if @communicator
             @communicator = nil
-            @in_thread.kill if @in_thread
             @in_thread = nil
         end
     

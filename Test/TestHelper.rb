@@ -4,7 +4,7 @@ module ID
         # Will perform all cleanup after a test, to ensure that the next test is not contaminated:
         # kill servers, removes temp db files, and temp sockets.
         # Can raise errors if there was a need to cleanup.
-        def self.cleanup(warnings_as_errors = false)            
+        def self.cleanup(warnings_as_errors = false)
             # Communication Socket Files
             socket_files = Dir.entries(ID::Config.comm_dir).length - 2
             if socket_files > 0

@@ -127,14 +127,12 @@ module ID; module Servers
           
           # Create a local program that is running off the document server
           program = Program.new
-#          # FIXME: This is breaking because it is proxing the program to the server and trying to run it.
-#          # We need to gather all the project details and proxy them here to run them. The program object
-#          # has a bunch of gobjects that can't be serialized over the net!
           Servers::ProjectServer.run_project(server_address,
                                              project.parent_branch.head_revision_number, 
                                              project.project_number.to_s,
                                              project.parent_branch.branch_number.to_s,
                                              program)
+                                             
       end
     end
 end; end

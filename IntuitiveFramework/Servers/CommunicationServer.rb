@@ -61,8 +61,6 @@ module ID; module Servers
         def stop_threads
             @system_socket.close
             @net_socket.close
-            @system_thread.kill
-            @net_thread.kill
         end
         
         def start_threads
