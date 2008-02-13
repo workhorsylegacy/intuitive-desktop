@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinKeyboard
         attr_accessor :on_key_press_event
         
@@ -7,4 +7,4 @@ module Views; module Base
             fire_events :on_key_press_event
         end
     end
-end; end
+end; end; end

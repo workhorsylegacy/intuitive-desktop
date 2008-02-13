@@ -1,8 +1,10 @@
 
+
+=begin
 require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
-module Controllers
+module ID; module Controllers
 	class TestDataController < Test::Unit::TestCase
 			def setup
           # Add a user
@@ -18,7 +20,8 @@ module Controllers
           @user.destroy if @user
           @communicator.close if @communicator
           @document_server.close if @document_server
-          FileUtils.rm_rf($DataSystem)
+          FileUtils.rm_rf(ID::Config.data_dir)
+          ID::TestHelper.cleanup()
 			end
 			
 			def test_find_project
@@ -171,7 +174,6 @@ CONTROLLER_CODE
                                                                     project.parent_branch)
       end
 
-=begin
       def test_branch
         # Create a simple document with data in it
         data_one = RevisionedDocument.new('secret sauce')
@@ -200,8 +202,8 @@ CONTROLLER_CODE
         # Create another document that is a changed version of this one
         data_two = RevisionData.new('secret sauce', 6)
         data_two.commit(:data => "things to buy for supper:\n 1. butter\n 2. crisco\n 3. vegtable oil")
-      end
-=end        
+      end     
 	end
-end
+end; end
 
+=end

@@ -1,10 +1,12 @@
 
 require $IntuitiveFramework_Models
 
-module Models
+module ID; module Models
 		class TestUser < Test::Unit::TestCase	    
 		    def teardown
-                @user.destroy if @user
+            @user.destroy if @user
+                
+            ID::TestHelper.cleanup()      
 		    end
 		    
 		    def test_can_create
@@ -22,4 +24,4 @@ module Models
 		        assert_equal(User.find(@user.id).name, @user.name)
 		    end
 		end
-end
+end; end

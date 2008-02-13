@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     class ContainerParent
         include MixinBindsToModel
         include MixinContainerParent
@@ -15,4 +15,4 @@ module Views; module Base
             @pack_style = pack_style.to_sym
         end
     end
-end; end
+end; end; end

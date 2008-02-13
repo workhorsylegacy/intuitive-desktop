@@ -1,7 +1,6 @@
 
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Polygon < Views::Base::ContainerChild
             attr_reader :name
             
@@ -30,5 +29,4 @@ module Views
                 new_polygon
           end         
         end
-    end
-end
+end; end; end

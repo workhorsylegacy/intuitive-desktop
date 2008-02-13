@@ -1,6 +1,6 @@
 
 
-module Views
+module ID; module Views
     module Animations
         class Rotate
             attr_reader :parent, :layers
@@ -77,4 +77,4 @@ module Views
           end         
         end
     end
-end
+end; end

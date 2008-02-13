@@ -1,6 +1,5 @@
 
-module Views
-    module Data
+module ID; module Views; module Data
         # FIXME: Should work like a GTK expander and an HTML bulleted/numbered list
         class List < Views::Base::ContainerParentAndChild
             attr_accessor :name, :on_populate_event, :on_selection_changed_event, :select_mode, :point_style
@@ -85,5 +84,4 @@ module Views
         		new_list
         	end       	
         end
-    end
-end
+end; end; end

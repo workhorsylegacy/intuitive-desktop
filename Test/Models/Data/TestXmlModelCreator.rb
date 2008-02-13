@@ -1,7 +1,10 @@
 
-module Models
-    module Data
+module ID; module Models; module Data
         class TestXmlModelCreator < Test::Unit::TestCase
+            def teardown
+                ID::TestHelper.cleanup()
+            end
+            
             def test_model_from_xml
                 # Get the XML for the model
                 xml = 
@@ -94,5 +97,4 @@ XML
                 assert_equal("Cryptonomicon", Author.find(:first).books.first.title)
             end
         end
-    end
-end
+end; end; end

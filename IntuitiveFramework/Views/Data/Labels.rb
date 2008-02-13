@@ -1,6 +1,5 @@
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Labels < Views::Base::ContainerChild
             attr_reader :parent, :name
             attr_accessor :spellcheck_style, :font_name, :font_color, :font_size, :items, :position_indicator
@@ -105,5 +104,4 @@ module Views
             new_labels
           end
         end
-    end
-end
+end; end; end

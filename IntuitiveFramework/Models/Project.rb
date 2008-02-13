@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class Project
         attr_reader :parent_branch, :project_number
         
@@ -36,6 +36,15 @@ module Models
             File.open("#{self.folder_name}name", 'w') { |f| f.write(value) }
             value
         end
+        
+        def description
+            File.open("#{self.folder_name}description", 'r') { |f| return f.read }
+        end
+        
+        def description=(value)
+            File.open("#{self.folder_name}description", 'w') { |f| f.write(value) }
+            value
+        end        
         
         def main_controller_class_name
             File.open("#{self.folder_name}main_controller_class_name", 'r') { |f| return f.read }
@@ -89,6 +98,7 @@ module Models
         end
         
         def self.from_number(branch, number)
+            number = number.to_i
             branch.projects.each do |project|
                 return project if project.project_number == number
             end
@@ -96,4 +106,4 @@ module Models
             raise "No Project with the number '#{number}' found."
         end
     end
-end
+end; end

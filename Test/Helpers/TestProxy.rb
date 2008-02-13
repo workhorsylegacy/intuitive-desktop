@@ -2,12 +2,13 @@
 require $IntuitiveFramework_Helpers
 require $IntuitiveFramework_Controllers
 
-module Helpers
+module ID; module Helpers
 	class TestProxy < Test::Unit::TestCase
         def setup
-            @local_communicator = Controllers::CommunicationController.new('127.0.0.1', 5000, 5001)
-            @remote_communicator = Controllers::CommunicationController.new('127.0.0.1', 6000, 6001)
-            
+            # Start the communication server
+            ID::TestHelper.cleanup()
+            @communication_server = Servers::CommunicationServer.new(:throw)
+        
             # Create an object that will be accessed by a proxy
             @object = Object.new
             def @object.name
@@ -19,15 +20,16 @@ module Helpers
             @object.name = "my name is object"
             
             # Start proxying the object
-            remote_connection = Helpers::Proxy.make_object_proxyable(@object, @remote_communicator)
+            Helpers::Proxy.make_object_proxyable(:object => @object, :name => "object")
             
             # Get a proxy to the real object
-            @proxy = Helpers::Proxy.get_proxy_to_object(@local_communicator, remote_connection)            
+            @proxy = Helpers::Proxy.get_proxy_to_object(:name => "object")
+            assert_not_nil(@proxy)
         end
         
         def teardown
-            @local_communicator.close if @local_communicator
-            @remote_communicator.close if @remote_communicator
+            @communication_server.close if @communication_server
+            ID::TestHelper.cleanup()
         end
         
         def test_proxy_object
@@ -47,11 +49,12 @@ module Helpers
             
             # Make sure .send works
             assert_equal(11, @proxy.send(:add, 4, 7))
+            assert_equal(11, @proxy.add(4, 7))
         end
         
         def test_exceptions
             # Make sure it forwards exceptions
-            assert_raise(Exception) { @proxy.kaboom }
+            assert_raise(Helpers::ProxiedException) { @proxy.kaboom }
             
             # Make sure the exception did not break the real object
             assert_equal("my name is object", @object.name)
@@ -71,7 +74,7 @@ module Helpers
             assert_equal(Object, @object.class)
             
             # Make sure that .class does not work
-            assert_raise(Exception) { @proxy.class }
+            assert_raise(Helpers::ProxiedException) { @proxy.class }
         end
         
 =begin FIXME: Add these tests to see what happens when the real object or proxy is GCed
@@ -131,5 +134,5 @@ module Helpers
 #            raise "Test what happens when the real object is disconnected"
 #        end
     end
-end
+end; end
 

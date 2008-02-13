@@ -1,6 +1,5 @@
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Spinner < Views::Base::ContainerParentAndChild
             attr_reader :name, :button_up, :button_down
             
@@ -51,5 +50,4 @@ module Views
         		new_spinner
         	end        	
         end
-    end
-end
+end; end; end

@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class Branch
         attr_reader :branch_number
         
@@ -8,8 +8,8 @@ module Models
             return if from_existing
         
             # Create the file structure
-            Dir.mkdir($DataSystem) unless File.directory?($DataSystem)
-            folder = Helpers::FileSystem::get_new_randomly_named_sub_directory($DataSystem, "branch_")
+            Dir.mkdir(ID::Config.data_dir) unless File.directory?(ID::Config.data_dir)
+            folder = Helpers::FileSystem::get_new_randomly_named_sub_directory(ID::Config.data_dir, "branch_")
             @branch_number = folder.split('_').last.to_i
             
             ["#{self.folder_name}",
@@ -35,7 +35,7 @@ module Models
         end
         
         def folder_name
-            "#{$DataSystem}branch_#{@branch_number}/"
+            "#{ID::Config.data_dir}branch_#{@branch_number}/"
         end
         
         def workspace_folder
@@ -85,10 +85,11 @@ module Models
         end
         
         def self.from_number(number)
-            (Dir.entries($DataSystem) - ['.', '..']).each do |entry|
-                next unless File.directory?("#{$DataSystem}#{entry}/") && entry.split('_').first == "branch"
+            number = number.to_i
+            (Dir.entries(ID::Config.data_dir) - ['.', '..']).each do |entry|
+                next unless File.directory?("#{ID::Config.data_dir}#{entry}/") && entry.split('_').first == "branch"
                 
-                branch = Branch.from_existing("#{$DataSystem}#{entry}")
+                branch = Branch.from_existing("#{ID::Config.data_dir}#{entry}")
                 return branch if branch.branch_number == number
             end
             
@@ -103,4 +104,4 @@ module Models
             value
         end
     end
-end
+end; end

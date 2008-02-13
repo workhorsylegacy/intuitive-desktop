@@ -1,6 +1,6 @@
 
 
-module Models
+module ID; module Models
     class TestDocument < Test::Unit::TestCase
         def setup
             # Create a branch
@@ -8,6 +8,10 @@ module Models
             @branch = Branch.new('Cool Project Main', user_id)
             @project = Project.new(@branch, 'Cool Project')
         end
+        
+        def teardown
+            ID::TestHelper.cleanup()
+        end        
         
         def test_document_create
             # Create a document
@@ -34,4 +38,4 @@ module Models
             assert_equal(:view, document.document_type)
         end
     end
-end
+end; end

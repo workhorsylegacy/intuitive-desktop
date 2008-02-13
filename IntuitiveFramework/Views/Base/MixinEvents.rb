@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinEvents
         attr_reader :event_map
         
@@ -83,4 +83,4 @@ module Views; module Base
             end
         end
     end
-end; end
+end; end; end

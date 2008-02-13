@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinMouse
         attr_accessor :on_mouse_down_event, :on_mouse_up_event
 
@@ -51,4 +51,4 @@ module Views; module Base
             fire_events :on_mouse_scroll_trigger
         end
     end
-end; end
+end; end; end

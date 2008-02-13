@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
-module Helpers
+module ID; module Helpers
     class Logger
         # The output argument can be:
         # * a file name for outputting to a file
@@ -55,4 +55,4 @@ module Helpers
             end
         end
     end
-end
+end; end

@@ -1,4 +1,3 @@
-
 /* 
 	Generate sqlite database with the command:
 	sqlite3 database.sqlite < database_sqlite.sql

@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Models
 
-module Models
+module ID; module Models
 		class TestGroup < Test::Unit::TestCase
 		    def setup
                 public_key, private_key = Models::EncryptionKey.make_public_and_private_keys
@@ -15,6 +15,8 @@ module Models
 		    def teardown
 		        @user.destroy if @user
 		        @group.destroy if @group
+            
+            ID::TestHelper.cleanup()        
 		    end
 		    
 		    def test_can_create
@@ -36,4 +38,4 @@ module Models
 		        assert_equal(@user.groups.first, @group)
 		    end
 		end
-end
+end; end

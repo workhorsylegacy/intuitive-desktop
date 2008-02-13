@@ -2,7 +2,7 @@
 #path = File.dirname(File.expand_path(__FILE__))
 #require "#{path}/Namespace"
 
-module Views
+module ID; module Views
     class Container < Views::Base::ContainerParentAndChild
         attr_reader :name
         
@@ -59,4 +59,4 @@ module Views
     		new_container
     	end
     end
-end
+end; end

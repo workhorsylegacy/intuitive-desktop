@@ -1,7 +1,7 @@
 
 require $IntuitiveFramework_Helpers
 
-module Helpers
+module ID; module Helpers
 	class TestLogger < Test::Unit::TestCase
         def setup
             @logger = nil
@@ -14,6 +14,8 @@ module Helpers
             @logger.close if @logger
             (Dir.entries(@dir_name) - ['..', '.']).each {|file|  File.delete(@dir_name + file) }
             Dir.rmdir(@dir_name)
+            
+            ID::TestHelper.cleanup()
         end
         
         def test_log_to_file
@@ -56,5 +58,5 @@ module Helpers
             assert_equal(was_logged_used, true)
         end        
     end
-end
+end; end
 

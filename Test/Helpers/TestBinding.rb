@@ -1,6 +1,10 @@
 
-module Helpers
+module ID; module Helpers
         class TestBinding < Test::Unit::TestCase
+            def teardown
+                ID::TestHelper.cleanup()
+            end
+            
             def test_from_xml
                 # Create a Binding from xml
                 xml =
@@ -127,4 +131,4 @@ XML
                 raise "add these tests!"
             end
         end
-end
+end; end

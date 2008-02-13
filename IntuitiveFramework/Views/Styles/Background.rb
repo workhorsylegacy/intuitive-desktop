@@ -1,6 +1,5 @@
 
-module Views
-    module Styles
+module ID; module Views; module Styles
         class Background
         	attr_accessor :elements
         
@@ -26,5 +25,4 @@ module Views
         		new_background
         	end
         end
-    end
-end
+end; end; end

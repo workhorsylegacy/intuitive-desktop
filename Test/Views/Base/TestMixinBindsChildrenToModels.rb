@@ -2,7 +2,7 @@
 require $IntuitiveFramework_Views_Base
 require $IntuitiveFramework_Models
 
-module Views; module Base
+module ID; module Views; module Base
         class TestMixinBindsChildrenToModels < Test::Unit::TestCase
             class TestController < Controllers::DocumentController
                 attr_reader :event_triggered
@@ -16,6 +16,10 @@ module Views; module Base
                     @event_triggered = true
                 end
             end
+            
+          def teardown
+              ID::TestHelper.cleanup()            
+          end
             
             def test_bind_models
                 # Create a document that has a button connected to a model
@@ -105,4 +109,4 @@ XML
                 assert_equal(true, program.main_controller.event_triggered)        
             end
         end
-end; end
+end; end; end

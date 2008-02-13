@@ -1,12 +1,16 @@
 
 
-module Models
+module ID; module Models
     class TestProject < Test::Unit::TestCase
         def setup
             # Create a branch
             user_id = "begin blah blah blah end"
             @branch = Branch.new('Cool Project Main', user_id)   
         end
+        
+        def teardown
+           ID::TestHelper.cleanup()
+        end         
         
         def test_project_create
             # Create a project
@@ -28,4 +32,4 @@ module Models
             assert_equal('go', project.main_controller_class_name)
         end
     end
-end
+end; end

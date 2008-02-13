@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinRefresh
         def refresh
             # Find the parent program
@@ -12,4 +12,4 @@ module Views; module Base
             parent.child_refresh(self)
         end
     end
-end; end
+end; end; end

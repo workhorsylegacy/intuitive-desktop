@@ -1,6 +1,5 @@
 
-module Views
-    module Styles
+module ID; module Views; module Styles
         class Gradient
         	attr_accessor :light_color, :dark_color
         
@@ -21,5 +20,4 @@ module Views
         		new_gradient
         	end
         end
-    end
-end
+end; end; end

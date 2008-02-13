@@ -2,7 +2,7 @@
 require 'openssl'
 require 'base64'
 
-module Models
+module ID; module Models
     class EncryptionKey
 	   attr_reader :is_public, :key
 
@@ -34,6 +34,6 @@ module Models
     		end
         end
     end
-end
+end; end
 
 

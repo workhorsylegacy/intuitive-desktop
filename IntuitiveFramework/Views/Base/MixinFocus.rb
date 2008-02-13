@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinFocus
         def focus
             # If there are children, focus on the first child
@@ -40,4 +40,4 @@ module Views; module Base
             end
         end
     end
-end; end
+end; end; end

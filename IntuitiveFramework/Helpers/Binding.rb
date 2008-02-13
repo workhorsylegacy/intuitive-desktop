@@ -4,7 +4,7 @@ path = File.dirname(File.expand_path(__FILE__))
 
 require "#{path}/Namespace"
 
-module Helpers
+module ID; module Helpers
     class Binding
         attr_reader :name, :parent
         attr_accessor :model, :on_model_change, :on_view_change, :model_properties, :view_properties
@@ -138,4 +138,4 @@ module Helpers
             
         end
     end
-end
+end; end

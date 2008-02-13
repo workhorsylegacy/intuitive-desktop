@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinBindsToModel
         attr_accessor :property_to_binding_map
         
@@ -43,4 +43,4 @@ module Views; module Base
             @property_to_binding_map[property]
         end
     end
-end; end
+end; end; end

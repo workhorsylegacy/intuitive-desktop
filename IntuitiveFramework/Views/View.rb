@@ -1,6 +1,6 @@
 
 
-module Views
+module ID; module Views
     class View < Base::ContainerParent
       attr_reader :name
       attr_accessor :title, :focused_child, :hotkey_quit
@@ -221,4 +221,4 @@ module Views
             layers
         end        
     end
-end
+end; end

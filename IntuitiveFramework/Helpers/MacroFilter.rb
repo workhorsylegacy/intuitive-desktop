@@ -6,7 +6,7 @@ require "#{path}/Namespace"
 
 require 'pathname'
 
-module Helpers
+module ID; module Helpers
     # This filter will return a new value if the value is a known macro, 
     # otherwise it will return the default value. If the default is nil,
     # it will return the original value
@@ -57,4 +57,4 @@ module Helpers
             end
         end
     end
-end
+end; end

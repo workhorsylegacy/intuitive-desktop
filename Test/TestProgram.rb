@@ -1,10 +1,15 @@
 
+module ID
 
 path = File.dirname(File.expand_path(__FILE__))
 require "#{path}/../IntuitiveFramework/IntuitiveFramework.rb"
 
 
     class TestProgram < Test::Unit::TestCase
+            def teardown
+                ID::TestHelper.cleanup()
+            end
+            
             def test_load_from_string
                 view_xml =
 <<VIEW_XML
@@ -36,3 +41,5 @@ MODEL_XML
                 assert_not_nil(program.main_view.children[0].children[0])
             end
         end
+
+end

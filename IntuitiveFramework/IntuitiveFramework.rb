@@ -16,7 +16,10 @@ libs = {'gtk2' => ["'gtk2'",  :require, "ruby-gnome2 or libcairo-ruby packages"]
 		'active_record' => ["'active record'", :both, "rails, or activerecord packages or gems"], 
         'openssl' => ["'openssl'", :require, "libopenssl-ruby package"],
         'base64' => ["'base64'", :require, "libruby or ruby1.8-dev packages"],
-        'sqlite3' => ["'sqlite3'", :require, "libsqlite3-ruby package"]}
+        'sqlite3' => ["'sqlite3'", :require, "libsqlite3-ruby package"],
+        'soap/wsdlDriver' => ["'WSDL Driver'", :require, "standard Ruby install"],
+        'socket' => ["'socket'", :require, "standard Ruby install"],
+        'fileutils' => ["'file utils'", :require, "standard Ruby install"]}
 
 # Load all the libraries and create a list of coherent errors if any are not installed.
 error_messages = []
@@ -69,10 +72,15 @@ class FalseClass
     end
 end
 
-# This lets us compare symbols
 class Symbol
+    # This lets us compare symbols
     def <=>(other)
         self.to_s <=> other.to_s
+    end
+    
+    # This lets us call .is_a? on a symbol
+    def is_a?(type)
+        self.class == type
     end
 end
 
@@ -85,16 +93,15 @@ path = File.dirname(File.expand_path(__FILE__))
 $IntuitiveFramework = path
 
 # Create a constant for the user database connection
-unless defined? Models::USER_DATABASE_CONNECTION
-    module Models
+unless defined? ID::Models::USER_DATABASE_CONNECTION
+    module ID; module Models
         USER_DATABASE_CONNECTION = { :adapter => 'sqlite3',
     						    :database => $IntuitiveFramework + "/database/database.sqlite" }
-    end
+    end; end
 end
 
-$DataSystem = "#{path}/data_system/"
-
 # Create a global string for each namespace file
+$IntuitiveFramework_Config = "#{path}/config.yaml"
 $IntuitiveFramework_Helpers = "#{path}/Helpers/Namespace"
 
 $IntuitiveFramework_Models = "#{path}/Models/Namespace"
@@ -119,7 +126,8 @@ $IntuitiveFramework_Controllers,
 $IntuitiveFramework_Views].each { |namespace| require namespace }
 
 # Load the root classes
-['Program'].each { |file_name| require "#{path}/#{file_name}" }
+['Program',
+'Config'].each { |file_name| require "#{path}/#{file_name}" }
 
 # Create a random seed to give us better random numbers
 Kernel.srand

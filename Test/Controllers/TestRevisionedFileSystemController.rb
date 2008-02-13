@@ -1,6 +1,6 @@
 
 
-module Controllers
+module ID; module Controllers
     class TestRevisionedFileSystemController < Test::Unit::TestCase
         def setup
             @test_folder = "test_dir/"
@@ -11,6 +11,8 @@ module Controllers
     
         def teardown
             FileUtils.rm_rf(@test_folder) if File.directory?(@test_folder)
+            
+            ID::TestHelper.cleanup()
         end
     
         def test_diff_folder_simple
@@ -272,4 +274,4 @@ module Controllers
             assert_equal(true, FileUtils.cmp("#{@test_folder}deltas/1/.file_system_changes", "#{@test_folder}change_two/.file_system_changes"))
         end
     end
-end
+end; end

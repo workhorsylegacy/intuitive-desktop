@@ -1,7 +1,11 @@
 
 
-module Models
+module ID; module Models
     class TestBranch < Test::Unit::TestCase
+        def teardown
+            ID::TestHelper.cleanup()
+        end
+            
         def test_branch_create
             # Create a branch
             user_id = "begin blah blah blah end"
@@ -58,4 +62,4 @@ module Models
             assert_equal(branch.name, new_branch.name)
         end
     end
-end
+end; end

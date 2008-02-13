@@ -2,45 +2,48 @@
 require $IntuitiveFramework_Controllers
 require $IntuitiveFramework_Servers
 
-module Servers
+module ID; module Servers
 	class TestIdentityServer < Test::Unit::TestCase
-			def setup
-			   # get sockets for the server, local machine and remote machine
-			   @local_ip_address = '127.0.0.1'
-			   @local_outgoing_port = 3000
-			   @local_incoming_port = 3001
-			   @server_ip_address = '127.0.0.1'
-			   @server_incoming_port = 6000
-			   @server_outgoing_port = 6001
-			   
-			   # Create a server and communication controller
-               # Have the logger throw when it gets anything
-               logger_exception = Proc.new { |status, message, exception| raise message }			   
-			   @server = Servers::IdentityServer.new(logger_exception, @server_ip_address, @server_outgoing_port, @server_incoming_port)
-			   @communicator = Controllers::CommunicationController.new(@local_ip_address,
-			                                                       @local_incoming_port,
-			                                                       @local_outgoing_port)
-			                                                       
-			   @local_connection = @communicator.create_connection                                                    
-			                                                       
-			   # create a test user
-			   public_key, private_key = Models::EncryptionKey.make_public_and_private_keys
-			   @user = Models::User.new
-			   @user.name = 'bobrick'
-			   @user.public_universal_key = public_key.key.to_s
-			   @user.private_key = private_key.key.to_s
-			   @user.save!
-            end
-            
-            def teardown
-                @server.close if @server
-                @communicator.close if @communicator
-                @user.destroy if @user
-			end
-			
-			def test_log_works
-			   warn "Make the log work instead of throwing."
-			end
+      def setup
+          ID::TestHelper.cleanup()
+          @communication_server = Servers::CommunicationServer.new(:throw)
+          
+          # Add 2 users
+          @local_user = ID::Controllers::UserController::create_user('matt jones')
+          @remote_user = ID::Controllers::UserController::create_user('bobrick')                
+                
+          # Have the logger throw when it gets anything
+          @identity_server = Servers::IdentityServer.new(:throw)
+      end
+      
+      def teardown
+          @local_user.destroy if @local_user
+          @remote_user.destroy if @remote_user
+          
+          @identity_server.close if @identity_server
+          @communication_server.close if @communication_server
+          
+          ID::TestHelper.cleanup()      
+      end
+      
+      def test_can_register_and_locate_user
+         # Register the user
+         passed =
+         @identity_server.register_identity(@local_user.name,
+                                           "The happy identity of your doom",
+                                           @local_user.public_universal_key,
+                                           @local_user.private_key)
+         
+         assert passed
+         
+         # Make sure we can find the identity
+         identity_info = 
+         @identity_server.find_identity(@local_user.public_universal_key)
+
+         # Make sure the identity is the same
+         assert_equal(@local_user.public_universal_key, identity_info[:public_key])
+         assert_equal(@local_user.name, identity_info[:name])                            
+      end
 			
 #			def test_cant_spoof_server
 			   # Add a logger first, so the server can put errors in the log instead of throwing for the tests
@@ -54,5 +57,5 @@ module Servers
 #			   throw "Implement these tests!"
 #			end
 		end
-end
+end; end
 

@@ -1,7 +1,6 @@
 
 
-module Views
-    module Data
+module ID; module Views; module Data
         class Line < Views::Base::ContainerChild
             attr_reader :name
             attr_accessor :color, :join, :cap, :width, :highlight_color
@@ -150,5 +149,4 @@ module Views
               end
           end
         end
-    end
-end
+end; end; end

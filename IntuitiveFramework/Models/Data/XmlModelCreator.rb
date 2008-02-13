@@ -1,7 +1,5 @@
 
-module Models
-    module Data
-    
+module ID; module Models; module Data
         # Reads an xml model and turns it into an ActiveRecord model.
         class XmlModelCreator
             def self.models_from_xml_string(xml_string)
@@ -135,18 +133,17 @@ module Models
             new_value_plan
           end
         end
-    end
-end
+end; end; end
 
 # FIXME: This needs to be in the base namespace so any models created will start from the base namespace too.
 def create_active_record_models_from_xml(xml_element_tables)
 
-	FileUtils.mkdir($IntuitiveFramework + "/temporary_tables/") unless File.exist?($IntuitiveFramework + "/temporary_tables/")
+	FileUtils.mkdir(ID::Config.table_dir) unless File.exist?(ID::Config.table_dir)
 
     # Create a folder for the databases
     file_name = nil
     loop do
-        dir_name = $IntuitiveFramework + "/temporary_tables/#{rand(2**32)}/"
+        dir_name = ID::Config.table_dir + "/#{rand(2**32)}/"
         unless File.directory? dir_name
             Dir.mkdir dir_name
             file_name = "#{dir_name}temp.sqlite"
@@ -155,7 +152,7 @@ def create_active_record_models_from_xml(xml_element_tables)
     end
                 
   # Read the xml tables into table plans
-  table_plans = xml_element_tables.collect{ |e| Models::Data::TablePlan::from_xml(e) }
+  table_plans = xml_element_tables.collect{ |e| ID::Models::Data::TablePlan::from_xml(e) }
 
     # Get the connection info for a new database
     connection_format =  { :adapter => 'sqlite3', :database => file_name }

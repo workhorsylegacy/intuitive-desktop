@@ -1,7 +1,7 @@
 
 require 'fileutils'
 
-module Controllers
+module ID; module Controllers
     class RevisionedFileSystemController        
         def self.patch(dest_file, source_file)
             command = "patch #{dest_file} #{source_file}"
@@ -389,4 +389,4 @@ module Controllers
             FileUtils.mv(source_file_name, dest_file_name)
         end
     end
-end
+end; end

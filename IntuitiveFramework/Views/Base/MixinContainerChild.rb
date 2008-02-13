@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinContainerChild
 		attr_reader :parent_container
 
@@ -49,4 +49,4 @@ module Views; module Base
             @parent_container.children << self if @parent_container
         end
     end
-end; end
+end; end; end

@@ -1,5 +1,5 @@
 
-module Views; module Base
+module ID; module Views; module Base
     module MixinImage
         def draw_image(window)
             cairo_context = window.create_cairo_context
@@ -14,4 +14,4 @@ module Views; module Base
             cairo_context.render_rsvg_handle(self.image)
         end
     end
-end; end
+end; end; end

@@ -1,4 +1,3 @@
-
 require $IntuitiveFramework_Views_Animations
 
 # get the path of this file
