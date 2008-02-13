@@ -9,5 +9,6 @@
 	3. Programs can be run on the client or the server using the new
 	   Browser.
 	4. Moved all settings to a configuration file.
-	5. Added the HACKING and CHANGELOG documents to help contributors
+	5. Moved settings to the ~/.IntuitiveDesktop directory
+	6. Added the HACKING and CHANGELOG documents to help contributors
 	    get started.
